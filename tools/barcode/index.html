@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Barcode Data Merge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css?v=2"><script type="module" src="script.js?v=2"></script></head>
+<body><main><section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Barcode Data Merge</h1></header>
+<button type="button" id="drop">Click or drop a TSV, CSV or TXT file here</button><input id="file" type="file" accept=".tsv,.csv,.txt,text/plain,text/csv,text/tab-separated-values" hidden>
+<label for="paste">Or paste codes or spreadsheet cells</label><textarea id="paste" rows="5" placeholder="Paste your data here" spellcheck="false"></textarea>
+<div class="options"><label>Separator <select id="delimiter"><option value="\t">Tabs / one code per line</option><option value=",">Commas (CSV)</option></select></label><label class="check"><input id="header" type="checkbox" checked> First row contains column headings</label></div>
+<p id="status" role="status" aria-live="polite"></p>
+<section id="settings" hidden><div class="options"><label>Barcode source <select id="source"></select></label><label>New column name <input id="name" value="BarcodeFormatted"></label></div><p id="count"></p><p id="last-row" class="hint"></p><div class="table-wrap"><table id="preview"></table></div><button type="button" id="download">Download for InDesign</button></section>
+</section><p class="info">Creates Code 128B text for Libre Barcode 128. Existing columns and values are kept; a formatted barcode column is added. Apply the barcode font to that field in InDesign. Import the tab-delimited TXT as Unicode.</p><nav><a href="../">All utilities</a></nav></main></body></html>
