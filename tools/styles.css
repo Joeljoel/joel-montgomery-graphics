@@ -9,7 +9,6 @@ nav a { display: flex; align-items: center; gap: 20px; min-height: 136px; paddin
 .tool-icon { width: 64px; height: 64px; object-fit: contain; flex: 0 0 64px; }
 /* Enlarge utility artwork without shifting the labels or the bonus icon. */
 nav > a .tool-icon { transform: scale(1.15); }
-nav > a[href="shape-mask/"] .tool-icon { transform: scale(1.3); }
 .tool-copy { flex: 1; min-width: 0; }
 .tool-name { display: block; font-size: 23px; font-weight: 600; line-height: 1.2; }
 .tool-subtitle { display: block; margin-top: 7px; font-size: 14px; font-weight: 400; line-height: 1.35; color: #6b6f75; }
@@ -20,6 +19,8 @@ a:focus-visible { outline: 3px solid #083f81; outline-offset: 4px; }
 /* Fill the next grid cell; on mobile the wrapper grows into a new row. */
 .secret-reveal { display: grid; min-width: 0; }
 .secret-reveal a { height: 100%; }
+/* An even number of utility links leaves the bonus on its own row. */
+.secret-reveal:nth-child(odd) { grid-column: 1 / -1; }
 @media (max-width: 760px) {
   body { padding: 24px 16px; }
   .card { padding: 28px; }
