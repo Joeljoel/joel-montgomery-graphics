@@ -20,6 +20,8 @@ a:focus-visible { outline: 3px solid #083f81; outline-offset: 4px; }
 /* Fill the next grid cell; on mobile the wrapper grows into a new row. */
 .secret-reveal { display: grid; min-width: 0; }
 .secret-reveal a { height: 100%; }
+/* An even number of utility links leaves the bonus on its own row. */
+.secret-reveal:nth-child(odd) { grid-column: 1 / -1; }
 @media (max-width: 760px) {
   body { padding: 24px 16px; }
   .card { padding: 28px; }
