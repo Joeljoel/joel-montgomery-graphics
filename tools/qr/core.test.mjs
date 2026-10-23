@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {table, entries, Archive} from './core.mjs';
+
+assert.deepEqual(table('\uFEFFName,URL\r\n"A, B","https://example.com/?a=1,2"\r\n', 'comma', true).rows, [['A, B', 'https://example.com/?a=1,2']]);
+assert.equal(table('https://example.com/?a=1,2', 'auto', false).rows[0][0], 'https://example.com/?a=1,2');
+assert.throws(() => table('a,b\nx', 'comma', false));
+assert.throws(() => entries([['name', '']], 1, 0, 'png'));
+assert.throws(() => entries([['', 'content']], 1, 0, 'png'));
+const {items} = entries([['a/b'], ['a:b'], ['a_b (2)'], ['CON'], ['こんにちは']], 0, -1, 'png');
+assert.equal(new Set(items.map(x => x.name.toLowerCase())).size, 5);
+assert.equal(items[0].text, 'a/b');
+assert.equal(items[3].name, '_CON.png');
+const rows = table(Array.from({length:100001}, (_,i) => 'https://example.com/' + i).join('\n'), 'lines', false).rows;
+assert.equal(rows.length, 100001);
+assert.equal(entries(rows, 0, -1, 'svg').items.at(-1).text, 'https://example.com/100000');
+const zip = new Archive();
+zip.add('こんにちは.svg', new TextEncoder().encode('example'));
+const bytes = new DataView(await zip.finish().arrayBuffer());
+assert.equal(bytes.getUint32(0, true), 0x04034b50);
+assert.equal(bytes.getUint16(6, true), 0x800);
+assert.equal(bytes.getUint16(bytes.byteLength - 14, true), 1);
+console.log('QR input, naming, row preservation and ZIP checks passed.');
