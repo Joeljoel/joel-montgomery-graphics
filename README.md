@@ -17,7 +17,7 @@ The [Design Utilities page](https://joelmontgomery.graphics/tools/) brings toget
 | [Bulk QR Code Generator](https://joelmontgomery.graphics/tools/qr/) | Creates PNG or SVG QR codes in bulk from pasted lists or spreadsheets, with custom filenames and a ZIP download. |
 | [Image Reference Grid](https://joelmontgomery.graphics/tools/image-grid/) | Collects Easil image links and arranges them in a balanced, compact masonry layout for screenshots. |
 
-Each tool includes its own usage instructions. The Image Reference Grid supports automatic or manual column counts, fixed gaps, background colour, removing/restoring images and a distraction-free screenshot view. Its height-aware masonry arrangement reorders images to reduce uneven column heights while preserving aspect ratios.
+Each tool includes its own usage instructions.
 
 ## Other projects
 
