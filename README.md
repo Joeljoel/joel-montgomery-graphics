@@ -4,7 +4,7 @@
 
 ## Design utilities
 
-The [Design Utilities page](https://joelmontgomery.graphics/tools/) brings together tools for preparing SVG artwork for Easil.
+The [Design Utilities page](https://joelmontgomery.graphics/tools/) brings together SVG converters, generators and image-reference tools for design work, including Easil.
 
 | Tool | What it does |
 | --- | --- |
@@ -15,8 +15,9 @@ The [Design Utilities page](https://joelmontgomery.graphics/tools/) brings toget
 | [Trim SVG Contents](https://joelmontgomery.graphics/tools/trim/) | Removes transparent space around artwork, including clipped and masked shapes. Drop multiple SVGs to trim and download them automatically. |
 | [Barcode Data Merge](https://joelmontgomery.graphics/tools/barcode/) | Prepares Code 128B barcodes for InDesign Data Merge, retaining the original columns and adding a formatted barcode column. |
 | [Bulk QR Code Generator](https://joelmontgomery.graphics/tools/qr/) | Creates PNG or SVG QR codes in bulk from pasted lists or spreadsheets, with custom filenames and a ZIP download. |
+| [Image Reference Grid](https://joelmontgomery.graphics/tools/image-grid/) | Collects Easil image links and arranges them in a balanced, compact masonry layout for screenshots. |
 
-Each tool includes instructions for preparing your artwork and downloading the converted file.
+Each tool includes its own usage instructions. The Image Reference Grid supports automatic or manual column counts, fixed gaps, background colour, removing/restoring images and a distraction-free screenshot view. Its height-aware masonry arrangement reorders images to reduce uneven column heights while preserving aspect ratios.
 
 ## Other projects
 
