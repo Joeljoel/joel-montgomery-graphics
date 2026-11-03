@@ -34,16 +34,16 @@ html[data-joeldle-duo]:not([data-zoomed]) body{touch-action:pan-y pinch-zoom}
 .improved .game:focus:not(:focus-visible){outline:none}
 
 /* Short outer display: share one masthead row and reserve room for Safari below the keys. */
-@media (orientation:portrait) and (max-width:540px) {
- [data-joeldle-duo] body.improved {display:grid;grid-template-columns:auto auto;align-content:start;justify-content:center;align-items:center;column-gap:12px;row-gap:3px;padding-top:6px}
- [data-joeldle-duo] .improved header {grid-column:1;grid-row:1;font-size:26px;margin:0;justify-self:end}
- [data-joeldle-duo] .modes {grid-column:2;grid-row:1;margin:0;justify-self:start}
- [data-joeldle-duo] .improved :is(.round-info,.fetch-info,#message,#streak,.game,.keys,#prizes) {grid-column:1/-1;justify-self:center}
- [data-joeldle-duo] :is(#message,#streak):empty {display:none}
- [data-joeldle-duo] .improved .game {padding:6px;margin:3px 0;gap:3px}
- [data-joeldle-duo] .improved .letter {width:clamp(25px,calc((min(100svh,var(--usable-height)) - 350px)/6),38px)}
- [data-joeldle-duo] .improved .keys {width:min(94vw,500px);gap:3px}
- [data-joeldle-duo] .legend {margin:0}
+@media (orientation:portrait) and (max-width:540px){
+ html:has(body.improved) body.improved {display:grid;grid-template-columns:auto auto;align-content:start;justify-content:center;align-items:center;column-gap:12px;row-gap:3px;padding-top:6px}
+ html:has(body.improved) .improved header {grid-column:1;grid-row:1;font-size:26px;margin:0;justify-self:end}
+ html:has(body.improved) .modes {grid-column:2;grid-row:1;margin:0;justify-self:start}
+ html:has(body.improved) .improved :is(.round-info,.fetch-info,#message,#streak,.game,.keys,#prizes) {grid-column:1/-1;justify-self:center}
+ html:has(body.improved) :is(#message,#streak):empty {display:none}
+ html:has(body.improved) .improved .game {padding:6px;margin:3px 0;gap:3px}
+ html:has(body.improved) .improved .letter {width:clamp(25px,calc((min(100svh,var(--usable-height,100svh)) - 350px)/6),38px)}
+ html:has(body.improved) .improved .keys {width:min(94vw,500px);gap:3px}
+ html:has(body.improved) .legend {margin:0}
 }
 
 .confetti{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:5;contain:strict}
@@ -57,25 +57,25 @@ body:not(.improved) #viewResult,.improved #prizes [onclick]{display:none}
 #resultSheet::backdrop{background:#20383e66;backdrop-filter:blur(4px)}
 #resultSheet small{letter-spacing:.14em;color:#367466}#resultSheet h2{margin:12px 0 4px;font-size:26px;letter-spacing:-.04em}#resultSheet p{margin:0 0 20px}
 #resultSheet form{float:right}#resultSheet button{border:0;border-radius:20px;padding:10px 16px;background:#dceae8;color:inherit;font:600 14px system-ui;min-height:44px;cursor:pointer}#resultSheet #again{background:#205e50;color:white}.sheet-actions{display:flex;gap:8px}#copied:not(:empty){display:block;margin-top:10px}
-@media(orientation:portrait) and (max-width:540px){
- [data-joeldle-duo] body.improved{padding-top:clamp(8px,2svh,14px);row-gap:5px}
- [data-joeldle-duo] .improved .game{padding:9px;margin:5px 0 6px;gap:4px}
- [data-joeldle-duo] .improved .letter{width:clamp(26px,calc((min(100svh,var(--usable-height)) - 315px)/6),45px)}
- [data-joeldle-duo] .improved .keys{gap:5px}
+@media (orientation:portrait) and (max-width:540px){
+ html:has(body.improved) body.improved{padding-top:clamp(8px,2svh,14px);row-gap:5px}
+ html:has(body.improved) .improved .game{padding:9px;margin:5px 0 6px;gap:4px}
+ html:has(body.improved) .improved .letter{width:clamp(26px,calc((min(100svh,var(--usable-height,100svh)) - 315px)/6),45px)}
+ html:has(body.improved) .improved .keys{gap:5px}
 }
 
 /* Broad capitals, independent of the available row height. */
 
-@media(orientation:portrait) and (max-width:540px){
- [data-joeldle-duo] body.improved{grid-template-columns:minmax(0,1fr) auto;justify-content:stretch;column-gap:12px;padding-inline:12px;padding-top:clamp(12px,2.8svh,20px)}
- [data-joeldle-duo] .improved header{justify-self:start;font-size:clamp(27px,8vw,36px);letter-spacing:-.065em}
- [data-joeldle-duo] .modes{justify-self:end}
- [data-joeldle-duo] .round-info{box-sizing:border-box;width:100%;justify-content:space-between;margin:5px 0 2px;padding-top:7px;border-top:0}
- [data-joeldle-duo] #roundCount{border:0;padding:0}
- [data-joeldle-duo] .improved .game{box-sizing:border-box;width:min(100%,350px);padding:8px;margin:2px 0 6px}
- [data-joeldle-duo] .game .row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
- [data-joeldle-duo] .improved .game .row .letter{width:100%;min-width:0;aspect-ratio:auto;height:clamp(25px,calc((min(100svh,var(--usable-height)) - 321px)/6),41px);font-size:22px;border-radius:9px}
- [data-joeldle-duo] .improved .keys{width:100%}
+@media (orientation:portrait) and (max-width:540px){
+ html:has(body.improved) body.improved{grid-template-columns:minmax(0,1fr) auto;justify-content:stretch;column-gap:12px;padding-inline:12px;padding-top:clamp(12px,2.8svh,20px)}
+ html:has(body.improved) .improved header{justify-self:start;font-size:clamp(27px,8vw,36px);letter-spacing:-.065em}
+ html:has(body.improved) .modes{justify-self:end}
+ html:has(body.improved) .round-info{box-sizing:border-box;width:100%;justify-content:space-between;margin:5px 0 2px;padding-top:7px;border-top:0}
+ html:has(body.improved) #roundCount{border:0;padding:0}
+ html:has(body.improved) .improved .game{box-sizing:border-box;width:min(100%,350px);padding:8px;margin:2px 0 6px}
+ html:has(body.improved) .game .row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+ html:has(body.improved) .improved .game .row .letter{width:100%;min-width:0;aspect-ratio:auto;height:clamp(25px,calc((min(100svh,var(--usable-height,100svh)) - 321px)/6),41px);font-size:22px;border-radius:9px}
+ html:has(body.improved) .improved .keys{width:100%}
 }
 
 
@@ -93,3 +93,9 @@ body:not(.improved) #viewResult,.improved #prizes [onclick]{display:none}
 .tile-name b{display:grid;place-items:center;width:clamp(15px,4.8vw,34px);aspect-ratio: .85;border-radius:3px;background:#155448;color:#fff6df;font:750 clamp(12px,3.5vw,24px)/1 system-ui;box-shadow:1px 2px #153f45;transform:rotate(-4deg)}
 .tile-name b:nth-child(even){background:#edbf69;color:#28293c;transform:rotate(3deg)}
 html[data-board-fits],html[data-board-fits] body{overflow:hidden;overscroll-behavior:none}
+
+@media (orientation:portrait) and (max-width:540px) and (max-height:760px){
+ html:has(body.improved):not([data-joeldle-duo]){overflow-x:hidden}
+ html:not([data-joeldle-duo]) body.improved{position:relative;isolation:isolate;background:transparent}
+ html:not([data-joeldle-duo]) .improved .duo-backdrop{display:block;position:absolute;pointer-events:none;z-index:-1;inset:0 auto 0 0;width:calc(100% + 96px);min-height:calc(100lvh + 80px);background:var(--aurora),#f2f6f6}
+}
