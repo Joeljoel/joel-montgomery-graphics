@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="improved.css">
     <title>Joeldle</title>
 </head>
-<body>
+<body class="improved"><nav class="modes" aria-label="Game appearance"><button type="button" data-mode="legacy" aria-pressed="false">Legacy</button><button type="button" data-mode="improved" aria-pressed="true">Improved</button></nav>
     <header>
         Joeldle
     </header>
-    <div id="message"></div>
+    <div id="message" role="status"></div>
     <div id="streak"></div>
     <div class="game">
         <div class="row row1">
@@ -56,9 +57,11 @@
             <input class="letter a6 final" maxlength="1" disabled>
         </div>
     </div>
+    <section class="keys" aria-label="Letter keyboard"><div class="legend"><span>Untested</span><span>Absent</span><span>Present</span><span>Correct</span></div></section>
     <div class="prizes prizeHidden" id="prizes">
         <button onclick="playRandom()">Play random?</button>
     </div>
     <script src="./script.js"></script>
+<script src="improved.js"></script>
 </body>
 </html>
