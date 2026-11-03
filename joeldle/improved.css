@@ -32,3 +32,16 @@ html[data-joeldle-duo]:not([data-zoomed]) body{touch-action:pan-y pinch-zoom}
 }
 
 .improved .game:focus:not(:focus-visible){outline:none}
+
+/* Short outer display: share one masthead row and reserve room for Safari below the keys. */
+@media (orientation:portrait) and (max-width:540px) {
+ [data-joeldle-duo] body.improved {display:grid;grid-template-columns:auto auto;align-content:start;justify-content:center;align-items:center;column-gap:12px;row-gap:3px;padding-top:6px}
+ [data-joeldle-duo] .improved header {grid-column:1;grid-row:1;font-size:26px;margin:0;justify-self:end}
+ [data-joeldle-duo] .modes {grid-column:2;grid-row:1;margin:0;justify-self:start}
+ [data-joeldle-duo] .improved :is(.round-info,.fetch-info,#message,#streak,.game,.keys,#prizes) {grid-column:1/-1;justify-self:center}
+ [data-joeldle-duo] :is(#message,#streak):empty {display:none}
+ [data-joeldle-duo] .improved .game {padding:6px;margin:3px 0;gap:3px}
+ [data-joeldle-duo] .improved .letter {width:clamp(25px,calc((min(100svh,var(--usable-height)) - 350px)/6),38px)}
+ [data-joeldle-duo] .improved .keys {width:min(94vw,500px);gap:3px}
+ [data-joeldle-duo] .legend {margin:0}
+}
