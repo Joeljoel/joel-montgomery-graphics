@@ -23,7 +23,7 @@ const bandObserver = new ResizeObserver(measureBands);
 for (const part of [header, ...bands]) bandObserver.observe(part, {box: 'border-box'});
 function edgeWidth() {
  const gap = screen.width - root.clientWidth;
- return navigator.maxTouchPoints > 0 && gap > 0 && gap <= 240 ? gap : 0;
+ return /\biPhone\b/i.test(navigator.userAgent) && navigator.maxTouchPoints > 0 && gap >= 40 && gap <= 240 ? gap : 0;
 }
 function updateEdge() {
  const w = edgeWidth();
