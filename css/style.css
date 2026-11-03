@@ -165,13 +165,10 @@ html[data-home-edge]:not([data-home-zoom]), html[data-home-edge]:not([data-home-
   touch-action: pan-y pinch-zoom;
 }
 html[data-home-edge] .home-edge {
-  display: block; position: absolute; top: 0; bottom: 0; left: 100%;
+  display: block; position: absolute; top: var(--home-scroll, 0px); height: var(--nav-height); left: 100%;
   width: var(--home-bleed); pointer-events: none;
 }
-.home-edge::before {
-  content: ""; display: block; position: sticky; top: 0;
-  height: var(--nav-height); background: var(--nav-grey);
-}
+.home-edge { background: var(--nav-grey); }
 .intro-edge { display: none; }
 html[data-home-edge] .intro-edge {
   display: block; position: absolute; left: 100%; top: 0; bottom: 0;
@@ -180,6 +177,25 @@ html[data-home-edge] .intro-edge {
 @media (max-width: 700px) {
   .home #hContent { min-width: 0; }
   .home #hLeft, .home #hRight { width: 30%; }
-  .home #logo { width: min(82vw, 434px, 67vh); height: auto; aspect-ratio: 434 / 470; }
+  .home #logo { width: min(52vw, 240px, 44vh); height: auto; aspect-ratio: 434 / 470; }
   .home #logo img { width: 100%; height: auto; }
+}
+
+html[data-home-edge] #start { height: max(100vh, var(--home-screen-height)); }
+@media (max-width: 700px) {
+  .home { --nav-height: 72px; }
+  .home #hContent { height: 100%; }
+  .home #hLogo { width: 42px; height: 45px; }
+  .home #hLogo img { width: 100%; height: auto; }
+  .home #hLeft { height: auto; bottom: auto; top: 50%; transform: translateY(-50%); }
+  .home #hLeft h1 { font-size: 24px; }
+  .home #body h1 { font-size: 30px; }
+  .home #main { padding-top: calc(var(--nav-height) + 28px); }
+  .home #arrow {
+    inset: auto; left: 50%; margin: 0; transform: translateX(-50%);
+    top: calc(min(100svh, var(--home-visible-height, 100svh)) - max(16px, env(safe-area-inset-bottom)) - 44px);
+    height: 44px; width: 44px;
+  }
+  .home #arrow a { display: grid; height: 44px; place-items: center; }
+  .home #arrow img { width: 28px; height: auto; }
 }
