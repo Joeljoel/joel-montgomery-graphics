@@ -1,0 +1,49 @@
+:root{--paper:#164b51;--rule:repeating-linear-gradient(125deg,#ffbd79 0 9px,#a63830 9px 18px);background:var(--paper);color:#eef8f4;font:16px/1.5 system-ui,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}header,section{width:min(100%,44rem);margin:auto;padding:1.5rem max(1rem,env(safe-area-inset-right)) 1.5rem max(1rem,env(safe-area-inset-left));background:#12292e}
+header{padding-top:max(2rem,env(safe-area-inset-top));border-bottom:1px solid #47636a}
+h1,h2,p{margin:0}h1{font-size:clamp(3rem,10vw,5.5rem);line-height:1.12;letter-spacing:-.07em}h1 span,small{color:#ffc88b}small,.sample,dl{font-family:ui-monospace,monospace}small{letter-spacing:.12em}h2{margin:.4rem 0 .5rem;font-size:1.55rem}p{color:#c3d8d6}section+p,label,nav,.fields,select{margin-top:.8rem}label{display:block;font-weight:600}
+.sample,#overlay{background:var(--rule)}.sample{height:6rem;display:grid;place-items:center;position:relative}.sample b,.edge{background:#12292e;color:white;padding:.2rem .4rem}.edge{position:absolute;top:0}.left{left:0}.right{right:0}
+#overlay{display:none;pointer-events:none;position:fixed;top:44%;left:-96px;right:-96px;height:2rem;z-index:2}html[data-paint=fixed] #overlay{display:block}html[data-paint=root]{background-image:var(--rule)}html[data-paint=root] .sample{background:transparent}
+select,button,nav a{font:inherit;color:inherit;background:#243e44;border:1px solid #7d9696;border-radius:.5rem;padding:.55rem .8rem;min-height:44px}select{display:block;width:100%;margin:.3rem 0}nav,.fields{display:flex;gap:.6rem;flex-wrap:wrap}nav a{text-decoration:none}nav a[aria-current=page]{background:#ffca91;color:#17282b}.fields label{flex:1}.fields input{display:block;width:100%;height:2.5rem;margin-top:.25rem}
+#targets{display:flex;align-items:center;justify-content:space-between;gap:.25rem;background:#234448}#targets.inset,#probe{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}#probe{position:fixed;visibility:hidden;pointer-events:none}output{font-size:.85rem;text-align:center}dl{margin:1rem 0}dl div{display:flex;justify-content:space-between;gap:1em;border-top:1px solid #486068;padding:.5rem 0}dd{margin:0;text-align:right}.source{font-size:.9rem}.source a{color:#ffca91}section:last-child{padding-bottom:max(2rem,env(safe-area-inset-bottom))}
+
+/* Repeat only across the document canvas, including any extra area Safari paints. */
+html[data-paint="header"] {
+  background-image: url("header-band.svg");
+  background-size: 96px var(--header-height);
+  background-position: left top;
+  background-repeat: repeat-x;
+}
+html[data-paint="header"] header { background: transparent; border-bottom-color: transparent; }
+
+/* The wider background tile tests the extra paint area without widening the page. */
+html:is([data-paint="bands"],[data-paint="edge"],[data-paint="panorama"]) {
+  background-image: url("header-band.svg"), var(--section-bands, none);
+  background-size: 96px var(--header-height), calc(100% + 100vw) 100%;
+  background-position: left top;
+  background-repeat: repeat-x;
+}
+html:is([data-paint="bands"],[data-paint="edge"],[data-paint="panorama"]) :is(header, [data-band]) { background: transparent; }
+html:is([data-paint="bands"],[data-paint="edge"],[data-paint="panorama"]) header { border-bottom-color: transparent; }
+
+#edgeColumn { display: none; }
+html[data-edge-active] { overflow-x: hidden; }
+html[data-edge-active]:not([data-zoomed]), html[data-edge-active]:not([data-zoomed]) body { touch-action: pan-y pinch-zoom; }
+html[data-edge-active] #edgeColumn {
+  display: block; position: absolute; pointer-events: none; left: 100%; top: 0;
+  width: var(--edge-width); height: var(--edge-height);
+  background-image: url("header-band.svg"), var(--section-bands);
+  background-position: var(--edge-phase) top, left top;
+  background-size: 96px var(--header-height), 100% 100%;
+  background-repeat: repeat-x, no-repeat;
+}
+
+#panorama { display: none; }
+html[data-paint="panorama"] #panorama {
+  display: block; position: absolute; top: 0; left: 0; z-index: 1;
+  width: calc(100% + var(--edge-width, 0px)); height: var(--header-height);
+  background: #293752 url("coast.svg") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+html[data-paint="panorama"] header { position: relative; z-index: 2; text-shadow: 0 1px 4px #111e30; }

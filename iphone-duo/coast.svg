@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" preserveAspectRatio="none">
+<defs>
+  <linearGradient id="sky" x2=".9" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#17263f"/><stop offset=".55" stop-color="#514359"/><stop offset="1" stop-color="#ef9467"/></linearGradient>
+  <linearGradient id="sunset"><stop stop-color="#142b3d"/><stop offset="1" stop-color="#986353"/></linearGradient>
+</defs>
+<rect width="1000" height="400" fill="url(#sky)"/>
+<svg x="72%" y="8%" width="23%" height="58%" viewBox="0 0 100 100"><circle cx="50" cy="50" r="43" fill="#ffd294"/></svg>
+<path d="M0 220Q120 190 235 215T470 188L560 209 648 171 685 178 750 130 786 155 823 142 880 195 934 170 1000 193V400H0Z" fill="#635566"/>
+<path d="M0 198Q120 230 240 223T490 247Q625 235 720 197T866 221Q932 248 1000 203V400H0Z" fill="#384557"/>
+<path d="M0 273Q275 251 504 282T1000 261V400H0Z" fill="url(#sunset)"/>
+<path d="M670 295q116-8 220-2m-192 14q145-7 258-1m-159 12 127-2" fill="none" stroke="#db9577" stroke-width="3"/>
+<path d="M0 277Q160 276 283 313T546 344Q416 355 375 374L267 400H0Z" fill="#152d39"/>
+</svg>
