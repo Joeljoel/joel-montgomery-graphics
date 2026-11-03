@@ -18,11 +18,23 @@ html[data-paint="header"] {
 html[data-paint="header"] header { background: transparent; border-bottom-color: transparent; }
 
 /* The wider background tile tests the extra paint area without widening the page. */
-html[data-paint="bands"] {
+html:is([data-paint="bands"],[data-paint="edge"]) {
   background-image: url("header-band.svg"), var(--section-bands, none);
   background-size: 96px var(--header-height), calc(100% + 100vw) 100%;
   background-position: left top;
   background-repeat: repeat-x;
 }
-html[data-paint="bands"] :is(header, [data-band]) { background: transparent; }
-html[data-paint="bands"] header { border-bottom-color: transparent; }
+html:is([data-paint="bands"],[data-paint="edge"]) :is(header, [data-band]) { background: transparent; }
+html:is([data-paint="bands"],[data-paint="edge"]) header { border-bottom-color: transparent; }
+
+#edgeColumn { display: none; }
+html[data-edge-active] { overflow-x: hidden; }
+html[data-edge-active]:not([data-zoomed]), html[data-edge-active]:not([data-zoomed]) body { touch-action: pan-y pinch-zoom; }
+html[data-edge-active] #edgeColumn {
+  display: block; position: absolute; pointer-events: none; left: 100%; top: 0;
+  width: var(--edge-width); height: var(--edge-height);
+  background-image: url("header-band.svg"), var(--section-bands);
+  background-position: var(--edge-phase) top, left top;
+  background-size: 96px var(--header-height), 100% 100%;
+  background-repeat: repeat-x, no-repeat;
+}
