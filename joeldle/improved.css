@@ -62,7 +62,6 @@ body:not(.improved) #viewResult,.improved #prizes [onclick]{display:none}
  [data-joeldle-duo] .improved .game{padding:9px;margin:5px 0 6px;gap:4px}
  [data-joeldle-duo] .improved .letter{width:clamp(26px,calc((min(100svh,var(--usable-height)) - 315px)/6),45px)}
  [data-joeldle-duo] .improved .keys{gap:5px}
- [data-joeldle-duo] .improved:has(#prizes:not(.prizeHidden)) .letter{width:clamp(25px,calc((min(100svh,var(--usable-height)) - 365px)/6),42px)}
 }
 
 /* Broad capitals, independent of the available row height. */
@@ -76,6 +75,15 @@ body:not(.improved) #viewResult,.improved #prizes [onclick]{display:none}
  [data-joeldle-duo] .improved .game{box-sizing:border-box;width:min(100%,350px);padding:8px;margin:2px 0 6px}
  [data-joeldle-duo] .game .row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
  [data-joeldle-duo] .improved .game .row .letter{width:100%;min-width:0;aspect-ratio:auto;height:clamp(25px,calc((min(100svh,var(--usable-height)) - 345px)/6),37px);font-size:22px;border-radius:9px}
- [data-joeldle-duo] .improved:has(#prizes:not(.prizeHidden)) .game .row .letter{height:clamp(24px,calc((min(100svh,var(--usable-height)) - 390px)/6),34px)}
  [data-joeldle-duo] .improved .keys{width:100%}
 }
+
+@font-face{font-family:JoeldleExtended;src:url("joeldle-extended.woff") format("woff");font-weight:700;font-display:swap}
+.improved .game .letter{font-family:JoeldleExtended,system-ui,sans-serif;font-weight:700;font-variation-settings:normal}
+.improved #prizes,.improved #prizes:not(.prizeHidden),body:not(.improved) #viewResult,.improved.round-ended :is(#message,#streak,#roundKind){display:none}
+.improved .round-info{min-height:30px;margin-block:0}
+.round-info #viewResult:not([hidden]){border:1px solid #91ada9;border-radius:12px;background:#ffffffab;color:#19584e;padding:3px 9px;font:600 12px system-ui;cursor:pointer}
+.improved #roundCount{letter-spacing:.02em;text-transform:none}
+.improved:has(#fetchStatus:empty) .fetch-info{display:none}
+.improved #message,.improved #message:empty,.improved.round-ended #message{display:block;min-height:18px;height:18px;font:13px/18px system-ui;margin:0}.improved.round-ended #message{visibility:hidden}
+.improved .fetch-info:has(#retry[hidden]){display:none}

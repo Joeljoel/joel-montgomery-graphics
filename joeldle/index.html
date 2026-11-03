@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1, viewport-fit=cover">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="improved.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wdth,wght@145,780&amp;display=swap&amp;text=ABCDEFGHIJKLMNOPQRSTUVWXYZ">
     <title>Joeldle</title>
 </head>
 <body class="improved"><div class="duo-backdrop" aria-hidden="true"></div><nav class="modes" aria-label="Game appearance"><button type="button" data-mode="legacy" aria-pressed="false">Legacy</button><button type="button" data-mode="improved" aria-pressed="true">Improved</button></nav>
     <header>
         Joeldle
     </header>
-    <div class="round-info"><span id="roundKind">Daily puzzle</span><span id="roundCount">Guess 1 / 6</span></div>
+    <div class="round-info"><span id="roundKind">Daily puzzle</span><button id="viewResult" hidden>View result</button><span id="roundCount" role="status">Guess 1 / 6</span></div>
     <div class="fetch-info"><span id="fetchStatus" role="status"></span><button id="retry" hidden>Retry</button></div>
     <div id="message" role="status"></div>
     <div id="streak"></div>
@@ -62,7 +61,7 @@
     </div>
     <section class="keys" aria-label="Letter keyboard"><div class="legend"><span>Untested</span><span>Absent</span><span>Present</span><span>Correct</span></div></section>
     <div class="prizes prizeHidden" id="prizes">
-        <button id="viewResult">View result</button><button onclick="playRandom()">Play random?</button>
+        <button onclick="playRandom()">Play random?</button>
     </div>
     <dialog id="resultSheet" aria-labelledby="resultTitle"><form method="dialog"><button aria-label="Close result">×</button></form><small>JOELDLE</small><h2 id="resultTitle">Round complete</h2><p id="resultNote"></p><div class="sheet-actions"><button class="copy-result">Copy result</button><button id="again">Play again</button></div><output id="copied" role="status"></output></dialog>
     <script src="./script.js"></script>
