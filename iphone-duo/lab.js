@@ -7,7 +7,20 @@ function sizeHeader() {
 }
 sizeHeader();
 new ResizeObserver(sizeHeader).observe(header, {box: 'border-box'});
-const notes={header:'Only the header-height band is painted on the document. Below its gold edge, the side strip should return to the page background.',flow:'The L and R labels mark the edges of normal page content.',fixed:'A fixed stripe now crosses the viewport and deliberately overshoots both sides. Scroll and watch its ends.',root:'The document itself now has stripes. Look for stripes behind the controls, not just a matching tint.'};
+// Place colour changes in document coordinates so they scroll with the sections.
+const bands = [...document.querySelectorAll('[data-band]')];
+function measureBands() {
+ if (root.dataset.paint !== 'bands') return;
+ const origin = root.getBoundingClientRect().top;
+ const stops = bands.map(band => {
+  const box = band.getBoundingClientRect();
+  return band.dataset.band + ' ' + (box.top - origin) + 'px ' + (box.bottom - origin) + 'px';
+ });
+ root.style.setProperty('--section-bands', 'linear-gradient(to bottom, ' + stops.join(', ') + ')');
+}
+const bandObserver = new ResizeObserver(measureBands);
+for (const part of [header, ...bands]) bandObserver.observe(part, {box: 'border-box'});
+const notes={bands:'Compare the plum, rust and teal bands on both sides of the page edge. The gold rule marks the bottom of the header.',header:'Only the header-height band is painted on the document. Below its gold edge, the side strip should return to the page background.',flow:'The L and R labels mark the edges of normal page content.',fixed:'A fixed stripe now crosses the viewport and deliberately overshoots both sides. Scroll and watch its ends.',root:'The document itself now has stripes. Look for stripes behind the controls, not just a matching tint.'};
 for(const id of ['bg','theme'])if(/^#[0-9a-f]{6}$/i.test(query.get(id)||''))el(id).value=query.get(id);
 if(Object.hasOwn(notes,query.get('paint')))el('paint').value=query.get('paint');
 el('safe').checked=query.get('safe')!=='0';
@@ -17,6 +30,7 @@ function refresh(){
  document.querySelector('meta[name=theme-color]').content=el('theme').value;
  el('paintNote').textContent=notes[root.dataset.paint];
  el('targets').classList.toggle('inset',el('safe').checked);
+ measureBands();
  for(const a of document.querySelectorAll('nav a')){
   const url=new URL(a.href);
   for(const id of ['bg','theme','paint'])url.searchParams.set(id,el(id).value);
