@@ -14,3 +14,19 @@ body.improved{background-image:var(--aurora);background-color:#f2f6f6}
 .fetch-info{margin-top:8px}.fetch-info button{margin-left:6px}
 @media(prefers-reduced-motion:no-preference){.improved .revealed{animation:turn-in .35s both;animation-delay:calc(var(--order)*55ms)}@keyframes turn-in{0%{transform:perspective(320px) rotateX(48deg);opacity:.5}100%{transform:none;opacity:1}}}
 @media(max-height:720px){body.improved{padding-top:2px}.improved header{margin:8px 0 2px}.improved .game{margin:5px 0 8px;padding:8px}.improved .row{padding:0}.improved .letter{width:min(10vw,6.8vh)}}
+
+.duo-backdrop{display:none}
+html[data-joeldle-duo]{overflow-x:hidden}
+html[data-joeldle-duo]:not([data-zoomed]) body{touch-action:pan-y pinch-zoom}
+[data-joeldle-duo] body.improved{position:relative;isolation:isolate;background:transparent;padding:8px 8px max(12px,env(safe-area-inset-bottom));min-height:var(--usable-height)}
+[data-joeldle-duo] .duo-backdrop{display:block;position:absolute;pointer-events:none;z-index:-1;inset:0 auto 0 0;width:calc(100% + var(--side));min-height:var(--glass-height);background:var(--aurora),#f2f6f6}
+[data-joeldle-duo] .modes{margin:0 auto}
+[data-joeldle-duo] .improved header{font-size:32px;margin:6px 0 2px}
+[data-joeldle-duo] .game{gap:4px;padding:8px;margin:5px 0 8px}
+[data-joeldle-duo] .improved .letter{width:clamp(27px,calc((var(--usable-height) - 315px)/6),49px)}
+[data-joeldle-duo] .keys{gap:4px}
+@media(min-width:540px) and (orientation:landscape){
+ [data-joeldle-duo] body.improved{display:grid;grid-template-columns: minmax(180px,2fr) minmax(300px,3fr);gap:3px 12px;align-content:center;justify-items:center;grid-template-areas:"title modes" "board info" "board load" "board msg" "board streak" "board keys" "board prizes"}
+ [data-joeldle-duo] header{grid-area:title}[data-joeldle-duo] .modes{grid-area:modes}[data-joeldle-duo] .game{grid-area:board}[data-joeldle-duo] .keys{grid-area:keys}[data-joeldle-duo] .round-info{grid-area:info}[data-joeldle-duo] .fetch-info{grid-area:load}[data-joeldle-duo] #message{grid-area:msg}[data-joeldle-duo] #streak{grid-area:streak}[data-joeldle-duo] #prizes{grid-area:prizes}
+ [data-joeldle-duo] .improved .letter{width:clamp(26px,calc((var(--usable-height) - 100px)/6),39px)}
+}

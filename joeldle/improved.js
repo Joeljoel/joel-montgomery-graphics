@@ -44,3 +44,19 @@
  try{await navigator.clipboard.writeText(result);message.textContent='Result copied.'}catch{window.prompt('Copy your result:',result)}
  };
 })();
+(() => {
+ const root=document.documentElement, vv=window.visualViewport;
+ if(!/\biPhone\b/.test(navigator.userAgent)||!navigator.maxTouchPoints)return;
+ function size(){
+  const gap=screen.width-root.clientWidth, active=document.body.classList.contains('improved')&&gap>=40&&gap<=240;
+  root.toggleAttribute('data-joeldle-duo',active);
+  root.toggleAttribute('data-zoomed',(vv?.scale||1)>1.01);
+  if(active && !root.hasAttribute('data-zoomed')){
+   root.style.setProperty('--side',gap+'px');
+   root.style.setProperty('--glass-height',screen.height+'px');
+   root.style.setProperty('--usable-height',(vv?.height||innerHeight)+'px');
+  }
+ }
+ size();new MutationObserver(size).observe(document.body,{attributes:true,attributeFilter:['class']});
+ window.addEventListener('resize',size);vv?.addEventListener('resize',size);
+})();
