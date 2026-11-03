@@ -15,7 +15,7 @@ async function loadPuzzle(url){
   if(!response.ok)throw Error();
   const {word}=await response.json();if(!/^[a-z]{5}$/i.test(word))throw Error();
   if(id!==puzzleRequest)return;
-  correctWord=word.toLowerCase();puzzleState='ready';status.textContent='';
+  correctWord=word.toLowerCase();puzzleState='ready';status.textContent='';document.dispatchEvent(new Event('puzzle-ready'));
  }catch{if(id!==puzzleRequest)return;puzzleState='error';status.textContent='Couldn’t load the puzzle.';retry.hidden=false}
 }
 function init() {

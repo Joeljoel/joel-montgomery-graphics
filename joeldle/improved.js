@@ -11,14 +11,27 @@
  modes.forEach(b=>b.onclick=()=>{if(!busy){mode(b.dataset.mode);try{localStorage.setItem('joeldle-mode',b.dataset.mode)}catch{}}});
  let initial='improved';try{if(localStorage.getItem('joeldle-mode')==='legacy')initial='legacy'}catch{}mode(initial);
  function score(word,answer){const result=Array(5).fill('absent'),stock={};for(let i=0;i<5;i++){if(word[i]===answer[i])result[i]='correct';else stock[answer[i]]=(stock[answer[i]]||0)+1}for(let i=0;i<5;i++)if(result[i]==='absent'&&stock[word[i]]){stock[word[i]]--;result[i]='present'}return result}
+ // Store submitted daily guesses only. Re-score against today's answer on reload.
+ const saveKey='joeldle.daily.v1';let submitted=[];
+ function puzzleID(){let h=5381;for(const c of correctWord)h=((h*33)^c.charCodeAt(0))>>>0;return new Date().toISOString().slice(0,10)+':'+h}
+ function save(){if(!puzzleURL.includes('random'))try{localStorage.setItem(saveKey,JSON.stringify({id:puzzleID(),words:submitted}))}catch{}}
+ function finishGuess(word,row,animate=true){
+  score(word,correctWord).forEach((state,i)=>{row[i].value=word[i].toUpperCase();row[i].classList.toggle('revealed',animate);row[i].style.setProperty('--order',i);if(state!=='absent')row[i].classList.add(state)});
+  if(word===correctWord){endGame();victory()}else if(guessNumber===6){endGame();defeat()}else{guessNumber++;nextLine()}refresh()
+ }
+ function restore(){submitted=[];if(!improved()||puzzleURL.includes('random')||guessNumber!==1||cells.some(c=>c.value))return;
+  try{const data=JSON.parse(localStorage.getItem(saveKey));if(!data||data.id!==puzzleID()||!Array.isArray(data.words)||data.words.length>6||!data.words.every(w=>typeof w==='string'&&/^[a-z]{5}$/.test(w)))return;
+   for(const word of data.words){const row=active();if(row.length!==5)break;finishGuess(word,row,false);submitted.push(word)}
+  }catch{}
+ }
+ document.addEventListener('puzzle-ready',restore);if(puzzleState==='ready')restore();
  async function input(k){const row=active();if(!improved()||busy||!row.length)return;const empty=row.find(c=>!c.value);row.forEach(c=>c.classList.remove('invalidWord'));
  if(k==='⌫'){const c=row.filter(c=>c.value).pop();if(c){c.value='';c.focus({preventScroll:true})}message.textContent='';return}
  if(k!=='✓'){if(empty){empty.value=k;(row.find(c=>!c.value)||empty).focus({preventScroll:true});message.textContent=''}return}
  if(empty){message.textContent='Enter five letters.';return}
  if(!correctWord){message.textContent=puzzleState==='loading'?'Puzzle is still loading.':'Use Retry to load the puzzle.';return}
  busy=true;message.textContent='Checking…';const word=row.map(c=>c.value).join('').toLowerCase();try{const response=await fetch('https://words.dev-apis.com/validate-word',{method:'POST',signal:AbortSignal.timeout(10000),body:JSON.stringify({word})});if(!response.ok)throw Error();if(!(await response.json()).validWord){message.textContent='Word not recognised.';return}
- message.textContent='';score(word,correctWord).forEach((state,i)=>{row[i].classList.add('revealed');row[i].style.setProperty('--order',i);if(state!=='absent')row[i].classList.add(state)});
- if(word===correctWord){endGame();victory()}else if(guessNumber===6){endGame();defeat()}else{guessNumber++;nextLine()}refresh()
+ message.textContent='';finishGuess(word,row);submitted=cells.filter(c=>c.disabled&&c.value).map(c=>c.value.toLowerCase()).join('').match(/.{5}/g)||[];save()
  }catch{message.textContent='Couldn’t check that word. Try again.'}finally{busy=false}}
  document.addEventListener('keydown',e=>{if(!improved()||e.metaKey||e.ctrlKey||e.altKey||e.isComposing)return;if(e.target.closest('button,a')&&e.key==='Enter')return;let k=e.key==='Enter'?'✓':e.key==='Backspace'?'⌫':/^[a-z]$/i.test(e.key)?e.key.toUpperCase():null;if(k){e.preventDefault();e.stopImmediatePropagation();input(k)}},true);
  document.querySelector('#retry').onclick=()=>{message.textContent='';loadPuzzle(puzzleURL)};
