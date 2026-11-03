@@ -2,6 +2,11 @@
  const body=document.body, cells=[...document.querySelectorAll('.letter')], keyboard=document.querySelector('.keys'), message=document.querySelector('#message'), modes=[...document.querySelectorAll('[data-mode]')],prizes=document.querySelector('#prizes');
  const keys=new Map(),states=['untested','absent','present','correct'];let busy=false;
  const improved=()=>body.classList.contains('improved'),active=()=>cells.filter(c=>!c.disabled);
+ const sheet=document.querySelector('#resultSheet'),view=document.querySelector('#viewResult');
+ function openResult(){if(!improved()||active().length||sheet.open)return;
+ document.querySelector('#resultTitle').textContent=message.textContent||'Round complete';
+ document.querySelector('#resultNote').textContent=document.querySelector('#roundKind').textContent+(document.querySelector('#streak').textContent?' · '+document.querySelector('#streak').textContent:'');document.querySelector('#copied').textContent='';sheet.showModal()}
+ view.onclick=openResult;document.querySelector('#again').onclick=()=>{sheet.close();prizes.querySelector('[onclick]').click()};
  function refresh(){document.querySelector('#roundKind').textContent=puzzleURL.includes('random=1')?'Random puzzle':'Daily puzzle';
  document.querySelector('#roundCount').textContent=active().length?'Guess '+guessNumber+' / 6':'Round complete';
  const ranks=new Map();for(const cell of cells){const l=cell.value.toUpperCase();if(!cell.disabled||!l)continue;const rank=cell.classList.contains('correct')?3:cell.classList.contains('present')?2:1;ranks.set(l,Math.max(rank,ranks.get(l)||0));cell.dataset.state=states[rank]}
@@ -35,7 +40,7 @@
  }
  function finishGuess(word,row,animate=true){
   score(word,correctWord).forEach((state,i)=>{row[i].value=word[i].toUpperCase();row[i].classList.toggle('revealed',animate);row[i].style.setProperty('--order',i);if(state!=='absent')row[i].classList.add(state)});
-  if(word===correctWord){endGame();victory();if(animate)celebrate(row)}else if(guessNumber===6){endGame();defeat()}else{guessNumber++;nextLine()}refresh()
+  if(word===correctWord){endGame();victory();if(animate)celebrate(row)}else if(guessNumber===6){endGame();defeat()}else{guessNumber++;nextLine()}refresh();if(!active().length)setTimeout(openResult,animate&&word===correctWord?1900:0)
  }
  function restore(){submitted=[];if(!improved()||puzzleURL.includes('random')||guessNumber!==1||cells.some(c=>c.value))return;
   try{const data=JSON.parse(localStorage.getItem(saveKey));if(!data||data.id!==puzzleID()||!Array.isArray(data.words)||data.words.length>6||!data.words.every(w=>typeof w==='string'&&/^[a-z]{5}$/.test(w)))return;
@@ -51,7 +56,7 @@
  busy=true;message.textContent='Checking…';const word=row.map(c=>c.value).join('').toLowerCase();try{const response=await fetch('https://words.dev-apis.com/validate-word',{method:'POST',signal:AbortSignal.timeout(10000),body:JSON.stringify({word})});if(!response.ok)throw Error();if(!(await response.json()).validWord){message.textContent='Word not recognised.';return}
  message.textContent='';finishGuess(word,row);submitted=cells.filter(c=>c.disabled&&c.value).map(c=>c.value.toLowerCase()).join('').match(/.{5}/g)||[];save()
  }catch{message.textContent='Couldn’t check that word. Try again.'}finally{busy=false}}
- document.addEventListener('keydown',e=>{if(!improved()||e.metaKey||e.ctrlKey||e.altKey||e.isComposing)return;if(e.target.closest('button,a')&&e.key==='Enter')return;let k=e.key==='Enter'?'✓':e.key==='Backspace'?'⌫':/^[a-z]$/i.test(e.key)?e.key.toUpperCase():null;if(k){e.preventDefault();e.stopImmediatePropagation();input(k)}},true);
+ document.addEventListener('keydown',e=>{if(sheet.open||!improved()||e.metaKey||e.ctrlKey||e.altKey||e.isComposing)return;if(e.target.closest('button,a')&&e.key==='Enter')return;let k=e.key==='Enter'?'✓':e.key==='Backspace'?'⌫':/^[a-z]$/i.test(e.key)?e.key.toUpperCase():null;if(k){e.preventDefault();e.stopImmediatePropagation();input(k)}},true);
  document.querySelector('#retry').onclick=()=>{message.textContent='';loadPuzzle(puzzleURL)};
  prizes.addEventListener('click',e=>{if(!e.target.closest('[onclick]'))return;clearCelebration();cells.forEach(c=>{delete c.dataset.state;c.classList.remove('revealed')});refresh()});
  document.querySelector('.copy-result').onclick=async()=>{
@@ -59,7 +64,7 @@
  const grid=rows.map(r=>[...r.children].map(c=>c.classList.contains('correct')?'🟩':c.classList.contains('present')?'🟨':'⬛').join('')).join('\n');
  const won=rows.at(-1)&&[...rows.at(-1).children].every(c=>c.classList.contains('correct'));
  const result='Joeldle · '+document.querySelector('#roundKind').textContent+' '+(won?rows.length:'X')+'/6\n'+grid;
- try{await navigator.clipboard.writeText(result);message.textContent='Result copied.'}catch{window.prompt('Copy your result:',result)}
+ try{await navigator.clipboard.writeText(result);document.querySelector('#copied').textContent='Result copied.'}catch{window.prompt('Copy your result:',result)}
  };
 })();
 (() => {
