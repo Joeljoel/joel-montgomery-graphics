@@ -10,7 +10,7 @@ new ResizeObserver(sizeHeader).observe(header, {box: 'border-box'});
 // Place colour changes in document coordinates so they scroll with the sections.
 const bands = [...document.querySelectorAll('[data-band]')];
 function measureBands() {
- if (!['bands','edge'].includes(root.dataset.paint)) return;
+ if (!['bands','edge','panorama'].includes(root.dataset.paint)) return;
  root.style.setProperty('--edge-height', document.body.getBoundingClientRect().height + 'px');
  const origin = root.getBoundingClientRect().top;
  const stops = bands.map(band => {
@@ -27,12 +27,12 @@ function edgeWidth() {
 }
 function updateEdge() {
  const w = edgeWidth();
- root.toggleAttribute('data-edge-active', root.dataset.paint === 'edge' && w > 0);
+ root.toggleAttribute('data-edge-active', ['edge','panorama'].includes(root.dataset.paint) && w > 0);
  root.toggleAttribute('data-zoomed', (window.visualViewport?.scale || 1) > 1.01);
  root.style.setProperty('--edge-width', w + 'px');
  root.style.setProperty('--edge-phase', -(root.clientWidth % 96) + 'px');
 }
-const notes={edge:'A decorative column extends the document beyond the layout edge. Compare with Section colours and watch the far-right margin.',bands:'Compare the plum, rust and teal bands on both sides of the page edge. The gold rule marks the bottom of the header.',header:'Only the header-height band is painted on the document. Below its gold edge, the side strip should return to the page background.',flow:'The L and R labels mark the edges of normal page content.',fixed:'A fixed stripe now crosses the viewport and deliberately overshoots both sides. Scroll and watch its ends.',root:'The document itself now has stripes. Look for stripes behind the controls, not just a matching tint.'};
+const notes={panorama:'Follow the mountain ridge and the setting sun across the right edge of the header. Both come from one image.',edge:'A decorative column extends the document beyond the layout edge. Compare with Section colours and watch the far-right margin.',bands:'Compare the plum, rust and teal bands on both sides of the page edge. The gold rule marks the bottom of the header.',header:'Only the header-height band is painted on the document. Below its gold edge, the side strip should return to the page background.',flow:'The L and R labels mark the edges of normal page content.',fixed:'A fixed stripe now crosses the viewport and deliberately overshoots both sides. Scroll and watch its ends.',root:'The document itself now has stripes. Look for stripes behind the controls, not just a matching tint.'};
 for(const id of ['bg','theme'])if(/^#[0-9a-f]{6}$/i.test(query.get(id)||''))el(id).value=query.get(id);
 if(Object.hasOwn(notes,query.get('paint')))el('paint').value=query.get('paint');
 el('safe').checked=query.get('safe')!=='0';

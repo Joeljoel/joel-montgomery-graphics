@@ -18,14 +18,14 @@ html[data-paint="header"] {
 html[data-paint="header"] header { background: transparent; border-bottom-color: transparent; }
 
 /* The wider background tile tests the extra paint area without widening the page. */
-html:is([data-paint="bands"],[data-paint="edge"]) {
+html:is([data-paint="bands"],[data-paint="edge"],[data-paint="panorama"]) {
   background-image: url("header-band.svg"), var(--section-bands, none);
   background-size: 96px var(--header-height), calc(100% + 100vw) 100%;
   background-position: left top;
   background-repeat: repeat-x;
 }
-html:is([data-paint="bands"],[data-paint="edge"]) :is(header, [data-band]) { background: transparent; }
-html:is([data-paint="bands"],[data-paint="edge"]) header { border-bottom-color: transparent; }
+html:is([data-paint="bands"],[data-paint="edge"],[data-paint="panorama"]) :is(header, [data-band]) { background: transparent; }
+html:is([data-paint="bands"],[data-paint="edge"],[data-paint="panorama"]) header { border-bottom-color: transparent; }
 
 #edgeColumn { display: none; }
 html[data-edge-active] { overflow-x: hidden; }
@@ -38,3 +38,12 @@ html[data-edge-active] #edgeColumn {
   background-size: 96px var(--header-height), 100% 100%;
   background-repeat: repeat-x, no-repeat;
 }
+
+#panorama { display: none; }
+html[data-paint="panorama"] #panorama {
+  display: block; position: absolute; top: 0; left: 0; z-index: 1;
+  width: calc(100% + var(--edge-width, 0px)); height: var(--header-height);
+  background: #293752 url("coast.svg") center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+html[data-paint="panorama"] header { position: relative; z-index: 2; text-shadow: 0 1px 4px #111e30; }
