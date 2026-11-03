@@ -11,6 +11,8 @@
     <header>
         Joeldle
     </header>
+    <div class="round-info"><span id="roundKind">Daily puzzle</span><span id="roundCount">Guess 1 / 6</span></div>
+    <div class="fetch-info"><span id="fetchStatus" role="status"></span><button id="retry" hidden>Retry</button></div>
     <div id="message" role="status"></div>
     <div id="streak"></div>
     <div class="game">
@@ -59,7 +61,7 @@
     </div>
     <section class="keys" aria-label="Letter keyboard"><div class="legend"><span>Untested</span><span>Absent</span><span>Present</span><span>Correct</span></div></section>
     <div class="prizes prizeHidden" id="prizes">
-        <button onclick="playRandom()">Play random?</button>
+        <button class="copy-result">Copy result</button><button onclick="playRandom()">Play random?</button>
     </div>
     <script src="./script.js"></script>
 <script src="improved.js"></script>

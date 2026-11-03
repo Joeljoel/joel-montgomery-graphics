@@ -5,17 +5,21 @@ let guessNumber = 1;
 let streakNumber = 0;
 let prevGuessNumber = 7;
 
+let puzzleRequest=0, puzzleURL=grabWord, puzzleState='loading';
+async function loadPuzzle(url){
+ const id=++puzzleRequest; puzzleURL=url; correctWord=undefined; puzzleState='loading';
+ const status=document.getElementById('fetchStatus'), retry=document.getElementById('retry');
+ status.textContent='Loading puzzle…';retry.hidden=true;
+ try {
+  const response=await fetch(url,{signal:AbortSignal.timeout(12000)});
+  if(!response.ok)throw Error();
+  const {word}=await response.json();if(!/^[a-z]{5}$/i.test(word))throw Error();
+  if(id!==puzzleRequest)return;
+  correctWord=word.toLowerCase();puzzleState='ready';status.textContent='';
+ }catch{if(id!==puzzleRequest)return;puzzleState='error';status.textContent='Couldn’t load the puzzle.';retry.hidden=false}
+}
 function init() {
-    const promise = fetch(grabWord);
-    promise
-        .then(function (response) {
-            const processingPromise = response.json();
-            return processingPromise;
-        })
-            .then(function (processedResponse) {
-                correctWord = processedResponse.word;
-                console.log(correctWord);
-            })
+    loadPuzzle(grabWord);
     let disableRow = document.getElementsByClassName("letter");
     for (let i = 0; i < disableRow.length; i++) {
         disableRow[i].disabled = true;
@@ -45,7 +49,7 @@ function prepareGuess(guessNumber) {
     });
     guess = guess.toLowerCase();
     
-    if (guess.length = 5) {
+    if (guess.length === 5 && correctWord) {
         validateWord(guess);
     }
 }
@@ -63,7 +67,7 @@ async function validateWord(guess) {
     } else {
         const currentRow = document.querySelector(`.row${guessNumber}`);
 
-        for (i = 0; i < currentRow.children.length; i++) {
+        for (let i = 0; i < currentRow.children.length; i++) {
             let child = currentRow.children[i];
             child.classList.add('invalidWord');
         }
@@ -262,7 +266,7 @@ function checkWord(guess) {
 function backspace() {
     const currentRow = document.querySelector(`.row${guessNumber}`);
 
-    for (i = 0; i < currentRow.children.length; i++) {
+    for (let i = 0; i < currentRow.children.length; i++) {
         let child = currentRow.children[i];
         child.classList.remove('invalidWord');
     }
@@ -386,16 +390,7 @@ function playRandom() {
         enableRow[i].classList.remove("present");
         enableRow[i].classList.remove("invalidWord");
     }
-    const promise = fetch(grabWord);
-    promise
-        .then(function (response) {
-            const processingPromise = response.json();
-            return processingPromise;
-        })
-            .then(function (processedResponse) {
-                correctWord = processedResponse.word;
-                console.log(correctWord);
-            })
+    loadPuzzle(grabWord);
     guessNumber = 1;
     document.getElementById("message").innerHTML=`Playing a random word`;
     document.getElementById("prizes").classList.add('prizeHidden');
