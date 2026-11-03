@@ -34,7 +34,7 @@ function init() {
         enableRow[i].classList.remove("correct");
         enableRow[i].classList.remove("present");
     }
-    document.getElementById("start").focus();
+    if (!document.body.classList.contains("improved")) document.getElementById("start").focus();
 }
 
 function isLetter(letter) {
@@ -312,7 +312,7 @@ function nextLine() {
         enableRow[i].disabled = false;
     }
 
-    document.getElementById(newRowString).focus();
+    if (!document.body.classList.contains("improved")) document.getElementById(newRowString).focus();
 
     let disableRow = document.getElementsByClassName(oldRowClass);
     for (let i = 0; i < disableRow.length; i++) {
@@ -394,7 +394,7 @@ function playRandom() {
     guessNumber = 1;
     document.getElementById("message").innerHTML=`Playing a random word`;
     document.getElementById("prizes").classList.add('prizeHidden');
-    document.getElementById("start").focus();
+    if (!document.body.classList.contains("improved")) document.getElementById("start").focus();
 }
 
 

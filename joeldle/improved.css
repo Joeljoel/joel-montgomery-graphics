@@ -30,3 +30,5 @@ html[data-joeldle-duo]:not([data-zoomed]) body{touch-action:pan-y pinch-zoom}
  [data-joeldle-duo] header{grid-area:title}[data-joeldle-duo] .modes{grid-area:modes}[data-joeldle-duo] .game{grid-area:board}[data-joeldle-duo] .keys{grid-area:keys}[data-joeldle-duo] .round-info{grid-area:info}[data-joeldle-duo] .fetch-info{grid-area:load}[data-joeldle-duo] #message{grid-area:msg}[data-joeldle-duo] #streak{grid-area:streak}[data-joeldle-duo] #prizes{grid-area:prizes}
  [data-joeldle-duo] .improved .letter{width:clamp(26px,calc((var(--usable-height) - 100px)/6),39px)}
 }
+
+.improved .game:focus:not(:focus-visible){outline:none}
