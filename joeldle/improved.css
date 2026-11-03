@@ -45,3 +45,9 @@ html[data-joeldle-duo]:not([data-zoomed]) body{touch-action:pan-y pinch-zoom}
  [data-joeldle-duo] .improved .keys {width:min(94vw,500px);gap:3px}
  [data-joeldle-duo] .legend {margin:0}
 }
+
+.confetti{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:5;contain:strict}
+.confetti i{position:absolute;width:6px;height:10px;border-radius:2px;background:var(--ink);opacity:0;animation:joeldle-confetti 1.45s var(--delay) both}
+@keyframes joeldle-confetti{0%{opacity:0;transform:translate(0,0)}5%{opacity:1}40%{transform:translate(calc(var(--dx)*.65),var(--rise)) rotate(var(--spin));animation-timing-function:ease-in}100%{opacity:0;transform:translate(var(--dx),var(--fall)) rotate(calc(var(--spin)*2))}}
+@media(prefers-reduced-motion:no-preference){.improved .letter.winning{animation:turn-in .3s both,joeldle-hop .52s both;animation-delay:calc(var(--order)*55ms),calc(340ms + var(--order)*75ms)}@keyframes joeldle-hop{0%,100%{translate:0 0}40%{translate:0 -9px;box-shadow:0 5px 11px #185f5138}}}
+@media(prefers-reduced-motion:reduce){.confetti{display:none}}
