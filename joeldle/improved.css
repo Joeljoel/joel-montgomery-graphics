@@ -64,3 +64,18 @@ body:not(.improved) #viewResult,.improved #prizes [onclick]{display:none}
  [data-joeldle-duo] .improved .keys{gap:5px}
  [data-joeldle-duo] .improved:has(#prizes:not(.prizeHidden)) .letter{width:clamp(25px,calc((min(100svh,var(--usable-height)) - 365px)/6),42px)}
 }
+
+/* Broad capitals, independent of the available row height. */
+.improved .letter{font-family:"Roboto Flex","Arial Black",system-ui,sans-serif;font-variation-settings:"wdth" 145,"wght" 780}
+@media(orientation:portrait) and (max-width:540px){
+ [data-joeldle-duo] body.improved{grid-template-columns:minmax(0,1fr) auto;justify-content:stretch;column-gap:12px;padding-inline:12px;padding-top:clamp(12px,2.8svh,20px)}
+ [data-joeldle-duo] .improved header{justify-self:start;font-size:clamp(27px,8vw,36px);letter-spacing:-.065em}
+ [data-joeldle-duo] .modes{justify-self:end}
+ [data-joeldle-duo] .round-info{box-sizing:border-box;width:100%;justify-content:space-between;margin:5px 0 2px;padding-top:7px;border-top:1px solid #74899055}
+ [data-joeldle-duo] #roundCount{border:0;padding:0}
+ [data-joeldle-duo] .improved .game{box-sizing:border-box;width:min(100%,350px);padding:8px;margin:2px 0 6px}
+ [data-joeldle-duo] .game .row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+ [data-joeldle-duo] .improved .game .row .letter{width:100%;min-width:0;aspect-ratio:auto;height:clamp(25px,calc((min(100svh,var(--usable-height)) - 345px)/6),37px);font-size:22px;border-radius:9px}
+ [data-joeldle-duo] .improved:has(#prizes:not(.prizeHidden)) .game .row .letter{height:clamp(24px,calc((min(100svh,var(--usable-height)) - 390px)/6),34px)}
+ [data-joeldle-duo] .improved .keys{width:100%}
+}
