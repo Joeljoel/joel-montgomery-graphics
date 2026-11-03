@@ -83,3 +83,17 @@
  size();new MutationObserver(size).observe(document.body,{attributes:true,attributeFilter:['class']});
  window.addEventListener('resize',size);vv?.addEventListener('resize',size);
 })();
+(() => {
+ const root=document.documentElement,body=document.body,vv=window.visualViewport;
+ let raf=0;
+ function check(){
+  raf=0;const height=vv?.height||innerHeight, bottom=Math.max(...Array.from(body.children)
+   .filter(el=>el.matches('header,nav,.game,.keys,.round-info,.fetch-info,#message,#streak,#prizes')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')
+   .map(el=>el.getBoundingClientRect().bottom+scrollY));
+  root.toggleAttribute('data-board-fits',body.classList.contains('improved')&&(vv?.scale||1)===1&&bottom+parseFloat(getComputedStyle(body).paddingBottom)<=height+1);
+ }
+ function queue(){if(!raf)raf=requestAnimationFrame(check)}
+ const ro=new ResizeObserver(queue);ro.observe(body);for(const el of body.children)if(el.tagName!=='SCRIPT')ro.observe(el);
+ new MutationObserver(queue).observe(body,{subtree:true,attributes:true,childList:true,characterData:true});
+ vv?.addEventListener('resize',queue);window.addEventListener('resize',queue);queue();
+})();
