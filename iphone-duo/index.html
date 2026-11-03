@@ -15,10 +15,10 @@ document.querySelector('meta[name=viewport]').content = 'width=device-width,init
 <header><small>DISPLAY LAB &nbsp; / &nbsp; 01</small><h1>Side strip<span>.</span></h1><p>Where does Safari stop drawing on the iPhone Duo?</p></header>
 <main>
 <section><small>01 &nbsp; / &nbsp; PAINT BOUNDARY</small><h2>Follow the stripes</h2>
-<p>Close the phone and look beside the system controls. Do the diagonal stripes continue, or does only a flat colour reach the edge?</p></section>
+<p>In Full-width header mode, follow the gold line at the bottom of the header into the side strip. Scroll slightly: does the line beside the controls move with the header? Switch probes below to compare. Do the diagonal stripes continue, or does only a flat colour reach the edge?</p></section>
 <div class="sample"><div class="edge left">L</div><div class="edge right">R</div><b>EDGE PROBE</b></div>
 <section>
-<label for="paint">Probe layer</label><select id="paint"><option value="flow">Page content</option><option value="fixed">Fixed overlay · extends 96px past both edges</option><option value="root">Document background</option></select>
+<label for="paint">Probe layer</label><select id="paint"><option value="header" selected>Full-width header</option><option value="flow">Page content</option><option value="fixed">Fixed overlay · extends 96px past both edges</option><option value="root">Document background</option></select>
 <p id="paintNote"></p>
 <div class="fields"><label>Page background<input type="color" id="bg" value="#164b51"></label><label>Browser theme hint<input type="color" id="theme" value="#12292e"></label></div>
 </section>

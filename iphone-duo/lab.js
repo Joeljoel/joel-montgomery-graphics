@@ -1,7 +1,13 @@
 const el=id=>document.getElementById(id);
 const root=document.documentElement;
 const query=new URLSearchParams(location.search);
-const notes={flow:'The L and R labels mark the edges of normal page content.',fixed:'A fixed stripe now crosses the viewport and deliberately overshoots both sides. Scroll and watch its ends.',root:'The document itself now has stripes. Look for stripes behind the controls, not just a matching tint.'};
+const header = document.querySelector('header');
+function sizeHeader() {
+ root.style.setProperty('--header-height', header.getBoundingClientRect().height + 'px');
+}
+sizeHeader();
+new ResizeObserver(sizeHeader).observe(header, {box: 'border-box'});
+const notes={header:'Only the header-height band is painted on the document. Below its gold edge, the side strip should return to the page background.',flow:'The L and R labels mark the edges of normal page content.',fixed:'A fixed stripe now crosses the viewport and deliberately overshoots both sides. Scroll and watch its ends.',root:'The document itself now has stripes. Look for stripes behind the controls, not just a matching tint.'};
 for(const id of ['bg','theme'])if(/^#[0-9a-f]{6}$/i.test(query.get(id)||''))el(id).value=query.get(id);
 if(Object.hasOwn(notes,query.get('paint')))el('paint').value=query.get('paint');
 el('safe').checked=query.get('safe')!=='0';
