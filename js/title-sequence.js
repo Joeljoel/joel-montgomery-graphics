@@ -186,6 +186,85 @@
  function sync(){cancelAnimationFrame(raf);paintGrid(performance.now(),0,0,0);hero.style.filter='';point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
  new IntersectionObserver(([e])=>{visible=e.isIntersecting;sync()}).observe(hero);reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
 })();
+/* Echo the header's changing glyph field behind the footer links.
+   Give it its own animation lifecycle: the header pauses when scrolled away. */
+(() => {
+ const footer=document.querySelector('footer');
+ if(!footer)return;
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const canvas=document.createElement('canvas');
+ canvas.className='motion-grid footer-motion-grid';
+ canvas.setAttribute('aria-hidden','true');
+ footer.prepend(canvas);
+ const ctx=canvas.getContext('2d');
+ if(!ctx)return;
+ let dots=[],width=0,height=0,point=null,power=0,raf=0,last=0,visible=false;
+ let x=0,y=0,ready=false;
+ function size(){
+  width=footer.clientWidth;height=footer.clientHeight;
+  const dpr=Math.min(devicePixelRatio||1,1.5);
+  canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  dots=[];const step=Math.max(40,Math.sqrt(width*height/900)),now=performance.now();
+  for(let yy=22;yy<height;yy+=step)for(let xx=22;xx<width;xx+=step)
+   dots.push({x:xx,y:yy,from:0,to:0,start:0,next:now+1000+Math.random()*12000});
+ }
+ function glyph(type,xx,yy,alpha){
+  ctx.globalAlpha=alpha*.21;ctx.beginPath();
+  if(type===0){ctx.arc(xx,yy,1.65,0,Math.PI*2);ctx.fill()}
+  else if(type===1)ctx.fillRect(xx-2.6,yy-2.6,5.2,5.2);
+  else if(type===2)ctx.strokeRect(xx-3,yy-3,6,6);
+  else{ctx.moveTo(xx-3,yy-3);ctx.lineTo(xx+3,yy+3);ctx.moveTo(xx+3,yy-3);ctx.lineTo(xx-3,yy+3);ctx.stroke()}
+ }
+ function draw(now){
+  raf=0;if(!visible||document.hidden)return;
+  const dt=Math.min(50,now-last);last=now;
+  const rect=footer.getBoundingClientRect();
+  if(point&&!reduced.matches){
+   const ease=-Math.expm1(-dt/160);
+   x+=(point[0]-rect.left-x)*ease;y+=(point[1]-rect.top-y)*ease;
+  }else ready=false;
+  power+=((point&&!reduced.matches?1:0)-power)*(-Math.expm1(-dt/(point?230:420)));
+  ctx.clearRect(0,0,width,height);
+  const ink=getComputedStyle(footer).color;ctx.fillStyle=ink;ctx.strokeStyle=ink;ctx.lineWidth=1.1;
+  for(const d of dots){
+   if(!reduced.matches&&now>d.next){
+    d.from=d.to;d.to=d.to===0?1+Math.floor(Math.random()*3):0;
+    d.start=now;d.next=now+(d.to?700+Math.random()*1900:3500+Math.random()*10000);
+   }
+   const t=reduced.matches?1:Math.min(1,(now-d.start)/180),mix=1-(1-t)**3;
+   const dx=x-d.x,dy=y-d.y,r=Math.hypot(dx,dy)/420;
+   const fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2;
+   const xx=d.x+power*fall*(dx-dy*fall)*.28,yy=d.y+power*fall*(dy+dx*fall)*.28;
+   if(mix<1)glyph(d.from,xx,yy,1-mix);
+   glyph(reduced.matches?0:d.to,xx,yy,mix);
+  }
+  ctx.globalAlpha=1;
+  if(!reduced.matches)raf=requestAnimationFrame(draw);
+ }
+ function sync(){
+  cancelAnimationFrame(raf);raf=0;
+  if(visible&&!document.hidden){last=performance.now();draw(last)}
+ }
+ function aim(clientX,clientY){
+  if(reduced.matches)return;
+  point=[clientX,clientY];
+  if(!ready){const r=footer.getBoundingClientRect();x=clientX-r.left;y=clientY-r.top;ready=true}
+  if(!raf)sync();
+ }
+ footer.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.pointerType==='pen')aim(e.clientX,e.clientY)},{passive:true});
+ footer.addEventListener('pointerleave',()=>{point=null},{passive:true});
+ footer.addEventListener('touchstart',e=>{if(e.touches.length===1)aim(e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+ footer.addEventListener('touchmove',e=>{if(e.touches.length===1)aim(e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+ const release=()=>{point=null};
+ footer.addEventListener('touchend',release,{passive:true});
+ footer.addEventListener('touchcancel',release,{passive:true});
+ new ResizeObserver(()=>{size();sync()}).observe(footer);
+ new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;sync()}).observe(footer);
+ reduced.addEventListener('change',()=>{point=null;power=0;sync()});
+ document.addEventListener('visibilitychange',sync);
+ size();sync();
+})();
 (() => {
  const brand=document.querySelector('.sticky-bar > a:first-child'),mark=brand.querySelector('b');
  const letters=['J','M'].map(letter=>{const span=document.createElement('span');span.textContent=letter;span.style.transformOrigin='left center';return span});
