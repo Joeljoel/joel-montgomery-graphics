@@ -163,10 +163,31 @@
  const heat=w.centres.map(f=>near*Math.exp(-.5*((px-r.left-f*r.width)/radius)**2));
  const mean=heat.reduce((a,b)=>a+b,0)/heat.length;
  w.influence??=heat.map(()=>0);w.mix??=0;const ease=-Math.expm1(-dt/145);w.mix+=(near-w.mix)*ease;
- w.glyphs.forEach((g,j)=>{w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;const bias=w.influence[j];const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?Math.max(100,Math.min(1000,550+400*n*(1-.86*w.mix)+(bias<0?2800:1050)*bias)):650)+', "wdth" '+(variable?Math.max(50,Math.min(145,100+(width-100)*(1-.86*w.mix)+(bias<0?340:160)*bias)):100);g.style.letterSpacing=(-.035+.019*n)+'em'});
- // Stretch the ink as well as its advance; the run normalises back to its resting width.
- const advances=w.glyphs.map(g=>g.offsetWidth);
- w.glyphs.forEach((g,j)=>{const k=Math.max(.34,Math.min(2.8,Math.exp((w.influence[j]<0?3.4:1.72)*w.influence[j])));g.style.transform='scaleX('+k+')';g.style.marginRight=(advances[j]*(k-1))+'px'});
+ // Use the full Roboto Flex width (50–145) and weight (100–1000)
+  // ranges instead of keeping idle glyphs inside them. Pointer interaction
+  // redistributes weight/width locally without flattening most of the
+  // independent letter animation.
+  const activity=1-.36*w.mix;
+  w.glyphs.forEach((g,j)=>{
+   w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;
+   const bias=w.influence[j];
+   const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));
+   const wave=Math.sin(.81*phase+j*1.17+row+.5);
+   const weight=variable?Math.max(100,Math.min(1000,550+450*n*activity+(bias<0?2700:1200)*bias)):650;
+   const width=variable?Math.max(50,Math.min(145,97.5+47.5*wave*activity+(bias<0?340:185)*bias)):100;
+   g.style.fontVariationSettings='"wght" '+weight+', "wdth" '+width;
+   g.style.letterSpacing=(-.035+.019*n)+'em';
+  });
+  // Keep ink distortion proportional to the individual glyph advance.
+  // The ResizeObserver normalises the whole word to its original width,
+  // even when the individual letters reach the font axis extremes.
+  const advances=w.glyphs.map(g=>g.offsetWidth);
+  w.glyphs.forEach((g,j)=>{
+   const bias=w.influence[j];
+   const k=Math.max(.28,Math.min(3.15,Math.exp((bias<0?3.75:1.92)*bias)));
+   g.style.transform='scaleX('+k+')';
+   g.style.marginRight=(advances[j]*(k-1))+'px';
+  });
 
  }
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
