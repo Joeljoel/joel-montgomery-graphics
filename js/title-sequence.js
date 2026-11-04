@@ -310,51 +310,33 @@
 })();
 
 
-/* Fragmented title motion: row-specific displacements and trailing scanline
-   wisps. Built once; CSS drives the short effect whenever a tile is selected. */
+/* Trailing ink deformation for the featured headings.
+   Each narrow horizontal band remains a copy of the same glyphs, rather than
+   a separate glitch graphic. The strips stretch back towards their previous
+   position and settle after the heading has finished moving. */
 (() => {
- const bands=[
-  [0,7,-.56,1.38,0], [8,8,-.92,1.70,42], [17,5,-.26,1.25,15],
-  [23,10,-.71,1.57,35], [34,6,-1.02,1.78,0],
-  [41,7,-.38,1.31,51], [49,11,-.85,1.63,18],
-  [61,6,-.29,1.26,44], [68,8,-.95,1.68,7],
-  [78,5,-.47,1.43,32], [84,9,-.72,1.52,11], [94,6,-.22,1.22,40]
- ];
- const trails=[
-  [7,-12,78,2,15],[19,-7,61,4,43],[32,-18,89,2,3],
-  [46,-10,69,3,27],[60,-16,80,2,51],[75,-13,56,4,12],[91,-8,72,2,36]
- ];
+ const pull=[.20,.23,.26,.24,.28,.31,.29,.26,.27,.30,.27,.25,.23,.24,.20,.18];
+ const offsets=[0,17,35,11,29,45,22,39,8,31,48,20,42,13,34,4];
  for(const heading of document.querySelectorAll('.work h3')){
   const layer=heading.querySelector('.title-smear');
   const label=heading.querySelector('.title-label');
   if(!layer||!label)continue;
   const fragments=document.createDocumentFragment();
-  bands.forEach(([top,height,dx,stretch,delay],i)=>{
-   const span=document.createElement('span');
-   span.className='smear-slice smear-tone-'+i%3;
-   span.textContent=label.textContent;
-   const vars={
-    '--slice-top':top+'%',
-    '--slice-bottom':100-top-height+'%',
-    '--slice-drift':dx+'em',
-    '--slice-half':dx*.47+'em',
-    '--slice-stretch':stretch,
-    '--slice-contract':1+(stretch-1)*.36,
-    '--smear-lag':delay+'ms'
-   };
-   for(const [name,value] of Object.entries(vars))span.style.setProperty(name,value);
-   fragments.append(span);
-  });
-  trails.forEach(([y,left,width,thickness,delay],i)=>{
-   const span=document.createElement('span');
-   span.className='smear-trail smear-tone-'+i%3;
-   const vars={
-    '--trail-y':y+'%', '--trail-left':left+'%',
-    '--trail-width':width+'%', '--trail-thickness':thickness+'px',
-    '--smear-lag':delay+'ms'
-   };
-   for(const [name,value] of Object.entries(vars))span.style.setProperty(name,value);
-   fragments.append(span);
+  const rows=pull.length;
+  pull.forEach((amount,i)=>{
+   const segment=document.createElement('span');
+   segment.className='smear-band';
+   segment.textContent=label.textContent;
+   const top=i*100/rows;
+   const bottom=100-(i+1)*100/rows;
+   segment.style.setProperty('--band-top',top+'%');
+   segment.style.setProperty('--band-bottom',bottom+'%');
+   segment.style.setProperty('--band-pull',(-amount).toFixed(3)+'em');
+   segment.style.setProperty('--band-half',(-amount*.44).toFixed(3)+'em');
+   segment.style.setProperty('--band-stretch',(1+amount*.22).toFixed(3));
+   segment.style.setProperty('--band-mid-stretch',(1+amount*.075).toFixed(3));
+   segment.style.setProperty('--band-delay',offsets[i]+'ms');
+   fragments.append(segment);
   });
   layer.replaceChildren(fragments);
  }
