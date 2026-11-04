@@ -35,7 +35,7 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('individual name letters explore full font axes while word widths stay fixed', () => {
+test('name letters explore full axes while Joel varies up to Montgomery width', () => {
   assert.match(home, /Roboto\+Flex:wdth,wght@50\.\.145,100\.\.1000/);
   assert.match(animations, /const activity=1-\.36\*w\.mix/);
   assert.match(animations, /550\+450\*n\*activity/);
@@ -44,13 +44,42 @@ test('individual name letters explore full font axes while word widths stay fixe
   assert.match(animations, /Math\.max\(50,Math\.min\(145,/);
   assert.match(animations, /Math\.max\(\.28,Math\.min\(3\.15,/);
   assert.match(animations, /w\.run\.style\.transform=normalization/);
-  assert.match(animations, /w\.ratio\*parseFloat\(getComputedStyle\(w\.line\)\.fontSize\)\/e\.contentRect\.width/);
+  assert.match(animations, /function scaleForWord\(w,currentWidth\)/);
+  assert.match(animations, /w===runs\[0\]\?Math\.min\(1,maxWidth\/currentWidth\)/);
+  assert.match(animations, /w\.ratio\*parseFloat\(getComputedStyle\(w\.line\)\.fontSize\)\/currentWidth/);
+  assert.match(animations, /scaleForWord\(w,e\.contentRect\.width\)/);
   assert.match(animations, /observer\.observe\(w\.run\)/);
   // At rest each glyph can reach the actual native axis endpoints.
   assert.equal(550-450,100);
   assert.equal(550+450,1000);
   assert.equal(97.5-47.5,50);
   assert.equal(97.5+47.5,145);
+});
+
+
+test('Joel width stays natural until capped to the actual Montgomery limit', () => {
+  // Run the same helper used by ResizeObserver with two mock word runs;
+  // Montgomery's calibrated 8em width is the maximum, not Joel's old 4em.
+  const start=animations.indexOf(' function scaleForWord(w,currentWidth){');
+  const end=animations.indexOf(' // ResizeObserver supplies',start);
+  assert.ok(start>0 && end>start);
+  const runs=[
+    {ratio:4,line:{fontSize:'20px'}},
+    {ratio:8,line:{fontSize:'20px'}}
+  ];
+  const getComputedStyle=line=>({fontSize:line.fontSize});
+  const scaleForWord=new Function('runs','getComputedStyle',
+    animations.slice(start,end)+';return scaleForWord;')(runs,getComputedStyle);
+  assert.equal(scaleForWord(runs[0],65),1);     // narrower Joel stays narrow
+  assert.equal(scaleForWord(runs[0],120),1);    // now wider than initial 80px
+  assert.equal(scaleForWord(runs[0],160),1);    // exactly matches Montgomery
+  assert.equal(scaleForWord(runs[0],200),.8);  // cannot exceed Montgomery
+  assert.equal(scaleForWord(runs[1],200),.8);  // Montgomery still fixed at 160px
+  assert.equal(scaleForWord(runs[1],100),1.6);
+  runs[1].line.fontSize='15px';                // responsive cap recomputes
+  assert.equal(scaleForWord(runs[0],160),.75);
+  assert.equal(scaleForWord(runs[1],160),.75);
+  assert.match(animations, /w\.line\.style\.setProperty\('--intro-run-transform',normalization\)/);
 });
 
 test('featured title Echo effect samples past positions with no lead scaling', () => {
