@@ -105,7 +105,7 @@ function buildOverlay(){
   wash:body.children.find(n=>n.className==='ui-screen-wash')};
 }
 
-test('button-only fill automatically cycles OFF light, ON dark every 10 seconds',()=>{
+test('button-only fill cycles every 10s until the first click takes manual control',()=>{
  const ui=buildOverlay(),{body,button,label,footer,cards}=ui;
  assert.equal(body.classList.contains('ui-overlay'),false);
  assert.equal(button.getAttribute('aria-pressed'),'false');
@@ -149,17 +149,30 @@ test('button-only fill automatically cycles OFF light, ON dark every 10 seconds'
  ui.tick(31000);
  assert.equal(body.classList.contains('ui-overlay'),true);
  assert.equal(button.dataset.phase,'dark');
- // User clicks remain available and reset whichever countdown is running.
+ // First click ends automatic cycling for the rest of this page visit.
  ui.setTime(33000);
  ui.press();
  assert.equal(body.classList.contains('ui-overlay'),false);
- assert.equal(button.dataset.phase,'light');
+ assert.equal(button.dataset.phase,'manual');
  assert.equal(button.style['--ui-phase-progress'],'0');
- ui.tick(38000);
- assert.equal(button.style['--ui-phase-progress'],'0.5');
- ui.tick(43000);
+ assert.equal(ui.getRaf(),null);
+ ui.setTime(73000);
+ assert.equal(body.classList.contains('ui-overlay'),false);
+ assert.equal(button.getAttribute('aria-pressed'),'false');
+ // The next click turns UI on and leaves it on indefinitely, while live
+ // artwork guides continue updating independently of the automatic timer.
+ ui.press();
  assert.equal(body.classList.contains('ui-overlay'),true);
- assert.equal(button.dataset.phase,'dark');
+ assert.equal(button.dataset.phase,'manual');
+ assert.equal(button.style['--ui-phase-progress'],'0');
+ ui.tick(73050);
+ ui.tick(143000);
+ assert.equal(body.classList.contains('ui-overlay'),true);
+ assert.equal(button.getAttribute('aria-pressed'),'true');
+ assert.equal(button.style['--ui-phase-progress'],'0');
+ ui.setTime(144000);ui.press();
+ assert.equal(body.classList.contains('ui-overlay'),false);
+ assert.equal(ui.getRaf(),null);
 });
 
 test('each ribbon disc gets its own animated bounding box only while hovered',()=>{
@@ -197,26 +210,48 @@ test('each ribbon disc gets its own animated bounding box only while hovered',()
  assert.equal(frame.hidden,true);
 });
 
-test('hidden tab pauses the countdown; manual clicks restart the cycle',()=>{
+test('hidden tab pauses automatic countdown; first click takes permanent manual control',()=>{
  const ui=buildOverlay();
  ui.tick(6000);
  ui.document.hidden=true;
  ui.setTime(6000);ui.document.onvisibilitychange();
  ui.setTime(26000);ui.document.hidden=false;ui.document.onvisibilitychange();
- // Time spent hidden does not advance the initial 10-second OFF countdown.
+ // Time spent hidden does not consume the first OFF countdown.
  assert.equal(ui.body.classList.contains('ui-overlay'),false);
  assert.equal(ui.button.dataset.phase,'light');
  assert.equal(ui.button.style['--ui-phase-progress'],'0.5');
  ui.tick(31000);
  assert.equal(ui.body.classList.contains('ui-overlay'),true);
  assert.equal(ui.button.dataset.phase,'dark');
+ // Click during ON turns UI off and stops all automatic updates.
  ui.setTime(33000);ui.press();
  assert.equal(ui.body.classList.contains('ui-overlay'),false);
- assert.equal(ui.button.dataset.phase,'light');
- ui.tick(43000);
- assert.equal(ui.body.classList.contains('ui-overlay'),true);
- // A throttled frame catches up in complete ten-second intervals.
- ui.tick(73000);
+ assert.equal(ui.button.dataset.phase,'manual');
+ assert.equal(ui.button.style['--ui-phase-progress'],'0');
+ assert.equal(ui.getRaf(),null);
+ ui.document.hidden=true;
+ ui.setTime(43000);ui.document.onvisibilitychange();
+ ui.setTime(143000);ui.document.hidden=false;ui.document.onvisibilitychange();
  assert.equal(ui.body.classList.contains('ui-overlay'),false);
- assert.equal(ui.button.dataset.phase,'light');
+ assert.equal(ui.getRaf(),null);
+ // Even a long hidden interval cannot re-enable the automatic cycle.
+ ui.press();
+ assert.equal(ui.body.classList.contains('ui-overlay'),true);
+ assert.equal(ui.button.dataset.phase,'manual');
+ ui.tick(244000);
+ assert.equal(ui.body.classList.contains('ui-overlay'),true);
+});
+test('first manual click during the initial OFF period enables UI without a deadline',()=>{
+ const ui=buildOverlay();
+ ui.tick(2500);
+ ui.setTime(3000);
+ ui.press();
+ assert.equal(ui.body.classList.contains('ui-overlay'),true);
+ assert.equal(ui.button.dataset.phase,'manual');
+ assert.equal(ui.button.style['--ui-phase-progress'],'0');
+ ui.tick(50000);
+ assert.equal(ui.body.classList.contains('ui-overlay'),true);
+ ui.press();
+ assert.equal(ui.body.classList.contains('ui-overlay'),false);
+ assert.equal(ui.getRaf(),null);
 });
