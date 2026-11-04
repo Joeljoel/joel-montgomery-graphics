@@ -1,103 +1,116 @@
-﻿<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <script src="js/home-edge.js" defer></script>
-        <meta name="description" content="Joel Montgomery Graphics">
-        <title>Joel Montgomery</title>
-        <link rel="author" href="humans.txt">
-		<link rel="stylesheet" href="css/style.css">
-        <link rel="stylesheet" href="css/flexslider.css" type="text/css" media="screen" />
-        <link rel="icon" type="image/png" href="favicon.ico">
-    </head>
-    <body class="home">
-        <div class="home-scene">
-        <div class="home-edge" aria-hidden="true"></div>
-        <div id="header">
-            <div id="hContent">
-                <div id="hLeft">
-                <h1 style="text-decoration: underline;"><a href="index.html">Home</a></h1>
-                </div>
-                <div id="hLogo">
-                    <ul class="nav">
-                        <a href="#start"><img src="images/hLogo.png" alt="Home"></a>
-                    </ul>
-                </div>
-                <div id="hRight">
-                <!-- <h1><a href="pages/portfolio.html">Portfolio</a></h1> -->
-                </div>
-            </div>
-        </div>
-        <div id="start">
-            <div class="intro-edge" aria-hidden="true"></div>
-            <div id="logo">
-                <img src="images/logo.png" alt="logo">
-            </div>
-            <div id="arrow">
-                <ul class="nav">
-                    <a href="#main"><img src="images/arrow.png" alt="scroll down"></a>
-                </ul>
-            </div>
-        </div>
-        <div id="main">
-            <div id="body">
-                <h1>Joel Montgomery</h1>
-                <br><br>
-                <!-- <div class="flexslider">
-                  <ul class="slides">
-                    <li>
-                      <img src="images/cover.png" />
-                    </li>
-                    <li>
-                      <img src="images/cover2.png" />
-                    </li>
-                    <li>
-                      <img src="images/cover3.png" />
-                    </li>
-                    <li>
-                      <img src="images/cover4.png" />
-                    </li>
-                  </ul>
-                </div>
-		-->
-                <br><br><br>
-                <div class="text">
-                    <p style="-webkit-columns: 100px 2; -moz-columns: 100px 2;columns: 100px 2;">
-			Resources: <a href="tools/" style="text-decoration:underline; color: blue;">Design utilities</a>
-			<br><a href="https://joelmontgomery.graphics/calculator/index.html" style="text-decoration:underline; color: blue;">joelculator</a>
-			<br><a href="https://joelmontgomery.graphics/joeldle/index.html" style="text-decoration:underline; color: blue;">play joeldle</a>
-			<br><a href="iphone-duo/" style="text-decoration:underline; color: blue;">iPhone Duo Display Lab</a>
-                    </p>
-                    <br><br><br>
-                </div>
-                <br><br>
-            </div>
-        </div>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Joel Montgomery — Motion graphics &amp; UI design</title><meta name="description" content="Joel Montgomery is a motion graphics and UI designer. Explore selected work, design utilities, Joeldle and Joelsketball."><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wdth,wght@50..145,100..1000&amp;display=swap&amp;text=Joel%20Montgomery"><link rel="icon" href="favicon.ico"><link rel="stylesheet" href="css/portfolio.css"><script defer src="js/portfolio-viewport.js"></script><script defer src="js/title-sequence.js"></script></head><body>
+<a class="skip-link" href="#work">Skip to selected work</a>
 
-        </div><!-- .home-scene -->
-
-        <!-- Javascript -->
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>     
-        <script src="js/jquery.flexslider-min.js"></script>
-        <script type="text/javascript" src="js/jquery.easing.1.3.js"></script>
-        <script type="text/javascript">
-            $(function() {
-                $('ul.nav a').bind('click',function(event){
-                    var $anchor = $(this);
-                    
-                    $('html, body').stop().animate({
-                        scrollTop: $($anchor.attr('href')).offset().top
-                    }, 1500,'easeInOutExpo');
-                    event.preventDefault();
-                });
-            });
-            $(window).load(function() {
-              $('.flexslider').flexslider({
-                animation: "slide"
-              });
-            });
-        </script>
-    </body>
-</html>
-
+<header><div class="press" aria-hidden="true"><b>UTILITIES</b><b>JOELDLE</b><b>JOELSKETBALL</b></div><nav><a href="./" aria-label="Joel Montgomery home"><b>JM</b></a><a href="#work">Selected work ↓</a></nav><div class="hero"><div class="ident" aria-hidden="true"><svg viewBox="0 0 324 210" preserveAspectRatio="xMidYMid meet"><defs><clipPath id="m-cap-flat"><rect x="0" y="25" width="360" height="200"/></clipPath></defs><g class="ident-height" transform="translate(0 24.2) scale(1 .78)"><g id="speed-ink" fill="none" stroke-linecap="butt"></g><g id="strokes" fill="none" stroke="#faf6ea" stroke-width="24" stroke-linecap="round"><path d="M114 25V128C114 204 18 204 18 122"/><path clip-path="url(#m-cap-flat)" d="M151 196V25L224 155L297 25V196"/></g><g id="vectors" fill="none" stroke-width="1"><g stroke="#75caff"><path stroke-dasharray="2 2"/><rect/><rect/><rect/><circle r="2.5"/></g><g stroke="#ffbd77"><path stroke-dasharray="2 2"/><rect/><rect/><rect/><circle r="2.5"/></g></g></g></svg><div class="guides"><small>COMP 01 / LETTERFORMS</small><b>⊕</b></div></div><div><h1 aria-label="Joel Montgomery"><span class="type-line">Joel</span><span class="type-line">Montgomery</span></h1><p><span class="type-line">Motion graphics &amp; UI designer</span><span class="type-line">Gold Coast, Australia</span></p></div></div><div class="comp-row"><div class="transport" hidden><button type="button" id="play">Pause</button><input id="playhead" type="range" min="0" max="72" value="0" aria-label="Animation progress"><output>000 / 72</output></div><div class="tracks" aria-hidden="true"><strong>COMPOSITION　/　JM</strong><strong>00:00　　　　　　02:12</strong><span>01 / J</span><i style="--in:0%;--out:54%"></i><span>02 / M</span><i style="--in:16%;--out:83%"></i>
+<span class="type-track">03 / Joel</span><i class="type-track" style="--in:7%;--out:51%"></i>
+<span class="type-track">04 / Montgomery</span><i class="type-track" style="--in:21%;--out:75%"></i>
+<span class="type-track">05 / Role</span><i class="type-track" style="--in:40%;--out:81%"></i>
+<span class="type-track">06 / Location</span><i class="type-track" style="--in:50%;--out:93%"></i>
+</div></div></header>
+<main id="work" tabindex="-1"><div class="rule"><h2>Selected work</h2><span>01—03</span></div><div class="work"><a href="tools/"><div class="art wave" aria-hidden="true"><svg viewBox="0 0 480 240"><defs><linearGradient id="ink"><stop stop-color="#91d5ff"/><stop offset=".45" stop-color="#335aff"/><stop offset="1" stop-color="#101596"/></linearGradient></defs><g style="--delay:0ms"><g class="disc"><ellipse cx="107" cy="124" rx="42" ry="69" transform="rotate(-45 107 124)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:18ms"><g class="disc"><ellipse cx="115.5" cy="118.58987426789398" rx="42" ry="69" transform="rotate(-43 115.5 118.58987426789398)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:36ms"><g class="disc"><ellipse cx="124" cy="113.28997161935602" rx="42" ry="69" transform="rotate(-41 124 113.28997161935602)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:54ms"><g class="disc"><ellipse cx="132.5" cy="108.20826951026402" rx="42" ry="69" transform="rotate(-39 132.5 108.20826951026402)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:72ms"><g class="disc"><ellipse cx="141" cy="103.4482998923644" rx="42" ry="69" transform="rotate(-37 141 103.4482998923644)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:90ms"><g class="disc"><ellipse cx="149.5" cy="99.10703990721629" rx="42" ry="69" transform="rotate(-35 149.5 99.10703990721629)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:108ms"><g class="disc"><ellipse cx="158" cy="95.27293612442418" rx="42" ry="69" transform="rotate(-33 158 95.27293612442418)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:126ms"><g class="disc"><ellipse cx="166.5" cy="92.02410257729993" rx="42" ry="69" transform="rotate(-31 166.5 92.02410257729993)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:144ms"><g class="disc"><ellipse cx="175" cy="89.4267293082373" rx="42" ry="69" transform="rotate(-29 175 89.4267293082373)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:162ms"><g class="disc"><ellipse cx="183.5" cy="87.53373384726598" rx="42" ry="69" transform="rotate(-27 183.5 87.53373384726598)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:180ms"><g class="disc"><ellipse cx="192" cy="86.38368309785929" rx="42" ry="69" transform="rotate(-25 192 86.38368309785929)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:198ms"><g class="disc"><ellipse cx="200.5" cy="86.00000759493201" rx="42" ry="69" transform="rotate(-23 200.5 86.00000759493201)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:216ms"><g class="disc"><ellipse cx="209" cy="86.39052414332679" rx="42" ry="69" transform="rotate(-21 209 86.39052414332679)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:234ms"><g class="disc"><ellipse cx="217.5" cy="87.54727656230406" rx="42" ry="69" transform="rotate(-19 217.5 87.54727656230406)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:252ms"><g class="disc"><ellipse cx="226" cy="89.44669778062409" rx="42" ry="69" transform="rotate(-17 226 89.44669778062409)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:270ms"><g class="disc"><ellipse cx="234.5" cy="92.05008997978048" rx="42" ry="69" transform="rotate(-15 234.5 92.05008997978048)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:288ms"><g class="disc"><ellipse cx="243" cy="95.304413003197" rx="42" ry="69" transform="rotate(-13 243 95.304413003197)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:306ms"><g class="disc"><ellipse cx="251.5" cy="99.14336496874937" rx="42" ry="69" transform="rotate(-11 251.5 99.14336496874937)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:324ms"><g class="disc"><ellipse cx="260" cy="103.48873306877553" rx="42" ry="69" transform="rotate(-9 260 103.48873306877553)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:342ms"><g class="disc"><ellipse cx="268.5" cy="108.25198703707838" rx="42" ry="69" transform="rotate(-7 268.5 108.25198703707838)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:360ms"><g class="disc"><ellipse cx="277" cy="113.33608281845444" rx="42" ry="69" transform="rotate(-5 277 113.33608281845444)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:378ms"><g class="disc"><ellipse cx="285.5" cy="118.63743969372504" rx="42" ry="69" transform="rotate(-3 285.5 118.63743969372504)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:396ms"><g class="disc"><ellipse cx="294" cy="124.04805057935434" rx="42" ry="69" transform="rotate(-1 294 124.04805057935434)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:414ms"><g class="disc"><ellipse cx="302.5" cy="129.45768250750908" rx="42" ry="69" transform="rotate(1 302.5 129.45768250750908)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:432ms"><g class="disc"><ellipse cx="311" cy="134.7561224551257" rx="42" ry="69" transform="rotate(3 311 134.7561224551257)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:450ms"><g class="disc"><ellipse cx="319.5" cy="139.835422766633" rx="42" ry="69" transform="rotate(5 319.5 139.835422766633)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:468ms"><g class="disc"><ellipse cx="328" cy="144.5921004232574" rx="42" ry="69" transform="rotate(7 328 144.5921004232574)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:486ms"><g class="disc"><ellipse cx="336.5" cy="148.92924535214405" rx="42" ry="69" transform="rotate(9 336.5 148.92924535214405)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:504ms"><g class="disc"><ellipse cx="345" cy="152.75849482170128" rx="42" ry="69" transform="rotate(11 345 152.75849482170128)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:522ms"><g class="disc"><ellipse cx="353.5" cy="156.00183369786643" rx="42" ry="69" transform="rotate(13 353.5 156.00183369786643)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:540ms"><g class="disc"><ellipse cx="362" cy="158.59318388380973" rx="42" ry="69" transform="rotate(15 362 158.59318388380973)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g><g style="--delay:558ms"><g class="disc"><ellipse cx="370.5" cy="160.47975056065962" rx="42" ry="69" transform="rotate(17 370.5 160.47975056065962)" fill="url(#ink)" stroke="#728eff" stroke-width=".8"/></g></g></svg></div><h3><span class="title-label">Design Utilities <svg class="tile-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19L19 5M9 5H19V15"/></svg></span></h3><p>SVG converters, bulk QR codes and barcode data merge.</p></a><a href="joeldle/"><div class="art wordboard" aria-hidden="true"><b style="--i:0">J</b><b style="--i:1">O</b><b style="--i:2">E</b><b style="--i:3">L</b><b style="--i:4">?</b></div><h3><span class="title-label">Joeldle <svg class="tile-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19L19 5M9 5H19V15"/></svg></span></h3><p>A five-letter word game.</p></a><a href="basketball/"><div class="art hoopboard" aria-hidden="true">
+<svg viewBox="0 0 480 240" preserveAspectRatio="xMidYMid meet">
+<defs>
+  <linearGradient id="jb-night" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3035ac"/><stop offset=".6" stop-color="#161b65"/><stop offset="1" stop-color="#09172f"/></linearGradient>
+  <linearGradient id="jb-panel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff4ba7"/><stop offset="1" stop-color="#ef1977"/></linearGradient>
+  <linearGradient id="jb-steel" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#465b67"/><stop offset=".48" stop-color="#d3e0e0"/><stop offset="1" stop-color="#667882"/></linearGradient>
+  <radialGradient id="jb-ball-shadow" cx=".32" cy=".24" r=".86"><stop stop-color="#ffffff" stop-opacity=".42"/><stop offset=".6" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#11152b" stop-opacity=".55"/></radialGradient>
+  <clipPath id="jb-ball-mask"><circle cx="82" cy="201" r="39"/></clipPath>
+</defs>
+<rect width="480" height="240" fill="url(#jb-night)"/>
+<!-- Full-bleed parallel strokes run beyond every edge of the tile.
+     Their endpoints stay off-canvas, and the cabinet occludes them naturally. -->
+<g class="jb-speed-back" fill="none" stroke-linecap="butt">
+  <path d="M-120 155L540 -110M-120 219L540 -46M-120 283L540 18M-120 347L540 82"
+        stroke="#fff4e2" stroke-width="3.1" opacity=".58"/>
+  <path d="M-120 185L540 -80M-120 314L540 49"
+        stroke="#ed77c5" stroke-width="9" opacity=".25"/>
+  <path d="M-120 246L540 -19M-120 372L540 107"
+        stroke="#a9bcff" stroke-width="1.6" opacity=".64"/>
+</g>
+<g class="jb-speed-wash" opacity=".12" fill="#fff4e3">
+  <path d="M-100 271L540 14L540 26L-100 283Z"/>
+  <path d="M-100 202L540 -55L540 -50L-100 207Z"/>
+</g>
+<!-- The arcade cabinet is set farther into the right side of the frame. -->
+<g class="jb-machine" transform="translate(95 -4) scale(.92)">
+  <!-- View from the cabinet's left-front: the top's rear edge runs up/right,
+       so the return chute must project toward the viewer down/LEFT. Both
+       near corners are deliberately cropped below the tile, as on a close shot. -->
+  <path d="M100 155L366 191L251 314L-15 278Z"
+        fill="#0b1020" stroke="#263548" stroke-width="2.5"/>
+  <!-- Side wall of the chute: a single edge instead of crossing support bars. -->
+  <path d="M100 155L-15 278L-23 270L92 157Z"
+        fill="#152235" stroke="#4a6373" stroke-width="1.5"/>
+  <path d="M366 191L251 314L263 312L374 189Z"
+        fill="#0d1627" stroke="#33485e" stroke-width="1.5"/>
+  <!-- Court guides recede back toward the cabinet at the same vanishing angle. -->
+  <g fill="none" stroke="#a8b9c5" stroke-width="1.7" opacity=".46">
+    <path d="M167 170L52 293M298 187L183 310"/>
+    <path d="M81 255Q129 239 209 268" opacity=".65"/>
+  </g>
+  <g fill="none" stroke="url(#jb-steel)" stroke-width="3.8"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 155L-15 278M366 191L251 314"/>
+  </g>
+  <!-- A visible top and right-hand edge give the backboard its 3/4 cabinet perspective. -->
+  <path d="M118 28L153 14L382 46L367 60Z" fill="#324454" stroke="#0a101d" stroke-width="3"/>
+  <path d="M365 52L388 37L379 171L351 181Z" fill="#0b111e" stroke="#293b50" stroke-width="3"/>
+  <g class="jb-face" transform="matrix(.87 .12 -.09 .94 48 0)">
+    <!-- Rounded black branded crown, aggressively hot-pink paired targets. -->
+    <path d="M75 155V52Q75 23 105 23H352Q382 23 382 52V155Z" fill="#101219" stroke="#030710" stroke-width="3"/>
+    <path d="M87 83L105 69H351L370 83V149H87Z" fill="url(#jb-panel)"/>
+    <path d="M218 69H247L261 149H207Z" fill="#131421"/>
+    <g stroke="#ff88bb" opacity=".75" stroke-width="1.5">
+      <path d="M217 77H248M216 85H250M215 93H252M214 101H254M213 109H256M212 117H257M211 125H259M210 133H260M209 141H261"/>
+    </g>
+    <path d="M216 69Q248 108 213 150M249 69Q218 111 255 150" stroke="#ffece6" stroke-width="3.5" fill="none"/>
+    <text x="229" y="54" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-style="italic" font-size="24" text-anchor="middle" letter-spacing="-1.1" fill="#faf6ea">HOOPS OF FUN</text>
+    <g fill="none" stroke="#fff6ef" stroke-width="6">
+      <path d="M118 94H194V142H118Z"/>
+      <path d="M263 94H339V142H263Z"/>
+    </g>
+    <circle cx="229" cy="116" r="25" fill="#f72d87" stroke="#101219" stroke-width="4"/>
+    <g stroke="#15131d" stroke-width="3" fill="none"><path d="M204 116H254M229 91V141M212 97Q234 117 212 135M246 97Q224 117 246 135"/></g>
+    <path d="M214 111H245L240 122H218Z" fill="#11131b"/>
+    <path d="M221 116H238" stroke="#fff3ec" stroke-width="2.2"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="M120 145Q157 152 192 145M266 145Q303 152 337 145" stroke="#fba15b" stroke-width="7"/>
+      <path d="M126 148L133 171L154 186L178 172L187 149M270 148L278 171L299 186L323 172L332 149M133 152L177 173M178 151L134 173M277 152L322 173M322 152L278 173M141 163H171M286 163H316" stroke="#f5f5ed" stroke-width="2.2"/>
+    </g>
+  </g>
+</g>
+<!-- The curved path and afterimages follow the exact same up/right shot direction. -->
+<g class="jb-flight-trail" fill="none" stroke-linecap="round">
+  <path d="M70 214Q151 162 248 124" stroke="#f7f1e5" stroke-width="8" opacity=".55"/>
+  <path d="M43 224Q144 165 238 128" stroke="#ff7fae" stroke-width="3.6" opacity=".9"/>
+  <path d="M51 232Q151 175 244 137" stroke="#fff1dc" stroke-width="2" opacity=".6"/>
+</g>
+<g class="jb-flight-echoes">
+  <ellipse cx="141" cy="172" rx="24" ry="16" transform="rotate(-20 141 172)" fill="#f3ebdb" opacity=".31"/>
+  <ellipse cx="179" cy="152" rx="20" ry="13" transform="rotate(-20 179 152)" fill="#e6455a" opacity=".42"/>
+  <ellipse cx="215" cy="136" rx="15" ry="10" transform="rotate(-20 215 136)" fill="#d9eaf0" opacity=".64"/>
+</g>
+<!-- Small convergence glint sits at the front rim, just behind the arriving ball. -->
+<g class="jb-rim-glint" transform="translate(252 143)" stroke="#fff7e2" fill="none" stroke-width="2.8" stroke-linecap="round">
+  <path d="M-18 0H-29M18 0H29M0-18V-28M-13-13L-21-21M13-13L21-21"/>
+  <circle r="10" stroke="#ff9cbd" stroke-width="2"/>
+</g>
+<!-- Game-accurate panels: alternating dark red, warm off-white and navy, with black rubber seams. -->
+<g class="hoop-ball">
+  <circle cx="82" cy="201" r="39" fill="#ebe6d7"/>
+  <g clip-path="url(#jb-ball-mask)" transform="rotate(-22 82 201)">
+    <path d="M43 159Q68 151 74 165Q59 198 74 240H42Z" fill="#bb242d"/>
+    <path d="M74 159Q91 157 101 163Q89 200 101 240H74Q59 200 74 159Z" fill="#ebe6d7"/>
+    <path d="M101 159Q123 158 125 171V240H101Q89 200 101 159Z" fill="#134069"/>
+    <path d="M125 163H135V240H125Q116 197 125 163Z" fill="#ebe6d7"/>
+    <g stroke="#1b1a1c" stroke-width="2.7" fill="none">
+      <path d="M74 158Q59 198 74 242M101 158Q89 199 101 242M125 158Q116 198 125 242"/>
+      <path d="M41 205Q82 195 129 205"/>
+    </g>
+  </g>
+  <circle cx="82" cy="201" r="39" fill="url(#jb-ball-shadow)"/>
+  <circle cx="82" cy="201" r="39" fill="none" stroke="#1b1a1c" stroke-width="2.7"/>
+</g>
+</svg></div><h3><span class="title-label">Joelsketball <svg class="tile-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19L19 5M9 5H19V15"/></svg></span></h3><p>A two-player arcade basketball game.</p></a></div></main>
+<footer><div><h2 class="footer-label">TOOLS</h2><a class="tools" href="tools/">Design Utilities ↗</a></div><div><h2 class="footer-label">EXPERIMENTS</h2><a href="calculator/">Joelculator ↗</a><a href="joeldle/">Joeldle ↗</a><a href="basketball/">Joelsketball ↗</a><a href="iphone-duo/">Joelport Lab ↗</a></div></footer></body></html>

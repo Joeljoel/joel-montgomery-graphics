@@ -182,3 +182,13 @@ Run `node tests/converter-sizing.test.cjs` with the same local server and
 Playwright setup. Checks cover large wide/tall sources, unchanged smaller
 sources, rendering parity, mask image bounds, PNG bottom-edge coverage,
 repeat tile sizes and all three stretchable slicing modes.
+
+## Homepage smoke checks
+
+Run `node --test tests/homepage.test.mjs` from the repository root (no install
+or HTTP server needed). These lightweight checks guard the selected-work links,
+keyboard skip navigation, the animated hero heading's accessible name, reduced
+motion/touch support, and the archived pre-redesign page at `/legacy/`.
+
+The checks are structural; before merging a homepage redesign, also inspect the
+desktop/mobile layout and animations in a real browser.
