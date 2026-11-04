@@ -1,18 +1,19 @@
 (() => {
  const body=document.body, cells=[...document.querySelectorAll('.letter')], keyboard=document.querySelector('.keys'), message=document.querySelector('#message'), modes=[...document.querySelectorAll('[data-mode]')],prizes=document.querySelector('#prizes');
+ document.querySelector('.game').addEventListener('pointerdown',e=>{if(body.classList.contains('improved')&&e.target.matches('input'))e.preventDefault()});
  const keys=new Map(),states=['untested','absent','present','correct'];let busy=false;
  const improved=()=>body.classList.contains('improved'),active=()=>cells.filter(c=>!c.disabled);
  const sheet=document.querySelector('#resultSheet'),view=document.querySelector('#viewResult');
  function openResult(){if(!improved()||active().length||sheet.open)return;
  document.querySelector('#resultTitle').textContent=message.textContent||'Round complete';
- document.querySelector('#resultNote').textContent=document.querySelector('#roundKind').textContent+(document.querySelector('#streak').textContent?' · '+document.querySelector('#streak').textContent:'');document.querySelector('#copied').textContent='';sheet.showModal()}
+ document.querySelector('#resultNote').textContent=document.querySelector('#roundKind').textContent+(document.querySelector('#streak').textContent?' · '+document.querySelector('#streak').textContent:'');document.querySelector('#copied').textContent='';document.querySelector('#nextPuzzle').textContent='The next daily puzzle arrives at midnight. The provider does not specify its timezone.';sheet.showModal()}
  view.onclick=openResult;document.querySelector('#again').onclick=()=>{sheet.close();prizes.querySelector('[onclick]').click()};
  function refresh(){document.querySelector('#roundKind').textContent=puzzleURL.includes('random=1')?'Random puzzle':'Daily puzzle';
  const done=!active().length;body.classList.toggle('round-ended',done);view.hidden=!done;document.querySelector('#roundCount').textContent=done?message.textContent:'Guess '+guessNumber+' / 6';
  const ranks=new Map();for(const cell of cells){const l=cell.value.toUpperCase();if(!cell.disabled||!l)continue;const rank=cell.classList.contains('correct')?3:cell.classList.contains('present')?2:1;ranks.set(l,Math.max(rank,ranks.get(l)||0));cell.dataset.state=states[rank]}
  for(const [k,b] of keys){b.dataset.state=states[ranks.get(k)||0];b.setAttribute('aria-label',k+', '+b.dataset.state)}}
- for(const row of ['QWERTYUIOP','ASDFGHJKL','✓ZXCVBNM⌫']){const wrap=document.createElement('div');wrap.className='keyrow';for(const k of row){const b=document.createElement('button');b.type='button';b.textContent=k==='✓'?'Enter':k;if(k==='✓'||k==='⌫'){b.className='wide';b.setAttribute('aria-label',k==='✓'?'Submit guess':'Delete letter')}else keys.set(k,b);b.onclick=()=>{document.querySelector(".game").focus({preventScroll:true});input(k)};wrap.append(b)}keyboard.append(wrap)}
- function mode(value){if(value==="legacy")document.querySelector(".confetti")?.remove();body.classList.toggle('improved',value==='improved');modes.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===value)));cells.forEach((c,i)=>{c.readOnly=improved();c.setAttribute('aria-label','Guess '+(1+Math.floor(i/5))+', letter '+(i%5+1))});refresh()}
+ for(const row of ['QWERTYUIOP','ASDFGHJKL','✓ZXCVBNM⌫']){const wrap=document.createElement('div');wrap.className='keyrow';for(const k of row){const b=document.createElement('button');b.type='button';b.textContent=k==='✓'?'Enter':k;if(k==='✓'||k==='⌫'){b.className='wide';b.setAttribute('aria-label',k==='✓'?'Submit guess':'Delete letter')}else keys.set(k,b);b.onclick=()=>input(k);b.addEventListener("pointerdown",e=>{if(e.pointerType==="mouse")e.preventDefault()});wrap.append(b)}keyboard.append(wrap)}
+ function mode(value){if(value==="legacy")document.querySelector(".confetti")?.remove();body.classList.toggle('improved',value==='improved');modes.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===value)));cells.forEach((c,i)=>{c.readOnly=improved();c.tabIndex=improved()?-1:0;c.setAttribute('aria-label','Guess '+(1+Math.floor(i/5))+', letter '+(i%5+1))});refresh()}
  modes.forEach(b=>b.onclick=()=>{if(!busy){mode(b.dataset.mode);try{localStorage.setItem('joeldle-mode',b.dataset.mode)}catch{}}});
  let initial='improved';try{if(localStorage.getItem('joeldle-mode')==='legacy')initial='legacy'}catch{}mode(initial);
  function score(word,answer){const result=Array(5).fill('absent'),stock={};for(let i=0;i<5;i++){if(word[i]===answer[i])result[i]='correct';else stock[answer[i]]=(stock[answer[i]]||0)+1}for(let i=0;i<5;i++)if(result[i]==='absent'&&stock[word[i]]){stock[word[i]]--;result[i]='present'}return result}
@@ -53,9 +54,9 @@
  if(k!=='✓'){if(empty){empty.value=k;message.textContent=''}return}
  if(empty){message.textContent='Enter five letters.';return}
  if(!correctWord){message.textContent=puzzleState==='loading'?'Puzzle is still loading.':'Use Retry to load the puzzle.';return}
- busy=true;message.textContent='Checking…';const word=row.map(c=>c.value).join('').toLowerCase();try{const response=await fetch('https://words.dev-apis.com/validate-word',{method:'POST',signal:AbortSignal.timeout(10000),body:JSON.stringify({word})});if(!response.ok)throw Error();if(!(await response.json()).validWord){message.textContent='Word not recognised.';return}
+ busy=true;message.textContent='';document.querySelector('#checking').textContent='Checking…';const word=row.map(c=>c.value).join('').toLowerCase();try{const response=await fetch('https://words.dev-apis.com/validate-word',{method:'POST',signal:AbortSignal.timeout(10000),body:JSON.stringify({word})});if(!response.ok)throw Error();if(!(await response.json()).validWord){message.textContent='Word not recognised.';return}
  message.textContent='';finishGuess(word,row);submitted=cells.filter(c=>c.disabled&&c.value).map(c=>c.value.toLowerCase()).join('').match(/.{5}/g)||[];save()
- }catch{message.textContent='Couldn’t check that word. Try again.'}finally{busy=false}}
+ }catch{message.textContent='Couldn’t check that word. Try again.'}finally{busy=false;document.querySelector('#checking').textContent=''}}
  document.addEventListener('keydown',e=>{if(sheet.open||!improved()||e.metaKey||e.ctrlKey||e.altKey||e.isComposing)return;if(e.target.closest('button,a')&&e.key==='Enter')return;let k=e.key==='Enter'?'✓':e.key==='Backspace'?'⌫':/^[a-z]$/i.test(e.key)?e.key.toUpperCase():null;if(k){e.preventDefault();e.stopImmediatePropagation();input(k)}},true);
  document.querySelector('#retry').onclick=()=>{message.textContent='';loadPuzzle(puzzleURL)};
  prizes.addEventListener('click',e=>{if(!e.target.closest('[onclick]'))return;clearCelebration();cells.forEach(c=>{delete c.dataset.state;c.classList.remove('revealed')});refresh()});
@@ -67,33 +68,38 @@
  try{await navigator.clipboard.writeText(result);document.querySelector('#copied').textContent='Result copied.'}catch{window.prompt('Copy your result:',result)}
  };
 })();
+// Keep geometry stable while Safari shows/hides its toolbar or a user pinches.
 (() => {
- const root=document.documentElement, vv=window.visualViewport;
- if(!/\biPhone\b/.test(navigator.userAgent)||!navigator.maxTouchPoints)return;
+ const root=document.documentElement,body=document.body,vv=window.visualViewport;
+ let orientation='',side=0;
  function size(){
-  const gap=screen.width-root.clientWidth, active=document.body.classList.contains('improved')&&gap>=40&&gap<=240;
-  root.toggleAttribute('data-joeldle-duo',active);
-  root.toggleAttribute('data-zoomed',(vv?.scale||1)>1.01);
-  if(active && !root.hasAttribute('data-zoomed')){
-   root.style.setProperty('--side',gap+'px');
-   root.style.setProperty('--glass-height',screen.height+'px');
-   root.style.setProperty('--usable-height',(vv?.height||innerHeight)+'px');
-  }
+  if((vv?.scale||1)>1.01)return;
+  const next=matchMedia('(orientation:portrait)').matches?'portrait':'landscape';
+  if(next!==orientation){orientation=next;side=0}
+  const gap=screen.width-root.clientWidth;
+  if(/\biPhone\b/.test(navigator.userAgent)&&navigator.maxTouchPoints&&gap>=40&&gap<=240)side=gap;
+  root.toggleAttribute('data-joeldle-duo',body.classList.contains('improved')&&side>0);
+  root.style.setProperty('--side',side+'px');
+  root.style.setProperty('--glass-height','100lvh');
  }
- size();new MutationObserver(size).observe(document.body,{attributes:true,attributeFilter:['class']});
- window.addEventListener('resize',size);vv?.addEventListener('resize',size);
+ size();new MutationObserver(size).observe(body,{attributes:true,attributeFilter:['class']});
+ addEventListener('resize',size);addEventListener('pageshow',size);
 })();
 (() => {
  const root=document.documentElement,body=document.body,vv=window.visualViewport;
  let raf=0;
  function check(){
-  raf=0;const height=vv?.height||innerHeight, bottom=Math.max(...Array.from(body.children)
+  raf=0;if((vv?.scale||1)>1.01)return;
+  const height=vv?.height||innerHeight;
+  const bottom=Math.max(0,...Array.from(body.children)
    .filter(el=>el.matches('header,nav,.game,.keys,.round-info,.fetch-info,#message,#streak,#prizes')&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden')
    .map(el=>el.getBoundingClientRect().bottom+scrollY));
-  root.toggleAttribute('data-board-fits',body.classList.contains('improved')&&(vv?.scale||1)===1&&bottom+parseFloat(getComputedStyle(body).paddingBottom)<=height+1);
+  const fits=body.classList.contains('improved')&&bottom+parseFloat(getComputedStyle(body).paddingBottom)<=height+(root.hasAttribute('data-board-fits')?2:0);
+  if(root.hasAttribute('data-board-fits')!==fits)root.toggleAttribute('data-board-fits',fits);
  }
  function queue(){if(!raf)raf=requestAnimationFrame(check)}
- const ro=new ResizeObserver(queue);ro.observe(body);for(const el of body.children)if(el.tagName!=='SCRIPT')ro.observe(el);
- new MutationObserver(queue).observe(body,{subtree:true,attributes:true,childList:true,characterData:true});
- vv?.addEventListener('resize',queue);window.addEventListener('resize',queue);queue();
+ // Geometry changes only: no observer work for every key state or confetti frame.
+ const ro=new ResizeObserver(queue);for(const el of body.children)if(el.matches('header,nav,.game,.keys,.round-info,.fetch-info,#message,#streak,#prizes'))ro.observe(el);
+ new MutationObserver(queue).observe(body,{attributes:true,attributeFilter:['class']});
+ vv?.addEventListener('resize',queue);addEventListener('resize',queue);addEventListener('pageshow',queue);queue();
 })();

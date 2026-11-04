@@ -18,17 +18,17 @@ body.improved{background-image:var(--aurora);background-color:#f2f6f6}
 .duo-backdrop{display:none}
 html[data-joeldle-duo]{overflow-x:hidden}
 html[data-joeldle-duo]:not([data-zoomed]) body{touch-action:pan-y pinch-zoom}
-[data-joeldle-duo] body.improved{position:relative;isolation:isolate;background:transparent;padding:8px 8px max(12px,env(safe-area-inset-bottom));min-height:var(--usable-height)}
+[data-joeldle-duo] body.improved{position:relative;isolation:isolate;background:transparent;padding:8px 8px max(12px,env(safe-area-inset-bottom));min-height:100svh}
 [data-joeldle-duo] .duo-backdrop{display:block;position:absolute;pointer-events:none;z-index:-1;inset:0 auto 0 0;width:calc(100% + var(--side));min-height:var(--glass-height);background:var(--aurora),#f2f6f6}
 [data-joeldle-duo] .modes{margin:0 auto}
 [data-joeldle-duo] .improved header{font-size:32px;margin:6px 0 2px}
 [data-joeldle-duo] .game{gap:4px;padding:8px;margin:5px 0 8px}
-[data-joeldle-duo] .improved .letter{width:clamp(27px,calc((var(--usable-height) - 315px)/6),49px)}
+[data-joeldle-duo] .improved .letter{width:clamp(27px,calc((100svh - 315px)/6),49px)}
 [data-joeldle-duo] .keys{gap:4px}
 @media(min-width:540px) and (orientation:landscape){
  [data-joeldle-duo] body.improved{display:grid;grid-template-columns: minmax(180px,2fr) minmax(300px,3fr);gap:3px 12px;align-content:center;justify-items:center;grid-template-areas:"title modes" "board info" "board load" "board msg" "board streak" "board keys" "board prizes"}
  [data-joeldle-duo] header{grid-area:title}[data-joeldle-duo] .modes{grid-area:modes}[data-joeldle-duo] .game{grid-area:board}[data-joeldle-duo] .keys{grid-area:keys}[data-joeldle-duo] .round-info{grid-area:info}[data-joeldle-duo] .fetch-info{grid-area:load}[data-joeldle-duo] #message{grid-area:msg}[data-joeldle-duo] #streak{grid-area:streak}[data-joeldle-duo] #prizes{grid-area:prizes}
- [data-joeldle-duo] .improved .letter{width:clamp(26px,calc((var(--usable-height) - 100px)/6),39px)}
+ [data-joeldle-duo] .improved .letter{width:clamp(26px,calc((100svh - 100px)/6),39px)}
 }
 
 .improved .game:focus:not(:focus-visible){outline:none}
@@ -99,3 +99,15 @@ html[data-board-fits],html[data-board-fits] body{overflow:hidden;overscroll-beha
  html:not([data-joeldle-duo]) body.improved{position:relative;isolation:isolate;background:transparent}
  html:not([data-joeldle-duo]) .improved .duo-backdrop{display:block;position:absolute;pointer-events:none;z-index:-1;inset:0 auto 0 0;width:calc(100% + 96px);min-height:calc(100lvh + 80px);background:var(--aurora),#f2f6f6}
 }
+/* Native vertical scrolling and pinch zoom; no double-tap zoom or horizontal pan. */
+html:has(body.improved){overflow-x:hidden;overscroll-behavior-x:none;background:#f2f6f6}
+body.improved{width:100%;max-width:100%;min-height:100svh;touch-action:pan-y pinch-zoom;overflow-anchor:none}
+.improved :is(button,.letter,.game){touch-action:manipulation}
+.improved .letter{user-select:none;-webkit-user-select:none}
+.improved .keyrow button:active{background-image:linear-gradient(#0001,#0001)}
+.improved #checking{font-size:10px;letter-spacing:0;text-transform:none;white-space:nowrap}
+body:not(.improved) #checking{display:none}
+.improved .round-info{gap:6px}
+.improved .duo-backdrop{min-height:max(100lvh,100%);width:calc(100% + max(var(--side,0px),96px))}
+#nextPuzzle{font-size:13px;color:#40545a;font-variant-numeric:tabular-nums}
+@media(max-width:370px){.modes button{padding-inline:12px}.tile-name b{width:clamp(14px,4.5vw,20px)}}
