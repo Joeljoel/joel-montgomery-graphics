@@ -1,4 +1,4 @@
-:root{--blue:#1727ab;--paper:#faf6ea;font:16px/1.45 Arial,Helvetica,sans-serif;color:var(--blue);background:var(--paper)}*{box-sizing:border-box}body{margin:0}header,main,footer{padding-inline:max(6vw,calc((100vw - 1260px)/2))}header{color:var(--paper);background:var(--blue);padding-block:24px 48px}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}a:focus-visible{outline:3px solid currentColor;outline-offset:4px}nav,.rule{display:flex;align-items:center;justify-content:space-between}nav b{font-size:26px;letter-spacing:-.09em}.hero{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;gap:5vw;padding-top:42px}.mark{font-size:clamp(100px,29vw,380px);font-weight:900;line-height:.84;letter-spacing:-.12em}h1,h2,h3,p{margin:0}h1{font-size:clamp(30px,6vw,92px);letter-spacing:-.075em;line-height:.94}.hero p{margin-top:22px}main{padding-block:38px 54px}.rule{border-top:1px solid;padding-block:12px 20px}.rule h2,small,.rule span{font:600 .78rem/1.5 monospace;letter-spacing:.08em;text-transform:uppercase}.work,footer{display:grid;grid-template-columns:1fr 1fr;gap:24px}.art{aspect-ratio:2;position:relative;overflow:hidden}.wave{background:#09104d}.wave svg{width:100%;height:100%}.display{background:linear-gradient(135deg,#ffaf84,#ac9ad4 50%,#597aee)}.display i{position:absolute;border:2px solid #fffc;border-radius:18%;width:35%;height:80%;transform:skewY(-13deg);background:linear-gradient(150deg,#fff4,#697cf05c);top:4%;left:18%}.display i+i{top:12%;left:34%}.display i:last-child{top:20%;left:50%}h3,.tools{font-size:clamp(24px,3vw,44px);letter-spacing:-.055em}h3{margin-top:10px}.work p{color:#383c50}footer{border-top:1px solid;padding-block:28px 52px}footer a,small{display:block}.tools{font-weight:700}small{margin-bottom:8px}@media(max-width:620px){.hero{gap:22px;padding-top:36px}.hero p{font-size:.86rem}.work{grid-template-columns:1fr;gap:28px}footer{grid-template-columns:1fr;gap:20px}footer a{padding-block:4px}}
+:root{--blue:#1727ab;--paper:#faf6ea;font:16px/1.45 Arial,Helvetica,sans-serif;color:var(--blue);background:var(--paper)}*{box-sizing:border-box}body{margin:0}header,main,footer{padding-inline:max(6vw,calc((100vw - 1260px)/2))}header{color:var(--paper);background:var(--blue);padding-block:24px 48px}a{color:inherit;text-decoration:none}a:hover{text-decoration:underline}a:focus-visible{outline:3px solid currentColor;outline-offset:4px}nav,.rule{display:flex;align-items:center;justify-content:space-between}nav b{font-size:26px;letter-spacing:-.09em}.hero{display:grid;grid-template-columns:1.15fr 1fr;align-items:center;gap:5vw;padding-top:42px}.mark{font-size:clamp(100px,29vw,380px);font-weight:900;line-height:.84;letter-spacing:-.12em}h1,h2,h3,p{margin:0}h1{font-size:clamp(30px,6vw,92px);letter-spacing:-.075em;line-height:.94}.hero p{margin-top:22px}main{padding-block:38px 54px}.rule{border-top:1px solid;padding-block:12px 20px}.rule h2,small,.rule span{font:600 .78rem/1.5 monospace;letter-spacing:.08em;text-transform:uppercase}.work,footer{display:grid;gap:24px}.work{grid-template-columns:repeat(3,minmax(0,1fr))}footer{grid-template-columns:repeat(2,minmax(0,1fr))}.art{aspect-ratio:2;position:relative;overflow:hidden}.wave{background:#09104d}.wave svg{width:100%;height:100%}.display{background:linear-gradient(135deg,#ffaf84,#ac9ad4 50%,#597aee)}.display i{position:absolute;border:2px solid #fffc;border-radius:18%;width:35%;height:80%;transform:skewY(-13deg);background:linear-gradient(150deg,#fff4,#697cf05c);top:4%;left:18%}.display i+i{top:12%;left:34%}.display i:last-child{top:20%;left:50%}h3,.tools{font-size:clamp(24px,3vw,44px);letter-spacing:-.055em}h3{margin-top:10px}.work p{color:#383c50}footer{border-top:1px solid;padding-block:28px 52px}footer a,small{display:block}.tools{font-weight:700}small{margin-bottom:8px}@media(max-width:620px){.hero{gap:22px;padding-top:36px}.hero p{font-size:.86rem}.work{grid-template-columns:1fr;gap:28px}footer{grid-template-columns:1fr;gap:20px}footer a{padding-block:4px}}
 /* A single motion study on arrival; play it again on keyboard focus or hover. */
 @media (prefers-reduced-motion: no-preference) {
   .hero .mark { animation: register 1.1s cubic-bezier(.16,1,.3,1) both; }
@@ -37,25 +37,26 @@ html[data-side-strip] :is(main,footer) { background: var(--paper); }
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:8;background:url("grain.svg") repeat;opacity:.095;mix-blend-mode:multiply}
 .press{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .press b{position:absolute;bottom:-.28em;left:-.04em;font:900 clamp(8rem,22vw,25rem)/1 Arial,sans-serif;letter-spacing:-.09em;color:transparent;-webkit-text-stroke:1.5px currentColor;opacity:0}
-.press b:first-child{-webkit-text-stroke-color:#fdf2ba}.press b:last-child{-webkit-text-stroke-color:#e6fffc}
+.press b:first-child{-webkit-text-stroke-color:#fdf2ba}.press b:nth-child(2){-webkit-text-stroke-color:#e6fffc}.press b:nth-child(3){-webkit-text-stroke-color:#ffe1b5}
 header :is(nav,.hero,.transport,.tracks){position:relative}
 body[data-look=tools]{--blue:#552153;--paper:#ffdda8}
 body[data-look=lab]{--blue:#104959;--paper:#d1ffec}
+body[data-look=basketball]{--blue:#672b1d;--paper:#ffe6bd}
 body[data-look]{color:var(--blue);background:var(--paper)}
-body[data-look=tools] .press b:first-child,body[data-look=lab] .press b:last-child{opacity:.40}
+body[data-look=tools] .press b:first-child,body[data-look=lab] .press b:nth-child(2),body[data-look=basketball] .press b:nth-child(3){opacity:.40}
 .audition{display:none}
 @media(hover:none){.audition:not([hidden]){display:flex;gap:8px;margin-bottom:14px}.audition button{background:transparent;color:inherit;border:1px solid currentColor;padding:9px;border-radius:3px;font:inherit}.audition [aria-pressed=true]{background:var(--blue);color:var(--paper)}}
 @media(prefers-reduced-motion:no-preference){
  header,body,main,footer{transition:background-color .45s,color .45s}
  .press b{transform:translateX(38%) skewX(-18deg);transition:transform .8s cubic-bezier(.16,1,.3,1),opacity .4s}
- [data-look=tools] .press b:first-child,[data-look=lab] .press b:last-child{transform:translateX(3%) skewX(-6deg)}
+ [data-look=tools] .press b:first-child,[data-look=lab] .press b:nth-child(2),[data-look=basketball] .press b:nth-child(3){transform:translateX(3%) skewX(-6deg)}
  .hero .ident,.hero h1,.art,.work h3{transition:transform .62s cubic-bezier(.2,.85,.25,1)}
  [data-look=tools] .hero .ident{transform:skewX(-9deg) scale(.9)}[data-look=lab] .hero .ident{transform:perspective(750px) rotateY(23deg)}
  [data-look] .hero h1{transform:translateY(-.09em)}
  [data-look=tools] .wave svg{transform:scale(1.19) rotate(-6deg)}
  [data-look=lab] .display i:first-child{transform:translateX(-27%) rotate(-10deg)}
  [data-look=lab] .display i:last-child{transform:translateX(27%) rotate(8deg)}
- [data-look=tools] .work a:first-child h3,[data-look=lab] .work a:last-child h3{transform:translateX(.24em)}
+ [data-look=tools] .work a:first-child h3,[data-look=lab] .work a:nth-child(2) h3,[data-look=basketball] .work a:nth-child(3) h3{transform:translateX(.24em)}
  header::before{content:"";position:absolute;inset:-50%;pointer-events:none;background:repeating-linear-gradient(115deg,transparent 0 8%,#ffffff25 8% 10%);opacity:0}
  [data-look=tools] header::before{animation:press-pass .85s both}
  [data-look=lab] header::before{animation:lens-pass .85s both}
@@ -89,6 +90,7 @@ html body header{background-image:linear-gradient(color-mix(in srgb,var(--blue) 
 .ident svg{transform-origin:center;transition:transform .45s}
 [data-look=tools] .ident svg{transform:scaleX(1.09)}
 [data-look=lab] .ident svg{transform:scaleX(.86)}
+[data-look=basketball] .ident svg{transform:skewX(-5deg) scale(.94)}
 
 @media(prefers-reduced-motion:reduce){.ident svg,#strokes path{transition:none}}
 
@@ -114,6 +116,7 @@ h1 .type-line>span{display:inline-block;transform-origin:left center}
 html body header{--wash-angle:125deg;background-image:linear-gradient(var(--wash-angle),color-mix(in srgb,var(--blue) 81%,transparent) 15%,color-mix(in srgb,var(--blue) 57%,#090a29) 105%),var(--grain);transition:--wash-angle .72s cubic-bezier(.16,1,.3,1),background-color .45s}
 body[data-look=tools] header{--wash-angle:235deg}
 body[data-look=lab] header{--wash-angle:48deg}
+body[data-look=basketball] header{--wash-angle:315deg}
 header::before{display:none}
 @media(prefers-reduced-motion:reduce){html body header{transition:none}}
 @media(max-width:420px){.transport:not([hidden]){gap:.4rem}.transport input{min-width:0;flex:1}#play{width:4.75rem;flex-basis:4.75rem}}
@@ -147,6 +150,7 @@ input[type=range]{touch-action:pan-y}
 html body :is(header,.sticky-bar){--wash-angle:125deg;background-image:linear-gradient(var(--wash-angle),color-mix(in srgb,var(--blue) 81%,transparent) 15%,color-mix(in srgb,var(--blue) 57%,#090a29) 105%),var(--grain);background-size:auto,337px 337px;transition:--wash-angle .72s cubic-bezier(.16,1,.3,1),background-color .45s,color .45s}
 body[data-look=tools] :is(header,.sticky-bar){--wash-angle:235deg}
 body[data-look=lab] :is(header,.sticky-bar){--wash-angle:48deg}
+body[data-look=basketball] :is(header,.sticky-bar){--wash-angle:315deg}
 @media(prefers-reduced-motion:reduce){html body :is(header,.sticky-bar){transition:none}}
 @media(max-width:420px){.sticky-bar{left:8px;right:8px;padding-left:18px}}
 #work{scroll-margin-top:90px}
@@ -157,3 +161,15 @@ body[data-look=lab] :is(header,.sticky-bar){--wash-angle:48deg}
 .sticky-bar>a[href="#work"]{flex:none}
 .sticky-bar b{display:inline-flex;width:max-content;flex:none;transform-origin:left center;font:700 30px/1.2 "Roboto Flex",Arial,sans-serif;letter-spacing:-.065em}
 .sticky-bar b span{display:block}
+
+/* The three selected-work cards share a row on wide screens; retain two/one columns below. */
+@media (min-width:621px) and (max-width:920px){.work{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Illustrated court and ball, sized to the same 2:1 artwork area as the other tiles. */
+.hoopboard{background:#102c42}
+.hoopboard svg{display:block;width:100%;height:100%}
+.hoopboard .hoop-ball{transform-box:fill-box;transform-origin:center}
+@media(prefers-reduced-motion:no-preference){
+ .hoopboard .hoop-ball{transition:transform .65s cubic-bezier(.2,.85,.25,1)}
+ .work a:is(:hover,:focus-visible) .hoopboard .hoop-ball,[data-look=basketball] .hoopboard .hoop-ball{transform:translate(25px,-18px) rotate(16deg)}
+}
