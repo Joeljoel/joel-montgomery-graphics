@@ -364,8 +364,9 @@
    if(time>=item.moves[i].at){move=item.moves[i];break}
   }
   const t=Math.max(0,Math.min(1,(time-move.at)/duration));
-  // Monotone ease-out: the lead never goes left before travelling right.
-  const ease=1-Math.pow(1-t,3);
+  // Strong, symmetric ease-in/out: nearly still at each end, fast through
+  // the midpoint. It stays monotone, so Echo samples only trail the motion.
+  const ease=t<.5?4*t*t*t:1-4*Math.pow(1-t,3);
   return move.from+(move.to-move.from)*ease;
  }
  function render(now){
