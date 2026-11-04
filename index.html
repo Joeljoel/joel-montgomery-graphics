@@ -27,23 +27,24 @@
 </g>
 <!-- The arcade cabinet is set farther into the right side of the frame. -->
 <g class="jb-machine" transform="translate(95 -4) scale(.92)">
-  <!-- Both ramp edges share the backboard's clockwise slope. The near edge
-       continues below the crop instead of ending in a horizontal front bar. -->
-  <path d="M100 155L366 191L422 272L156 236Z"
-        fill="#0b1020" stroke="#35465a" stroke-width="2.5"/>
-  <path d="M100 155L156 236L149 238L94 157Z"
-        fill="#1a2533" stroke="#42566a" stroke-width="1.6"/>
-  <path d="M366 191L422 272L431 266L374 186Z"
-        fill="#121b2a" stroke="#33475a" stroke-width="1.6"/>
-  <!-- Only two sparse lane markings, foreshortened with the chute. -->
-  <g fill="none" stroke="#a5b3bf" stroke-width="1.7" opacity=".4">
-    <path d="M168 167L225 246"/>
-    <path d="M300 183L357 261"/>
+  <!-- View from the cabinet's left-front: the top's rear edge runs up/right,
+       so the return chute must project toward the viewer down/LEFT. Both
+       near corners are deliberately cropped below the tile, as on a close shot. -->
+  <path d="M100 155L366 191L251 314L-15 278Z"
+        fill="#0b1020" stroke="#263548" stroke-width="2.5"/>
+  <!-- Side wall of the chute: a single edge instead of crossing support bars. -->
+  <path d="M100 155L-15 278L-23 270L92 157Z"
+        fill="#152235" stroke="#4a6373" stroke-width="1.5"/>
+  <path d="M366 191L251 314L263 312L374 189Z"
+        fill="#0d1627" stroke="#33485e" stroke-width="1.5"/>
+  <!-- Court guides recede back toward the cabinet at the same vanishing angle. -->
+  <g fill="none" stroke="#a8b9c5" stroke-width="1.7" opacity=".46">
+    <path d="M167 170L52 293M298 187L183 310"/>
+    <path d="M81 255Q129 239 209 268" opacity=".65"/>
   </g>
-  <!-- Rails follow the same skewed quadrilateral as the printed backboard. -->
-  <g fill="none" stroke="url(#jb-steel)" stroke-width="4"
+  <g fill="none" stroke="url(#jb-steel)" stroke-width="3.8"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="M100 155L156 236L422 272L366 191"/>
+    <path d="M100 155L-15 278M366 191L251 314"/>
   </g>
   <!-- A visible top and right-hand edge give the backboard its 3/4 cabinet perspective. -->
   <path d="M118 28L153 14L382 46L367 60Z" fill="#324454" stroke="#0a101d" stroke-width="3"/>
