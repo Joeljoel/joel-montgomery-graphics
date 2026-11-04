@@ -17,4 +17,20 @@
  nav.replaceWith(space);nav.className='sticky-bar';nav.setAttribute('aria-label','Main navigation');// Keep keyboard and screen-reader order aligned with the fixed nav's visual position.
  // The skip link stays first, followed by navigation, then the header controls.
  body.insertBefore(nav,header);
+ // Paint Safari's out-of-layout strip on the root canvas itself. Its background
+ // scrolls with the document, avoiding a separately positioned scroll follower.
+ const sizeBackdrop=()=>root.style.setProperty('--header-paint-height',header.offsetHeight+'px');
+ sizeBackdrop();new ResizeObserver(sizeBackdrop).observe(header);
+ // Safari owns the side strip: provide a solid header theme for it to sample,
+ // including when the header itself has scrolled away but its bubble remains.
+ let theme=document.querySelector('meta[name="theme-color"]');
+ if(!theme){theme=document.createElement('meta');theme.name='theme-color';document.head.append(theme)}
+ function syncTheme(){
+  const colour='#1727ab';
+  root.style.backgroundColor=colour;
+  theme.content=colour;
+ }
+ syncTheme();
+
+ addEventListener('pageshow',syncTheme);
 })();

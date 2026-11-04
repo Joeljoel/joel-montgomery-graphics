@@ -448,3 +448,51 @@ footer>div:last-child a+a{margin-top:4px}
  .ui-wire-label,.ui-footer-caption{font-size:8px}
  .ui-wire-feature .ui-wire-label{bottom:calc(100% + 1px)}
 }
+
+/* Safari can place its control strip on either edge in split-screen.
+   Bleed the actual section (including its grain and canvas) in both directions.
+   Equal extra padding keeps the content box unchanged. Negative left overflow
+   is not a scroll destination; the root clips positive horizontal overflow. */
+@media (hover:none) and (pointer:coarse) {
+ html:root body > :is(header,main,footer) {
+  --bleed-left:max(120px,env(safe-area-inset-left,0px));
+  --bleed-right:max(120px,var(--strip,0px),env(safe-area-inset-right,0px));
+  width:calc(100% + var(--bleed-left) + var(--bleed-right));
+  margin-left:calc(0px - var(--bleed-left));
+  padding-left:calc(max(6vw,(100vw - 1260px)/2) + var(--bleed-left));
+  padding-right:calc(max(6vw,(100vw - 1260px)/2) + var(--bleed-right));
+ }
+}
+
+/* The root canvas can paint behind Safari controls even where negative element
+   overflow is clipped. Keep the header band in document coordinates so its
+   lower edge scrolls naturally with the real header, without scroll handlers. */
+@media (hover:none) and (pointer:coarse) {
+ html:root {
+  --edge-blue:#1727ab;--edge-paper:#faf6ea;--edge-angle:125deg;
+  background-color:var(--edge-base,var(--edge-paper));
+  background-image:
+   linear-gradient(var(--edge-angle),var(--edge-blue) 15%,color-mix(in srgb,var(--edge-blue) 57%,#090a29) 105%),
+   linear-gradient(color-mix(in srgb,var(--edge-paper) 90%,transparent),color-mix(in srgb,var(--edge-paper) 90%,transparent)),
+   url("grain-stock.webp");
+  background-size:100% var(--header-paint-height,100svh),100% 100%,311px 311px;
+  background-position:0 0;
+  background-repeat:repeat-x,repeat,repeat;
+  background-attachment:scroll;
+ }
+ html:has(body[data-look=tools]){--edge-blue:#552153;--edge-paper:#ffdda8;--edge-angle:235deg}
+ html:has(body[data-look=lab]){--edge-blue:#104959;--edge-paper:#d1ffec;--edge-angle:48deg}
+ html:has(body[data-look=basketball]){--edge-blue:#84214e;--edge-paper:#ffe0ec;--edge-angle:315deg}
+}
+
+/* Safari may sample only the root's solid colour for browser-owned regions. */
+@media (hover:none) and (pointer:coarse) {
+ html[data-header-backdrop]{--edge-base:var(--edge-blue)}
+}
+
+/* Keep the former oversized hover labels available, but out of the composition. */
+header > .press{display:none}
+/* Safari-owned strips retain the default blue in either inner-screen window. */
+@media (hover:none) and (pointer:coarse) {
+ html:root{--edge-blue:#1727ab!important;--edge-base:#1727ab!important;--edge-angle:125deg!important}
+}
