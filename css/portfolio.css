@@ -122,6 +122,8 @@ header::before{display:none}
 .hero>div:last-child{min-width:0}
 .hero h1 .type-line{display:block;white-space:nowrap;height:1.12em;line-height:1.12;letter-spacing:0!important}
 .hero h1 .type-line>span{vertical-align:top}
-.pressure-field{position:absolute;top:0;left:0;width:0;height:0;opacity:0;pointer-events:none}
-.pressure-field::after{content:"";position:absolute;inset:-220px;width:440px;height:440px;border-radius:50%;background:radial-gradient(ellipse at 43% 37%,#d5e7ff22,transparent 44%,#b6d8ff18 54%,#101a4c1c 58%,transparent 70%);transform:rotate(-22deg) scaleY(.82)}
-@media(prefers-reduced-motion:reduce){.pressure-field{display:none}}
+
+
+
+
+.hero h1 .word-run{display:inline-flex;align-items:baseline;vertical-align:baseline;width:max-content;white-space:pre;transform-origin:left center}.word-run>span{display:block;line-height:inherit}.hero h1 .type-line{font-synthesis:none}

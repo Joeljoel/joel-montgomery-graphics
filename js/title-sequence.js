@@ -51,41 +51,37 @@
  addEventListener('scroll',queue,{passive:true});addEventListener('resize',queue);touch.addEventListener('change',queue);scan();
 })();
 (() => {
- const reduced=matchMedia('(prefers-reduced-motion: reduce)'), range=document.querySelector('#playhead');
- const words=[...document.querySelectorAll('h1 .type-line')].map(line=>{
-  const name=line.textContent;line.setAttribute('aria-label',name);
-  const letters=[...name].map(c=>{const el=document.createElement('span');el.textContent=c;el.setAttribute('aria-hidden','true');return el});
-  line.replaceChildren(...letters);return letters;
+ const hero=document.querySelector('.hero'), header=document.querySelector('header'), reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const runs=[...hero.querySelectorAll('h1 .type-line')].map(line=>{
+  const text=line.textContent,run=document.createElement('span');run.className='word-run';line.setAttribute('aria-label',text);run.setAttribute('aria-hidden','true');
+  const glyphs=[...text].map(c=>{const el=document.createElement('span');el.textContent=c;return el});run.append(...glyphs);line.replaceChildren(run);return {line,run,glyphs,ratio:0}
  });
- const header=document.querySelector('header'), hero=document.querySelector('.hero'), ident=hero.querySelector('.ident');
- const lens=document.createElement('div');lens.className='pressure-field';lens.setAttribute('aria-hidden','true');header.prepend(lens);
- let pointer=null, strength=0, px=0,py=0;
- header.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&!reduced.matches){pointer=[e.clientX,e.clientY]}});
- header.addEventListener('pointerleave',()=>pointer=null);
- const canvas=document.createElement('canvas').getContext('2d');let metrics=[];
- function measure(){metrics=words.map(letters=>{const st=getComputedStyle(letters[0]);canvas.font='700 '+st.fontSize+' '+st.fontFamily;return letters.map(el=>canvas.measureText(el.textContent).width)})}
- new ResizeObserver(measure).observe(hero);document.fonts.ready.then(measure);measure();
- let phase=0,prev=0,raf=0,visible=true;
- function draw(now){
-  raf=0;if(!visible||document.hidden||reduced.matches)return;
-  phase+=Math.min(50,now-prev)*(Number(range.value)<72?.004:.00023);prev=now;
-  const rect=header.getBoundingClientRect();strength+=((pointer?1:0)-strength)*.14;
-  if(pointer){px+=(pointer[0]-px)*.33;py+=(pointer[1]-py)*.33}
-  lens.style.transform='translate('+ (px-rect.left)+'px,'+(py-rect.top)+'px)';lens.style.opacity=strength;
-  const displacement=(x,y)=>{const dx=x-px,dy=y-py,force=.28*strength*Math.exp(-(dx*dx+dy*dy)/31000);return [dx*force,dy*force]};
-  const ib=ident.getBoundingClientRect(),off=displacement(ib.left+ib.width/2,ib.top+ib.height/2);
-  ident.style.translate=off.join('px ')+'px';
-  words.forEach((letters,row)=>{
-   const widths=metrics[row], total=widths.reduce((a,b)=>a+b,0);
-   const line=letters[0].parentElement.getBoundingClientRect();
-   const wave=letters.map((_,i)=>Math.sin(phase*(.84+i*.037)+i*1.47+row+ .72*Math.sin(phase*.61+i)));
-   letters.forEach((el,i)=>el.style.fontWeight=Math.round(570+425*wave[i]));
-   const natural=letters.map(el=>el.offsetWidth),desired=widths.map((w,i)=>w*(1+.105*wave[i])),sum=desired.reduce((a,b)=>a+b,0);
-   let at=0,source=0;letters.forEach((el,i)=>{const w=desired[i]*total/(sum||1),[x,y]=displacement(line.left+at+w/2,line.top+line.height/2);
-    el.style.transform='translate('+(at-source+x)+'px,'+y+'px) scaleX('+w/(natural[i]||1)+')';source+=natural[i];at+=w});
-  });raf=requestAnimationFrame(draw);
- }
- function sync(){cancelAnimationFrame(raf);if(reduced.matches){pointer=null;strength=0;lens.style.opacity=0;ident.style.translate="none"}prev=performance.now();if(reduced.matches)words.flat().forEach(el=>{el.style.transform='';el.style.fontWeight='' });else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
- new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;sync()}).observe(document.querySelector('h1'));
- reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);
+ // Capture the resting advance in em; subsequent weight changes flow through the whole word.
+ function calibrate(){for(const w of runs){w.glyphs.forEach(g=>g.style.fontVariationSettings='"wght" 650');w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
+ calibrate();
+ let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
+ const ns='http://www.w3.org/2000/svg',mk=(name,attrs)=>{const el=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el};
+ const svg=mk('svg',{width:0,height:0,'aria-hidden':'true'});svg.style.position='absolute';const filter=mk('filter',{id:'ink-pull',filterUnits:'userSpaceOnUse',primitiveUnits:'userSpaceOnUse',x:-60,y:-60,'color-interpolation-filters':'sRGB'});
+ // RGB encodes inverse sampling direction: outward sampling pulls visible ink inward.
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=160;const ctx=canvas.getContext('2d'),im=ctx.createImageData(160,160);
+ for(let y=0;y<160;y++)for(let x=0;x<160;x++){const a=(x-79.5)/80,b=(y-79.5)/80,r=Math.hypot(a,b),fall=Math.max(0,1-r)**2,swirl=1.8*fall,j=(160*y+x)*4;
+ im.data.set([128+250*fall*(a-b*swirl),128+250*fall*(b+a*swirl),128,255],j)}
+ ctx.putImageData(im,0,0);const map=mk('feImage',{href:canvas.toDataURL(),width:340,height:340,result:'field'});
+ const warp=mk('feDisplacementMap',{in:'SourceGraphic',in2:'map',xChannelSelector:'R',yChannelSelector:'G',scale:0});
+ filter.append(mk('feFlood',{'flood-color':'#808080',result:'neutral'}),map,mk('feComposite',{in:'field',in2:'neutral',operator:'over',result:'map'}),warp);svg.append(filter);document.body.append(svg);
+ let point=null,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
+ header.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||reduced.matches)return;point=[e.clientX,e.clientY];if(!ready){[x,y]=point;ready=true}});header.addEventListener('pointerleave',()=>point=null);
+ function draw(now){raf=0;if(!visible||document.hidden||reduced.matches)return;
+ const dt=Math.min(50,now-last);last=now;phase+=dt*(document.querySelector('#playhead').value<72?.002:.00023);
+ for(const [row,w] of runs.entries()){const size=parseFloat(getComputedStyle(w.line).fontSize);
+ w.glyphs.forEach((g,j)=>{const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));g.style.fontVariationSettings='"wght" '+(variable?550+400*n:650);g.style.letterSpacing=(-.035+.019*n)+'em'});
+
+ const natural=w.run.scrollWidth;if(natural)w.run.style.transform='scaleX('+w.ratio*size/natural+')';}
+ power+=((point?1:0)-power)*(1-Math.exp(-dt/75));
+ if(power>.008){const rect=hero.getBoundingClientRect(),k=1-Math.exp(-dt/52);if(point){x+=(point[0]-x)*k;y+=(point[1]-y)*k}
+ filter.setAttribute('width',rect.width+120);filter.setAttribute('height',rect.height+120);
+ map.setAttribute('x',x-rect.left-170);map.setAttribute('y',y-rect.top-170);warp.setAttribute('scale',power*205);hero.style.filter='url(#ink-pull)'}else{hero.style.filter='';ready=false}
+ raf=requestAnimationFrame(draw)}
+ function sync(){cancelAnimationFrame(raf);hero.style.filter='';point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
+ new IntersectionObserver(([e])=>{visible=e.isIntersecting;sync()}).observe(hero);reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
 })();
