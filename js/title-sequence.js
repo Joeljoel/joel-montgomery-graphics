@@ -37,7 +37,19 @@
   layer.className='type-intro-echoes';layer.setAttribute('aria-hidden','true');
   const copies=Array.from({length:18},()=>{
    const echo=document.createElement('span');echo.className='type-intro-echo';
-   echo.append(real.cloneNode(true));layer.append(echo);return echo;
+   const copiedRun=real.cloneNode(true);
+   // A frozen clone holds the font axes and local transforms from the frame
+   // when it was created. Bind each copied glyph to the live word's variables
+   // so all Echo samples deform with the changing Roboto Flex lettering.
+   copiedRun.style.transform='var(--intro-run-transform, none)';
+   [...copiedRun.children].forEach((glyph,j)=>{
+    const prefix='--intro-glyph-'+j+'-';
+    glyph.style.fontVariationSettings='var('+prefix+'axes, "wght" 650)';
+    glyph.style.letterSpacing='var('+prefix+'spacing, normal)';
+    glyph.style.transform='var('+prefix+'scale, none)';
+    glyph.style.marginRight='var('+prefix+'margin, 0px)';
+   });
+   echo.append(copiedRun);layer.append(echo);return echo;
   });
   line.append(layer);introEchoes.set(line,copies);return copies;
  }
@@ -178,7 +190,15 @@
  const widths=w.glyphs.map(g=>g.offsetWidth),total=widths.reduce((a,b)=>a+b,0)||1;let pos=0;
  w.centres=widths.map(v=>{pos+=v;return (pos-v/2)/total});w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
  // ResizeObserver reports untransformed fractional advances without a synchronous layout read per frame.
- const observer=new ResizeObserver(entries=>{for(const e of entries){const w=runs.find(item=>item.run===e.target);if(w&&e.contentRect.width)w.run.style.transform='scaleX('+w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/e.contentRect.width+')'}});
+ const observer=new ResizeObserver(entries=>{for(const e of entries){
+  const w=runs.find(item=>item.run===e.target);
+  if(w&&e.contentRect.width){
+   const normalization='scaleX('+w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/e.contentRect.width+')';
+   w.run.style.transform=normalization;
+   // The Echo layer needs the identical whole-word width correction, too.
+   w.line.style.setProperty('--intro-run-transform',normalization);
+  }
+ }});
  calibrate();runs.forEach(w=>observer.observe(w.run));
  let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
  const ns='http://www.w3.org/2000/svg',mk=(name,attrs)=>{const el=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el};
@@ -258,8 +278,13 @@
    const wave=Math.sin(.81*phase+j*1.17+row+.5);
    const weight=variable?Math.max(100,Math.min(1000,550+450*n*activity+(bias<0?2700:1200)*bias)):650;
    const width=variable?Math.max(50,Math.min(145,97.5+47.5*wave*activity+(bias<0?340:185)*bias)):100;
-   g.style.fontVariationSettings='"wght" '+weight+', "wdth" '+width;
-   g.style.letterSpacing=(-.035+.019*n)+'em';
+   const axes='"wght" '+weight+', "wdth" '+width;
+   const spacing=(-.035+.019*n)+'em';
+   g.style.fontVariationSettings=axes;
+   g.style.letterSpacing=spacing;
+   // Share the current axes and tracking with all temporal Echo copies.
+   w.line.style.setProperty('--intro-glyph-'+j+'-axes',axes);
+   w.line.style.setProperty('--intro-glyph-'+j+'-spacing',spacing);
   });
   // Keep ink distortion proportional to the individual glyph advance.
   // The ResizeObserver normalises the whole word to its original width,
@@ -268,8 +293,14 @@
   w.glyphs.forEach((g,j)=>{
    const bias=w.influence[j];
    const k=Math.max(.28,Math.min(3.15,Math.exp((bias<0?3.75:1.92)*bias)));
-   g.style.transform='scaleX('+k+')';
-   g.style.marginRight=(advances[j]*(k-1))+'px';
+   const scale='scaleX('+k+')';
+   const margin=(advances[j]*(k-1))+'px';
+   g.style.transform=scale;
+   g.style.marginRight=margin;
+   // Include the per-letter stretch and compensating advance, otherwise
+   // the Echo can still pop off as soon as its timeline offset reaches zero.
+   w.line.style.setProperty('--intro-glyph-'+j+'-scale',scale);
+   w.line.style.setProperty('--intro-glyph-'+j+'-margin',margin);
   });
 
  }
