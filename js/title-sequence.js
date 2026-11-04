@@ -310,34 +310,105 @@
 })();
 
 
-/* Trailing ink deformation for the featured headings.
-   Each narrow horizontal band remains a copy of the same glyphs, rather than
-   a separate glitch graphic. The strips stretch back towards their previous
-   position and settle after the heading has finished moving. */
+/* Elastic title drag: deform the real heading instead of drawing a ghost copy.
+   A damped spring moves the ink, while horizontal stretch, skew and the ink's
+   own morphological trail resist the pull and settle just after the move.
+   The existing data-look state covers hover, keyboard focus and mobile scroll. */
 (() => {
- const pull=[.14,.15,.17,.16,.18,.20,.19,.17,.18,.20,.18,.17,.16,.17,.15,.14];
- const offsets=[0,17,35,11,29,45,22,39,8,31,48,20,42,13,34,4];
- for(const heading of document.querySelectorAll('.work h3')){
-  const layer=heading.querySelector('.title-smear');
+ const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const looks=['tools','lab','basketball'];
+ const cards=[...document.querySelectorAll('.work h3')].map((heading,i)=>{
   const label=heading.querySelector('.title-label');
-  if(!layer||!label)continue;
-  const fragments=document.createDocumentFragment();
-  const rows=pull.length;
-  pull.forEach((amount,i)=>{
-   const segment=document.createElement('span');
-   segment.className='smear-band';
-   segment.textContent=label.textContent;
-   const top=i*100/rows;
-   const bottom=100-(i+1)*100/rows;
-   segment.style.setProperty('--band-top',top+'%');
-   segment.style.setProperty('--band-bottom',bottom+'%');
-   segment.style.setProperty('--band-pull',(-amount).toFixed(3)+'em');
-   segment.style.setProperty('--band-half',(-amount*.44).toFixed(3)+'em');
-   segment.style.setProperty('--band-stretch',(1+amount*.13).toFixed(3));
-   segment.style.setProperty('--band-mid-stretch',(1+amount*.05).toFixed(3));
-   segment.style.setProperty('--band-delay',offsets[i]+'ms');
-   fragments.append(segment);
-  });
-  layer.replaceChildren(fragments);
+  const filter=document.getElementById('title-elastic-'+i);
+  const morph=filter?.querySelector('feMorphology');
+  const offset=filter?.querySelector('feOffset');
+  if(!label||!morph||!offset)return null;
+  return {heading,label,morph,offset,filterId:filter.id,look:looks[i],
+   x:0,v:0,stretch:1,stretchV:0,skew:0,skewV:0,target:0,direction:1};
+ }).filter(Boolean);
+ if(!cards.length)return;
+ let enabled=false,raf=0,last=0;
+ const targetFor=item=>document.body.dataset.look===item.look
+  ?parseFloat(getComputedStyle(item.heading).fontSize)*.28:0;
+ function render(item,moving){
+  item.label.style.transformOrigin=item.direction>0?'right center':'left center';
+  item.label.style.transform='translate3d('+item.x.toFixed(2)+'px,0,0) scaleX('+
+   item.stretch.toFixed(4)+') skewX('+item.skew.toFixed(2)+'deg)';
+  item.heading.classList.toggle('is-moving',moving);
+  if(!moving){item.label.style.filter='none';return}
+  const gap=item.target-item.x;
+  // Morphology thickens existing ink behind the moving letterforms; it never
+  // draws a second text copy and is capped to avoid long stray trails.
+  const tail=Math.min(3.1,Math.abs(item.v)*.034+Math.abs(gap)*.055);
+  item.morph.setAttribute('radius',tail.toFixed(2)+' 0');
+  item.offset.setAttribute('dx',((item.direction>0?-1:1)*tail).toFixed(2));
+  item.label.style.filter='url(#'+item.filterId+')';
  }
+ function frame(now){
+  raf=0;
+  const dt=Math.min(.033,Math.max(.008,(now-last)/1000||.016));last=now;
+  let running=false;
+  for(const item of cards){
+   const gap=item.target-item.x;
+   item.v+=(gap*74-item.v*14.8)*dt;
+   item.x+=item.v*dt;
+   // The leading edge moves first; the rest of the glyph stretches with
+   // inertia, then contracts after the translation has nearly stopped.
+   const desired=1+Math.min(.16,Math.abs(gap)*.011+Math.abs(item.v)*.00072);
+   item.stretchV+=((desired-item.stretch)*105-item.stretchV*17)*dt;
+   item.stretch+=item.stretchV*dt;
+   const wantedSkew=Math.max(-7,Math.min(7,-item.v*.095));
+   item.skewV+=((wantedSkew-item.skew)*130-item.skewV*21)*dt;
+   item.skew+=item.skewV*dt;
+   const moving=Math.abs(item.target-item.x)>.025||Math.abs(item.v)>.22||
+    Math.abs(item.stretch-1)>.001||Math.abs(item.stretchV)>.008||
+    Math.abs(item.skew)>.02;
+   if(!moving){
+    item.x=item.target;item.v=0;item.stretch=1;item.stretchV=0;
+    item.skew=0;item.skewV=0;
+   }
+   render(item,moving);
+   running ||=moving;
+  }
+  if(running&&enabled&&!document.hidden)raf=requestAnimationFrame(frame);
+ }
+ function wake(){
+  if(enabled&&!raf&&!document.hidden){last=performance.now();raf=requestAnimationFrame(frame)}
+ }
+ function changeLook(){
+  if(!enabled)return;
+  let changed=false;
+  for(const item of cards){
+   const next=targetFor(item);
+   if(Math.abs(next-item.target)<.01)continue;
+   item.direction=next>item.target?1:-1;
+   item.target=next;changed=true;
+  }
+  if(changed)wake();
+ }
+ function configure(){
+  cancelAnimationFrame(raf);raf=0;
+  enabled=!reduced.matches;
+  for(const item of cards){
+   item.heading.classList.toggle('title-elastic',enabled);
+   item.heading.classList.remove('is-moving');
+   item.label.style.filter='none';
+   if(!enabled){item.label.style.removeProperty('transform');continue}
+   item.target=targetFor(item);
+   item.x=item.target;item.v=0;item.stretch=1;item.stretchV=0;
+   item.skew=0;item.skewV=0;
+   render(item,false);
+  }
+ }
+ new MutationObserver(changeLook).observe(document.body,{
+  attributes:true,attributeFilter:['data-look']
+ });
+ window.addEventListener('resize',changeLook,{passive:true});
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){cancelAnimationFrame(raf);raf=0}
+  else if(cards.some(item=>Math.abs(item.x-item.target)>.025||
+    Math.abs(item.stretch-1)>.001))wake();
+ });
+ reduced.addEventListener('change',configure);
+ configure();
 })();
