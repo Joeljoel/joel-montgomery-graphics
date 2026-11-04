@@ -88,7 +88,9 @@
   name.setAttribute('stroke','none');
   name.setAttribute('font-family','monospace');
   name.setAttribute('font-weight','700');
-  name.setAttribute('font-size','9');
+  // JM is a large SVG: compensate for its viewport scale so these
+  // labels resemble the 9px HTML typography-layer labels.
+  name.setAttribute('font-size','4.2');
   layer.append(bg,name);guide.append(layer);
   return {bg,name};
  });
@@ -151,9 +153,9 @@
  rect(box,minX,minY,Math.max(...xs)-Math.min(...xs)+w,Math.max(...ys)-Math.min(...ys)+w);
  [first,last].forEach((el,j)=>{const v=p.getPointAtLength(j*len);rect(el,v.x-2,v.y-2,4,4)});
  dot.setAttribute('cx',tip.x);dot.setAttribute('cy',tip.y);
- const label=jmLabels[i],labelWidth=i?86:82,labelX=Math.max(0,Math.min(324-labelWidth,minX)),labelY=minY-17;
- rect(label.bg,labelX,labelY,labelWidth,13);
- label.name.setAttribute('x',labelX+4);label.name.setAttribute('y',labelY+9.5);
+ const label=jmLabels[i],labelWidth=i?45:43,labelX=Math.max(0,Math.min(324-labelWidth,minX)),labelY=minY-9;
+ rect(label.bg,labelX,labelY,labelWidth,7.5);
+ label.name.setAttribute('x',labelX+2);label.name.setAttribute('y',labelY+5.4);
  }
  });
  lines.forEach((el,i)=>{
