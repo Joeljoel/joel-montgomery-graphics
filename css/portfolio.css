@@ -500,7 +500,7 @@ header > .press{display:none}
 /* Local-time activity, kept in the tools column beside the experiments. */
 .currently{margin-top:24px;font-size:14px;line-height:1.6}
 .currently-label{font:inherit;margin-right:.3em}
-.currently-activity{display:inline-flex;align-items:center;gap:.45em;vertical-align:middle;flex-wrap:wrap}
-.currently img{width:18px;height:18px;object-fit:contain;flex:none}
+.currently-activity{display:inline;font:inherit}
+.currently img{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-left:.2em}
 .currently img[hidden]{display:none}
 @media(max-width:620px){.currently{margin-top:16px}}
