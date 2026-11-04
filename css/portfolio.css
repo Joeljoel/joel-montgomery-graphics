@@ -165,11 +165,20 @@ body[data-look=basketball] :is(header,.sticky-bar){--wash-angle:315deg}
 /* The three selected-work cards share a row on wide screens; retain two/one columns below. */
 @media (min-width:621px) and (max-width:920px){.work{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-/* Illustrated court and ball, sized to the same 2:1 artwork area as the other tiles. */
-.hoopboard{background:#102c42}
-.hoopboard svg{display:block;width:100%;height:100%}
+/* 3/4-angle arcade poster. A quick camera push and short speed-line reveal
+   suggest impact on hover; the artwork is otherwise static. */
+.hoopboard{background:#151f65;isolation:isolate}
+.hoopboard svg{display:block;width:100%;height:100%;transform-origin:61% 51%}
+.hoopboard .jb-machine{transform-origin:61% 56%;transform-box:view-box}
+.hoopboard .jb-speedburst{opacity:.42}
 .hoopboard .hoop-ball{transform-box:fill-box;transform-origin:center}
 @media(prefers-reduced-motion:no-preference){
- .hoopboard .hoop-ball{transition:transform .65s cubic-bezier(.2,.85,.25,1)}
- .work a:is(:hover,:focus-visible) .hoopboard .hoop-ball,[data-look=basketball] .hoopboard .hoop-ball{transform:translate(25px,-18px) rotate(16deg)}
+ .hoopboard svg{transition:transform .58s cubic-bezier(.16,.85,.22,1)}
+ .hoopboard .jb-machine{transition:transform .58s cubic-bezier(.16,.85,.22,1)}
+ .hoopboard .jb-speedburst{transition:opacity .24s ease,transform .54s cubic-bezier(.16,.85,.22,1)}
+ .hoopboard .hoop-ball{transition:transform .54s cubic-bezier(.16,.85,.22,1)}
+ .work a:is(:hover,:focus-visible) .hoopboard svg,[data-look=basketball] .hoopboard svg{transform:scale(1.115) translate(-8px,-1px)}
+ .work a:is(:hover,:focus-visible) .hoopboard .jb-machine,[data-look=basketball] .hoopboard .jb-machine{transform:translate(9px,-5px) scale(1.025)}
+ .work a:is(:hover,:focus-visible) .hoopboard .jb-speedburst,[data-look=basketball] .hoopboard .jb-speedburst{opacity:1;transform:translate(14px,-3px) skewX(-6deg)}
+ .work a:is(:hover,:focus-visible) .hoopboard .hoop-ball,[data-look=basketball] .hoopboard .hoop-ball{transform:translate(14px,-11px) rotate(12deg)}
 }
