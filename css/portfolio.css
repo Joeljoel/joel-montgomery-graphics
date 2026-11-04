@@ -226,7 +226,7 @@ footer>div:last-child a+a{margin-top:4px}
 }
 .work .smear-trail{
  position:absolute;top:var(--trail-y);left:var(--trail-left);
- width:var(--trail-width);height:var(--trail-thickness);
+ width:var(--trail-width);max-width:6em;height:var(--trail-thickness);
  opacity:0;transform-origin:right center;
  background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--smear-ink) 35%,transparent) 28%,var(--smear-ink) 89%,transparent 100%);
 }
