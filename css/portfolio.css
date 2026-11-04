@@ -448,3 +448,18 @@ footer>div:last-child a+a{margin-top:4px}
  .ui-wire-label,.ui-footer-caption{font-size:8px}
  .ui-wire-feature .ui-wire-label{bottom:calc(100% + 1px)}
 }
+
+/* Safari can place its control strip on either edge in split-screen.
+   Bleed the actual section (including its grain and canvas) in both directions.
+   Equal extra padding keeps the content box unchanged. Negative left overflow
+   is not a scroll destination; the root clips positive horizontal overflow. */
+@media (hover:none) and (pointer:coarse) {
+ html body > :is(header,main,footer) {
+  --bleed-left:max(120px,env(safe-area-inset-left,0px));
+  --bleed-right:max(120px,var(--strip,0px),env(safe-area-inset-right,0px));
+  width:calc(100% + var(--bleed-left) + var(--bleed-right));
+  margin-left:calc(0px - var(--bleed-left));
+  padding-left:calc(max(6vw,(100vw - 1260px)/2) + var(--bleed-left));
+  padding-right:calc(max(6vw,(100vw - 1260px)/2) + var(--bleed-right));
+ }
+}
