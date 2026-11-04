@@ -114,6 +114,25 @@ test('hero name has solid ink echoes and scrub-only typography controls', () => 
   assert.match(animations, /range\.oninput=\(\)=>/);
 });
 
+test('hero Echo glyphs track live font variation, transforms and word width', () => {
+  // Echoes must not capture a frozen snapshot of the variable-font glyphs.
+  assert.match(animations, /copiedRun\.style\.transform='var\(--intro-run-transform, none\)'/);
+  for (const property of ['axes', 'spacing', 'scale', 'margin']) {
+    assert.ok(animations.includes("glyph.style."));
+    assert.ok(animations.includes("w.line.style.setProperty('--intro-glyph-'+j+'-"+property+"'"));
+  }
+  assert.match(animations, /glyph\.style\.fontVariationSettings='var\('\+prefix\+'axes/);
+  assert.match(animations, /glyph\.style\.letterSpacing='var\('\+prefix\+'spacing/);
+  assert.match(animations, /glyph\.style\.transform='var\('\+prefix\+'scale/);
+  assert.match(animations, /glyph\.style\.marginRight='var\('\+prefix\+'margin/);
+  assert.match(animations, /w\.line\.style\.setProperty\('--intro-run-transform',normalization\)/);
+  // The same shared values reset during font load / measurement.
+  assert.match(animations, /w\.line\.style\.setProperty\(prefix\+'axes',g\.style\.fontVariationSettings\)/);
+  assert.match(animations, /w\.line\.style\.setProperty\(prefix\+'scale','none'\)/);
+  assert.match(animations, /w\.line\.style\.setProperty\(prefix\+'margin','0px'\)/);
+  assert.match(animations, /document\.fonts\.load\('650 32px "Roboto Flex"'/);
+});
+
 test('pre-redesign homepage is archived without a link from the new page', () => {
   const legacy = content('legacy/index.html');
   assert.match(legacy, /<meta name="robots" content="noindex,follow">/);
