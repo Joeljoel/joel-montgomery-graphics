@@ -57,7 +57,12 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
   assert.doesNotMatch(home, /id="title-elastic-|title-velocity-blur|title-smear/);
-  assert.match(animations, /const duration=470,spacing=13,echoCount=18/);
+  assert.match(animations, /const duration=470,spacing=7,echoCount=40/);
+  assert.match(animations, /echo\.style\.display=smeared\?'block':'none'/);
+  assert.doesNotMatch(animations, /echo\.style\.opacity/);
+  const echoStyle = styles.slice(styles.lastIndexOf('/* Solid-ink Echo trail'));
+  assert.doesNotMatch(echoStyle, /blur\(|opacity:/);
+  assert.match(echoStyle, /color:var\(--blue\);display:none;/);
   assert.match(animations, /positionAt\(item,now-\(i\+1\)\*spacing\)/);
   assert.match(animations, /1-Math\.pow\(1-t,3\)/);
   assert.match(animations, /item\.label\.style\.transform='translate3d\('/);
