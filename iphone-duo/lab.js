@@ -61,3 +61,82 @@ function measure(){
  el('meters').replaceChildren(...Object.entries(rows).map(([k,v])=>{const row=document.createElement('div');for(const [tag,t] of [['dt',k],['dd',v]]){const node=document.createElement(tag);node.textContent=t;row.append(node)}return row}));
 }
 refresh();measure();window.addEventListener('resize',measure);window.visualViewport?.addEventListener('resize',measure);
+
+;
+// Optional APIs: lack of support must remain "unknown", never "flat".
+(() => {
+ const queries=Object.fromEntries(Object.entries({
+  folded:'(device-posture: folded)',continuous:'(device-posture: continuous)',
+  h1:'(horizontal-viewport-segments: 1)',h2:'(horizontal-viewport-segments: 2)',
+  v1:'(vertical-viewport-segments: 1)',v2:'(vertical-viewport-segments: 2)'
+ }).map(([key,q])=>[key,matchMedia(q)]));
+ const probes=[];
+ for(const [x,y] of [[0,0],[1,0],[0,1],[1,1]]){
+  const p=document.createElement('div');p.className='segment-probe';
+  for(const key of ['width','height','left','top'])
+   p.style.setProperty('--'+key,'env(viewport-segment-'+key+' '+x+' '+y+', -1px)');
+  document.body.append(p);probes.push(p);
+ }
+ function classifyPose(posture,horizontal,vertical,count){
+  if(posture==='folded')return ['Partly folded — reported by Safari',
+   horizontal?'Side-by-side segments: book-style layout.':vertical?'Stacked segments: laptop-style layout.':'Safari reports folded, but segment direction is unavailable.'];
+  if(posture==='continuous')return ['Continuous — reported by Safari','This does not distinguish fully open from the outer display.'];
+  if(horizontal||vertical||count>1)return ['Possible half-folded pose — inferred',
+   (horizontal?'Side-by-side segments detected. ':vertical?'Stacked segments detected. ':'Multiple segments detected. ')+
+   'Device Posture is unavailable; segment geometry alone cannot confirm the physical pose.'];
+  return ['Pose unknown','Safari is not exposing a folded state or multiple segments in this window. Try folding, rotating, or opening Safari across the full inner screen.'];
+ }
+ let previous='',lastStatus='';
+ function read(){
+  if(document.hidden)return;
+  let posture=null;
+  try{posture=navigator.devicePosture?.type||null}catch{}
+  if(!posture)posture=queries.folded.matches?'folded':queries.continuous.matches?'continuous':null;
+  let rectangles=[],source='Unavailable';
+  try{
+   const raw=window.viewport?.segments||window.visualViewport?.segments;
+   if(raw){rectangles=Array.from(raw,r=>({left:r.left,top:r.top,width:r.width,height:r.height}));source='JavaScript'}
+  }catch{}
+  if(!rectangles.length){
+   rectangles=probes.map(p=>{const c=getComputedStyle(p);return Object.fromEntries(['left','top','width','height'].map(k=>[k,parseFloat(c.getPropertyValue('--'+k))]))})
+    .filter(r=>r.width>0&&r.height>0&&r.left>=0&&r.top>=0);
+   if(rectangles.length)source='CSS environment variables';
+  }
+  rectangles=rectangles.filter(r=>Object.values(r).every(Number.isFinite)&&r.width>0&&r.height>0);
+  const horizontal=queries.h2.matches||(rectangles.length>1&&new Set(rectangles.map(r=>r.left)).size>1);
+  const vertical=queries.v2.matches||(rectangles.length>1&&new Set(rectangles.map(r=>r.top)).size>1);
+  const [status,detail]=classifyPose(posture,horizontal,vertical,rectangles.length);
+  if(status!==lastStatus){el('pose-status').textContent=status;lastStatus=status}
+  el('pose-detail').textContent=detail;
+  const readings={
+   'Device Posture JS':('devicePosture' in navigator)?(posture||'Exposed, no value'):'Not exposed',
+   'Posture CSS':queries.folded.matches?'folded':queries.continuous.matches?'continuous':'No matching state',
+   'Segment CSS':queries.h2.matches?'2 horizontal':queries.v2.matches?'2 vertical':queries.h1.matches||queries.v1.matches?'1 segment':'No matching state',
+   'Segment rectangles':source+' · '+rectangles.length,
+   'Layout viewport':root.clientWidth+' × '+root.clientHeight
+  };
+  rectangles.forEach((r,i)=>readings['Segment '+(i+1)]=Math.round(r.width)+' × '+Math.round(r.height)+' at '+Math.round(r.left)+', '+Math.round(r.top));
+  const signature=JSON.stringify(readings);
+  if(signature===previous)return;previous=signature;
+  el('pose-readings').replaceChildren(...Object.entries(readings).map(([k,v])=>{
+   const row=document.createElement('div'),dt=document.createElement('dt'),dd=document.createElement('dd');
+   dt.textContent=k;dd.textContent=v;row.append(dt,dd);return row;
+  }));
+  const map=el('segment-map');map.replaceChildren();map.hidden=!rectangles.length;
+  if(rectangles.length){
+   const width=Math.max(...rectangles.map(r=>r.left+r.width)),height=Math.max(...rectangles.map(r=>r.top+r.height));
+   map.style.aspectRatio=width+'/'+height;
+   rectangles.forEach((r,i)=>{const box=document.createElement('span');box.textContent=String(i+1);
+    Object.assign(box.style,{left:r.left/width*100+'%',top:r.top/height*100+'%',width:r.width/width*100+'%',height:r.height/height*100+'%'});map.append(box)});
+  }
+  const item=document.createElement('li');item.textContent=new Date().toLocaleTimeString()+' — '+status+'; '+readings['Segment CSS'];
+  el('pose-history').prepend(item);while(el('pose-history').children.length>8)el('pose-history').lastChild.remove();
+ }
+ Object.values(queries).forEach(q=>q.addEventListener('change',read));
+ navigator.devicePosture?.addEventListener?.('change',read);
+ addEventListener('resize',read);addEventListener('pageshow',read);
+ window.visualViewport?.addEventListener('resize',read);
+ document.addEventListener('visibilitychange',read);
+ // Some experimental implementations change segment values without an event.
+ setInterval(read,500);read();
+})();
