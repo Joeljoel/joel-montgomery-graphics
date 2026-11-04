@@ -35,27 +35,25 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('featured titles use bounded, cohesive motion blur with reduced-motion support', () => {
-  const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><span class="title-smear" aria-hidden="true" data-smear="([^"]+)"><\/span><\/h3>/g)];
+test('featured headings deform their actual ink with a bounded spring', () => {
+  const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
-  for (const match of headings) assert.equal(match[1], match[2]);
-  assert.match(home, /<filter id="title-velocity-blur"/);
-  assert.match(home, /<feGaussianBlur stdDeviation="6 0\.2"/);
-  assert.match(animations, /const pull=\[/);
-  assert.match(animations, /segment\.className='smear-band'/);
-  assert.match(animations, /segment\.textContent=label\.textContent/);
-  assert.match(animations, /layer\.replaceChildren\(fragments\)/);
-  assert.doesNotMatch(animations, /smear-trail/);
-  const pull = animations.match(/const pull=\[([^\]]+)\]/);
-  assert.ok(pull);
-  assert.ok(pull[1].split(',').every(value => Math.abs(Number(value)) <= 0.2));
-  assert.match(styles, /filter:url\(#title-velocity-blur\)/);
-  assert.match(styles, /@keyframes title-ink-smear/);
-  assert.doesNotMatch(styles, /title-scanline-tear|title-velocity-line/);
-  assert.match(styles, /prefers-reduced-motion:reduce\)\{\.work \.title-smear\{display:none\}/);
-  assert.match(styles, /body\[data-look=tools\] \.work a:first-child/);
-  assert.match(styles, /body\[data-look=lab\] \.work a:nth-child\(2\)/);
-  assert.match(styles, /body\[data-look=basketball\] \.work a:nth-child\(3\)/);
+  assert.doesNotMatch(home, /class="title-smear"/);
+  for (let i=0; i<3; i++) {
+    assert.match(home, new RegExp('id="title-elastic-' + i + '"'));
+  }
+  assert.match(home, /<feMorphology in="SourceGraphic" operator="dilate"/);
+  assert.match(home, /<feOffset in="expanded"/);
+  assert.match(animations, /gap\*74-item\.v\*14\.8/);
+  assert.match(animations, /item\.stretchV\+=/);
+  assert.match(animations, /item\.skewV\+=/);
+  assert.match(animations, /item\.morph\.setAttribute\('radius'/);
+  assert.match(animations, /document\.body\.dataset\.look===item\.look/);
+  assert.match(animations, /reduced\.addEventListener\('change',configure\)/);
+  assert.doesNotMatch(animations, /smear-band|smear-trail/);
+  assert.match(styles, /\.work h3\.title-elastic\{transform:none!important/);
+  assert.doesNotMatch(styles, /\.title-smear|\.smear-band/);
+  assert.match(styles, /@media\(prefers-reduced-motion:no-preference\)/);
 });
 
 test('pre-redesign homepage is archived without a link from the new page', () => {
