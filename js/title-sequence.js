@@ -305,13 +305,22 @@
  });
  const widths=w.glyphs.map(g=>g.offsetWidth),total=widths.reduce((a,b)=>a+b,0)||1;let pos=0;
  w.centres=widths.map(v=>{pos+=v;return (pos-v/2)/total});w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
- // ResizeObserver reports untransformed fractional advances without a synchronous layout read per frame.
+ // Montgomery stays at its calibrated word width. Joel is free to change
+ // width with its individual glyphs and only shrinks if it would extend beyond
+ // Montgomery. Never enlarge Joel just to match its own initial width.
+ function scaleForWord(w,currentWidth){
+  const montgomery=runs[1];
+  const maxWidth=montgomery.ratio*parseFloat(getComputedStyle(montgomery.line).fontSize);
+  return w===runs[0]?Math.min(1,maxWidth/currentWidth):
+   w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/currentWidth;
+ }
+ // ResizeObserver supplies current untransformed advances as the letters vary.
  const observer=new ResizeObserver(entries=>{for(const e of entries){
   const w=runs.find(item=>item.run===e.target);
   if(w&&e.contentRect.width){
-   const normalization='scaleX('+w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/e.contentRect.width+')';
+   const normalization='scaleX('+scaleForWord(w,e.contentRect.width)+')';
    w.run.style.transform=normalization;
-   // The Echo layer needs the identical whole-word width correction, too.
+   // Echo copies use exactly the same width correction as the live lettering.
    w.line.style.setProperty('--intro-run-transform',normalization);
   }
  }});
@@ -406,8 +415,8 @@
    w.line.style.setProperty('--intro-glyph-'+j+'-spacing',spacing);
   });
   // Keep ink distortion proportional to the individual glyph advance.
-  // The ResizeObserver normalises the whole word to its original width,
-  // even when the individual letters reach the font axis extremes.
+  // Montgomery keeps its calibrated width. Joel can grow naturally,
+  // with its final word transform capped by Montgomery's width.
   const advances=w.glyphs.map(g=>g.offsetWidth);
   w.glyphs.forEach((g,j)=>{
    const bias=w.influence[j];
