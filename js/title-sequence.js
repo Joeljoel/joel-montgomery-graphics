@@ -389,21 +389,24 @@
    width=5*cell+4*gap;height=cell+1;
    for(let i=0;i<5;i++)rect(i*(cell+gap),0,cell,height);
   }else if(look==='basketball'){
-   rect(0,0,6,3);rect(2,1,2,2);
-   add([[2,3],[4,3],[4,4],[3,5],[2,4],[2,3]]);
-   add([[2,3],[4,4]]);add([[4,3],[2,4]]);
-   add([[3,5],[3,6]]);add([[1,6],[5,6]]);height=6;
-  }else if(look==='tools'){
-   width=cols>=12?12:6;height=4;
-   // Three flowing contours, joined at grid anchors like a vector construction.
-   for(let line=0;line<3;line++){
-    const p=[];
-    for(let i=0;i<=width;i++){
-     p.push([i,Math.round(1.2*Math.sin(i/width*Math.PI*2))+line+1]);
-    }
-    add(p);
+   width=16;height=8;
+   // Paired arcade backboard, with a raised crown and two separate baskets.
+   add([[0,5],[0,1],[1,0],[15,0],[16,1],[16,5],[0,5]]);
+   add([[1,2],[15,2]]);
+   for(const x of [2,10]){
+    rect(x,3,4,2);
+    add([[x,5],[x+2,4.5],[x+4,5],[x+2,5.5],[x,5]]);
+    add([[x,5],[x+1,8],[x+3,8],[x+4,5]]);
+    add([[x+.5,6],[x+3,8],[x+3.5,6],[x+1,8],[x+.5,6]]);
    }
-   add([[0,1],[0,3]]);add([[width,1],[width,3]]);
+  }else if(look==='tools'){
+   // Easil's three-part E, traced from tools/assets/easilLogo.png.
+   // Keep the diagonal faces and original square proportions.
+   width=8;height=8;
+   add([[0,1.125],[2,0],[2,2.375],[0,3.375],[0,1.125]]);
+   add([[0,3.625],[1.125,4.125],[5,1.875],[5,4.125],[3,5.375],
+        [4,5.875],[4,8],[0,5.875],[0,3.625]]);
+   add([[4.125,5.875],[8,3.625],[8,5.875],[4.125,8],[4.125,5.875]]);
   }else return [];
   // Desktop illustrations fill the composition rather than a small central patch.
   // Quantize every enlarged anchor back to the existing dot lattice.
@@ -414,14 +417,14 @@
     paths.length=0;width=cell*5+4;height=cell;
     for(let i=0;i<5;i++)rect(i*(cell+1),0,cell,cell);
    }else{
-    sx=Math.max(1,Math.floor(cols*(look==='tools'?.84:.62))/width);
-    sy=Math.max(1,Math.floor(rows*.68)/height);
+    // Uniform scaling avoids stretching logos or hoops.
+    sx=sy=Math.max(.5,Math.min(cols*.84/width,rows*.72/height));
    }
   }
   const usedWidth=Math.round(width*sx),usedHeight=Math.round(height*sy);
   const ox=22+Math.max(0,Math.floor((cols-usedWidth)/2))*gridStep;
   const oy=22+Math.max(0,Math.floor((rows-usedHeight)/2))*gridStep;
-  return paths.map(p=>p.map(([x,y])=>[ox+Math.round(x*sx)*gridStep,oy+Math.round(y*sy)*gridStep]));
+  return paths.map(p=>p.map(([x,y])=>[ox+x*sx*gridStep,oy+y*sy*gridStep]));
  }
  function paintMotif(look,progress,opacity,cx,cy,strength){
   if(!look||opacity<=0)return;
@@ -435,7 +438,10 @@
   gctx.globalAlpha=opacity*.38;
   // Stagger individual strokes; sample long segments so they bend with the field.
   paths.forEach((path,index)=>{
-   let remaining=Math.max(0,Math.min(1,progress*1.3-index/Math.max(1,paths.length)*.3));
+   const spread=look==='lab'?.62:.48;
+   const delay=index/Math.max(1,paths.length-1)*spread;
+   const local=Math.max(0,Math.min(1,(progress-delay)/(1-spread)));
+   const remaining=1-(1-local)**3;
    const lengths=path.slice(1).map((p,i)=>Math.hypot(p[0]-path[i][0],p[1]-path[i][1]));
    let budget=lengths.reduce((a,b)=>a+b,0)*remaining;
    gctx.beginPath();gctx.moveTo(...warpPoint(path[0]));
@@ -455,9 +461,9 @@
   if(now<inkTransitionUntil)ink=getComputedStyle(header).color;
   const bounds=header.getBoundingClientRect();cx-=bounds.left;cy-=bounds.top;
   gctx.clearRect(0,0,gw,gh);gctx.fillStyle=ink;gctx.strokeStyle=ink;gctx.lineWidth=1.1;
-  const elapsed=reduced.matches?1:Math.min(1,(now-motifStart)/720);
+  const elapsed=reduced.matches?1:Math.min(1,(now-motifStart)/1500);
   paintMotif(motifPrevious,1,1-Math.min(1,elapsed*2.5),cx,cy,strength);
-  paintMotif(motifLook,1-(1-elapsed)**3,Math.min(1,elapsed*3),cx,cy,strength);
+  paintMotif(motifLook,elapsed,Math.min(1,elapsed*3),cx,cy,strength);
   for(const d of dots){
    if(!reduced.matches&&now>d.next){d.from=d.to;d.to=d.to===0?1+Math.floor(Math.random()*3):0;d.start=now;d.next=now+(d.to?700+Math.random()*1900:3500+Math.random()*10000)}
    const t=reduced.matches?1:Math.min(1,(now-d.start)/180),mix=1-(1-t)**3;
