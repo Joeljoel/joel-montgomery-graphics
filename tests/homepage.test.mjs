@@ -54,7 +54,7 @@ test('individual name letters explore full font axes while word widths stay fixe
 });
 
 test('featured title Echo effect samples past positions with no lead scaling', () => {
-  const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><\/h3>/g)];
+  const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+) <svg class="tile-arrow"[^>]*>[\s\S]*?<\/svg><\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
   assert.doesNotMatch(home, /id="title-elastic-|title-velocity-blur|title-smear/);
   assert.match(animations, /const enterDuration=385,exitDuration=470,spacing=7,echoCount=40/);
@@ -84,6 +84,15 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   assert.match(styles, /\.work h3\.title-echo-active\{transform:none!important/);
   assert.match(styles, /\.work h3 \.title-echoes/);
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)\{\.work \.title-echoes\{display:none\}/);
+});
+
+test('featured tile arrows are vector icons and appear in Echo copies', () => {
+  assert.equal((home.match(/<svg class="tile-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false">/g)||[]).length,3);
+  assert.equal((home.match(/<path d="M5 19L19 5M9 5H19V15"\/>/g)||[]).length,3);
+  assert.doesNotMatch(home, /<h3>[^<]*↗|<span class="title-label">[^<]*↗/);
+  assert.match(styles, /\.work h3 \.tile-arrow\{/);
+  assert.match(styles, /stroke:currentColor/);
+  assert.match(animations, /echo\.append\(\.\.\.Array\.from\(label\.childNodes,node=>node\.cloneNode\(true\)\)\)/);
 });
 
 test('hero name has solid ink echoes and scrub-only typography controls', () => {
