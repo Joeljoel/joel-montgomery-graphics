@@ -196,7 +196,7 @@ footer>div{position:relative;z-index:1}
  font:600 .78rem/1.5 monospace;letter-spacing:.08em;text-transform:uppercase;
 }
 footer a{text-underline-offset:.18em;text-decoration-thickness:1px}
-footer>div:last-child a+a{margin-top:4px}
+footer>div:last-of-type a+a{margin-top:4px}
 /* A tablet in landscape can still have touch input and needs generous targets. */
 @media(pointer:coarse) and (min-width:621px){
  footer a{display:flex;align-items:center;min-height:44px}
@@ -498,7 +498,8 @@ header > .press{display:none}
 }
 
 /* Local-time activity, kept in the tools column beside the experiments. */
-.currently{margin-top:24px;font-size:14px;line-height:1.6}
+footer{grid-template-rows:auto 1fr}
+.currently{grid-column:1 / -1;align-self:end;position:relative;z-index:1;margin-top:0;font-size:14px;line-height:1.6}
 .currently img{width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-left:.2em}
 .currently img[hidden]{display:none}
-@media(max-width:620px){.currently{margin-top:16px}}
+@media(max-width:620px){footer{grid-template-rows:auto auto 1fr}}
