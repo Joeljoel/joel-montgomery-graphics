@@ -383,51 +383,40 @@
   const cols=Math.max(1,Math.floor((gw-44)/gridStep)),rows=Math.max(1,Math.floor((gh-44)/gridStep));
   const paths=[],add=p=>paths.push(p);
   const rect=(x,y,w,h)=>add([[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]]);
-  let width=6,height=4;
+  let width,height,unit=1;
   if(look==='lab'){
-   const cell=cols>=14?2:1,gap=cols>=14?1:0;
-   width=5*cell+4*gap;height=cell+1;
-   for(let i=0;i<5;i++)rect(i*(cell+gap),0,cell,height);
+   const cell=gw>=800?Math.max(2,Math.min(Math.floor((cols*.86-4)/5),Math.floor(rows*.65))):(cols>=14?2:1);
+   const gap=cols>=14?1:0;
+   width=5*cell+4*gap;height=cell;
+   for(let i=0;i<5;i++)rect(i*(cell+gap),0,cell,cell);
   }else if(look==='basketball'){
-   width=16;height=8;
-   // Paired arcade backboard, with a raised crown and two separate baskets.
-   add([[0,5],[0,1],[1,0],[15,0],[16,1],[16,5],[0,5]]);
-   add([[1,2],[15,2]]);
+   // Built on whole grid cells: identical targets and mirrored rim/net geometry.
+   width=16;height=10;
+   add([[0,7],[0,1],[1,0],[15,0],[16,1],[16,7],[0,7]]);
+   add([[0,2],[16,2]]);
    for(const x of [2,10]){
-    rect(x,3,4,2);
-    add([[x,5],[x+2,4.5],[x+4,5],[x+2,5.5],[x,5]]);
-    add([[x,5],[x+1,8],[x+3,8],[x+4,5]]);
-    add([[x+.5,6],[x+3,8],[x+3.5,6],[x+1,8],[x+.5,6]]);
+    rect(x,3,4,3);
+    // Shallow diamond rim: four actual grid nodes, rather than a snapped oval.
+    add([[x,7],[x+2,6],[x+4,7],[x+2,8],[x,7]]);
+    add([[x,7],[x+1,10],[x+3,10],[x+4,7]]);
+    add([[x,7],[x+3,10]]);
+    add([[x+4,7],[x+1,10]]);
    }
+   unit=Math.max(1,Math.floor(Math.min(cols*.84/width,rows*.82/height)));
   }else if(look==='tools'){
-   // Easil's three-part E, traced from tools/assets/easilLogo.png.
-   // Keep the diagonal faces and original square proportions.
-   width=8;height=8;
-   add([[0,1.125],[2,0],[2,2.375],[0,3.375],[0,1.125]]);
-   add([[0,3.625],[1.125,4.125],[5,1.875],[5,4.125],[3,5.375],
-        [4,5.875],[4,8],[0,5.875],[0,3.625]]);
-   add([[4.125,5.875],[8,3.625],[8,5.875],[4.125,8],[4.125,5.875]]);
+   // Grid-native Easil mark. Every diagonal has the same 2:1 slope and
+   // every face has a four-cell depth. Enlarge/crop instead of rounding vertices.
+   width=16;height=16;
+   add([[0,2],[4,0],[4,4],[0,6],[0,2]]);
+   add([[0,8],[2,9],[10,5],[10,9],[6,11],[8,12],[8,16],[0,12],[0,8]]);
+   add([[8,12],[16,8],[16,12],[8,16],[8,12]]);
+   unit=Math.max(1,Math.round(rows/height));
   }else return [];
-  // Desktop illustrations fill the composition rather than a small central patch.
-  // Quantize every enlarged anchor back to the existing dot lattice.
-  let sx=1,sy=1;
-  if(gw>=800){
-   if(look==='lab'){
-    const cell=Math.max(2,Math.min(Math.floor((cols*.86-4)/5),Math.floor(rows*.65)));
-    paths.length=0;width=cell*5+4;height=cell;
-    for(let i=0;i<5;i++)rect(i*(cell+1),0,cell,cell);
-   }else{
-    // Uniform scaling avoids stretching logos or hoops.
-    sx=sy=Math.max(.5,Math.min(cols*.84/width,rows*.72/height));
-   }
-  }
-  const usedWidth=Math.round(width*sx),usedHeight=Math.round(height*sy);
-  const ox=22+Math.max(0,Math.floor((cols-usedWidth)/2))*gridStep;
-  const oy=22+Math.max(0,Math.floor((rows-usedHeight)/2))*gridStep;
-  return paths.map(p=>p.map(([x,y])=>[
-   ox+Math.round(x*sx)*gridStep,oy+Math.round(y*sy)*gridStep
-  ]).filter((p,i,points)=>i===0||p[0]!==points[i-1][0]||p[1]!==points[i-1][1]))
-   .filter(p=>p.length>1);
+  // Integer scaling and integer-cell translation preserve shape and alignment.
+  // The header clips oversized artwork naturally, including the Easil mark.
+  const ox=22+Math.floor((cols-width*unit)/2)*gridStep;
+  const oy=22+Math.floor((rows-height*unit)/2)*gridStep;
+  return paths.map(p=>p.map(([x,y])=>[ox+x*unit*gridStep,oy+y*unit*gridStep]));
  }
  function paintMotif(look,progress,opacity,cx,cy,strength){
   if(!look||opacity<=0)return;
