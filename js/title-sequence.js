@@ -186,7 +186,16 @@
   const glyphs=[...text].map(c=>{const el=document.createElement('span');el.textContent=c;return el});run.append(...glyphs);line.replaceChildren(run);return {line,run,glyphs,ratio:0}
  });
  // Capture the resting advance in em; subsequent weight changes flow through the whole word.
- function calibrate(){for(const w of runs){w.glyphs.forEach(g=>{g.style.fontVariationSettings='"wght" 650';g.style.marginRight='';g.style.transform=''});
+ function calibrate(){for(const w of runs){w.glyphs.forEach((g,j)=>{
+  g.style.fontVariationSettings='"wght" 650';g.style.marginRight='';g.style.transform='';
+  // Also reset the Echo's shared values during initial font measurement and
+  // when the variable font finishes loading, before live animation resumes.
+  const prefix='--intro-glyph-'+j+'-';
+  w.line.style.setProperty(prefix+'axes',g.style.fontVariationSettings);
+  w.line.style.setProperty(prefix+'spacing',g.style.letterSpacing||'normal');
+  w.line.style.setProperty(prefix+'scale','none');
+  w.line.style.setProperty(prefix+'margin','0px');
+ });
  const widths=w.glyphs.map(g=>g.offsetWidth),total=widths.reduce((a,b)=>a+b,0)||1;let pos=0;
  w.centres=widths.map(v=>{pos+=v;return (pos-v/2)/total});w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
  // ResizeObserver reports untransformed fractional advances without a synchronous layout read per frame.
