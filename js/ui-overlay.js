@@ -74,11 +74,10 @@
   for(const corner of ['tl','tr','bl','br'])guide.append(create('i','ui-wire-handle ui-corner-'+corner));
   section.append(guide);
  });
- const ACTIVE_DURATION=22000,RETURN_DURATION=1400;
- const wash=create('div','ui-screen-wash');
- wash.setAttribute('aria-hidden','true');
- wash.hidden=true;body.append(wash);
- let phase='idle',phaseStart=0,hiddenSince=null;
+ // The OFF/ON cycle begins on page load and repeats every ten seconds.
+ // The light/dark fill is confined to the button itself.
+ const CYCLE_DURATION=10000;
+ let phaseStart=0,hiddenSince=null;
  let raf=0,last=0;
  const place=(frame,rect,origin)=>{
   if(!rect||!rect.width||!rect.height){frame.hidden=true;return}
@@ -89,22 +88,17 @@
   frame.style.height=rect.height.toFixed(2)+'px';
  };
  function progress(amount){
-  const p=String(Math.max(0,Math.min(1,amount)));
-  button.style.setProperty('--ui-phase-progress',p);
-  wash.style.setProperty('--ui-phase-progress',p);
+  button.style.setProperty('--ui-phase-progress',String(Math.max(0,Math.min(1,amount))));
  }
- function setMode(on,animateReturn=true,now=performance.now()){
+ function setMode(on,now=performance.now()){
   body.classList.toggle('ui-overlay',on);
   button.setAttribute('aria-pressed',String(on));
   button.setAttribute('aria-label',on?
-   'Hide composition UI across the homepage (automatically turns off after 22 seconds)':
-   'Show composition UI across the homepage');
+   'Turn composition UI off (automatically switches in 10 seconds)':
+   'Turn composition UI on (automatically switches in 10 seconds)');
   button.querySelector('.ui-toggle-text').textContent=on?'UI ON':'UI OFF';
-  phase=on?'light':animateReturn?'dark':'idle';
+  button.dataset.phase=on?'dark':'light';
   phaseStart=now;
-  button.dataset.phase=phase;
-  wash.dataset.phase=phase;
-  wash.hidden=phase==='idle';
   progress(0);
   if(!on){
    cards.forEach(card=>card.classList.remove('ui-card-active'));
@@ -112,20 +106,14 @@
   }
  }
  function timer(now){
-  if(phase==='light'){
-   const p=Math.min(1,(now-phaseStart)/ACTIVE_DURATION);
-   progress(p);
-   if(p>=1)setMode(false,true,now);
-  }else if(phase==='dark'){
-   const p=Math.min(1,(now-phaseStart)/RETURN_DURATION);
-   progress(p);
-   if(p>=1){
-    phase='idle';
-    button.dataset.phase='idle';
-    wash.dataset.phase='idle';wash.hidden=true;
-    progress(0);
-   }
+  const elapsed=Math.max(0,now-phaseStart);
+  if(elapsed>=CYCLE_DURATION){
+   // Catch up if the browser throttles a frame. Hidden time is excluded.
+   const cycles=Math.floor(elapsed/CYCLE_DURATION);
+   const currentlyOn=body.classList.contains('ui-overlay');
+   setMode(cycles%2?!currentlyOn:currentlyOn,phaseStart+cycles*CYCLE_DURATION);
   }
+  progress((now-phaseStart)/CYCLE_DURATION);
  }
  function draw(now){
   raf=0;
@@ -171,11 +159,11 @@
    layer.playhead.style.left=active?'78%':'17%';
   }
   }
-  if(phase!=='idle')raf=requestAnimationFrame(draw);
+  raf=requestAnimationFrame(draw);
  }
  function start(){
   cancelAnimationFrame(raf);raf=0;last=0;
-  if(!document.hidden&&phase!=='idle')draw(performance.now());
+  if(!document.hidden)draw(performance.now());
  }
  button.addEventListener('click',()=>{
   setMode(!body.classList.contains('ui-overlay'));
@@ -193,6 +181,6 @@
  window.addEventListener('resize',()=>{
   if(body.classList.contains('ui-overlay'))start();
  },{passive:true});
- // UI mode is always opt-in and the timer resets on every activation.
- setMode(false,false);
+ // Start the first light-fill countdown immediately, with the UI hidden.
+ setMode(false);start();
 })();
