@@ -11,16 +11,8 @@
   root.toggleAttribute('data-side-strip',side>0);
  }
  update();addEventListener('resize',update);addEventListener('pageshow',update);
- // A compact navigation bar stays in the viewport and inherits the active tile's palette.
- const header=document.querySelector('body > header'),nav=header.querySelector('nav').cloneNode(true);
- nav.className='sticky-bar';nav.setAttribute('aria-label','Sticky navigation');nav.inert=true;
- const brand=nav.querySelector('a');brand.className='sticky-brand';
- const name=document.createElement('span');name.textContent='Joel Montgomery';brand.append(name);
- body.append(nav);
- let raf=0,threshold=0;
- function paint(){raf=0;const show=scrollY>threshold;
-  if(body.hasAttribute('data-sticky')!==show){body.toggleAttribute('data-sticky',show);nav.inert=!show}}
- function queue(){if(!raf)raf=requestAnimationFrame(paint)}
- new ResizeObserver(()=>{threshold=header.querySelector("nav").offsetTop+header.querySelector("nav").offsetHeight+24;queue()}).observe(header);
- addEventListener('scroll',queue,{passive:true});addEventListener('pageshow',queue);queue();
+ // Use the original navigation once, in a persistent inset bubble.
+ const header=document.querySelector('body > header'),nav=header.querySelector('nav');
+ const space=document.createElement('div');space.className='nav-space';space.setAttribute('aria-hidden','true');
+ nav.replaceWith(space);nav.className='sticky-bar';nav.setAttribute('aria-label','Main navigation');body.append(nav);
 })();
