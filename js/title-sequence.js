@@ -58,8 +58,17 @@
   const box=editBoxes[i];box.hidden=u<=.015;
   if(box.hidden)return;
   const real=line.querySelector('.word-run');
+  // Use the transformed glyph boxes: the word-run's layout rectangle may
+  // include excess space while Joel's individual characters stretch.
+  const glyphRects=real?[...real.children].map(g=>g.getBoundingClientRect()):[];
   let rect;
-  if(real)rect=real.getBoundingClientRect();
+  if(glyphRects.length){
+   const left=Math.min(...glyphRects.map(r=>r.left));
+   const right=Math.max(...glyphRects.map(r=>r.right));
+   const top=Math.min(...glyphRects.map(r=>r.top));
+   const bottom=Math.max(...glyphRects.map(r=>r.bottom));
+   rect={left,top,width:right-left,height:bottom-top};
+  }else if(real)rect=real.getBoundingClientRect();
   else{
    const range=document.createRange();range.selectNodeContents(line);
    rect=range.getBoundingClientRect();
@@ -199,6 +208,12 @@
  function play(){document.body.classList.remove('editing');if(frame>=72)draw(0);start=performance.now()-frame/.045;btn.textContent='Pause';run=requestAnimationFrame(tick)}
  function edit(){stop();document.body.classList.add('editing');draw(frame)}
  range.addEventListener('pointerdown',edit);range.oninput=()=>{const requested=Number(range.value);stop();document.body.classList.add("editing");draw(requested);stop()};btn.onclick=()=>run?stop():play();
+ // The other animation loop continues changing glyph widths during scrubbing.
+ // Keep the editing boxes in sync without restarting the intro timeline.
+ q('.hero').addEventListener('header:letterforms-changed',()=>{
+  if(!document.body.classList.contains('editing'))return;
+  lines.slice(0,2).forEach((line,i)=>updateTextBounds(i,line,introProgress(i,frame)));
+ });
  new MutationObserver(()=>draw(frame)).observe(document.body,{attributes:true,attributeFilter:['data-look']});
  q('.transport').hidden=false;draw(72);stop();if(!rm.matches)play();rm.onchange=()=>{draw(72);stop();document.body.classList.remove('editing')};
 })();
@@ -315,6 +330,7 @@
    w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/currentWidth;
  }
  // ResizeObserver supplies current untransformed advances as the letters vary.
+ const letterformsChanged=new Event('header:letterforms-changed');
  const observer=new ResizeObserver(entries=>{for(const e of entries){
   const w=runs.find(item=>item.run===e.target);
   if(w&&e.contentRect.width){
@@ -323,7 +339,10 @@
    // Echo copies use exactly the same width correction as the live lettering.
    w.line.style.setProperty('--intro-run-transform',normalization);
   }
- }});
+ }
+ // The width cap updates asynchronously: sync the box after normalization.
+ if(document.body.classList.contains('editing'))hero.dispatchEvent(letterformsChanged);
+ });
  calibrate();runs.forEach(w=>observer.observe(w.run));
  let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
  // Moderated twisting for the header's cursor warp and dot field.
@@ -432,7 +451,9 @@
   });
 
  }
- // Keep contextual labels attached to the changing character bounds.
+ // Keep the name bounding boxes and hovered-glyph labels anchored to the
+ // changing letterforms while the playhead is stopped in editing mode.
+ if(document.body.classList.contains('editing'))hero.dispatchEvent(letterformsChanged);
  renderGlyphInspector();
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
  power+=((point?1:0)-power)*(-Math.expm1(-dt/(point?290:490)));
