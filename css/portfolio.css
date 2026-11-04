@@ -302,31 +302,55 @@ footer>div:last-child a+a{margin-top:4px}
 }
 
 
-/* Optional composition-overlay mode. The fixed nav remains stable when the
-   overlay is enabled and the decorative layers never steal interactions. */
+/* A glassy orange composition toggle, styled at the same text size and
+   weight as Selected Work. Its inset fill reflects the visible UI timer. */
 .sticky-bar #ui-overlay-toggle{
- display:inline-flex;align-items:center;justify-content:center;gap:7px;
- min-height:44px;min-width:91px;padding:0 12px;
- flex:none;border:1px solid #ffffff73;border-radius:99px;
- color:var(--paper);background:#101c5a52;
- font:700 10px/1.2 monospace;letter-spacing:.055em;
- white-space:nowrap;cursor:pointer;
+ position:relative;isolation:isolate;overflow:hidden;
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:44px;flex:none;padding:0 1.1em;
+ border:1px solid #ffe2baae;border-radius:99px;
+ color:#fff8ec;background:linear-gradient(155deg,#ffffff66,#ffd6a40e 45%,#fa93462e),#a95729b5;
+ -webkit-backdrop-filter:blur(9px) saturate(160%);
+ backdrop-filter:blur(9px) saturate(160%);
+ box-shadow:inset 0 1px 1px #ffffffd4,inset 1px 0 2px #fff2cf66,inset -1px -2px 3px #ffc17855,0 4px 12px #4f170c33;
+ font:inherit;letter-spacing:inherit;white-space:nowrap;cursor:pointer;
 }
-.sticky-bar #ui-overlay-toggle:hover,.sticky-bar #ui-overlay-toggle:focus-visible{background:#d7e9ff28}
-.sticky-bar #ui-overlay-toggle:focus-visible{outline:2px solid currentColor;outline-offset:3px}
-.ui-toggle-led{width:8px;height:8px;border-radius:50%;border:1px solid currentColor;opacity:.7}
-#ui-overlay-toggle[aria-pressed=true]{
- color:#b5f5cb;border-color:#b5f5cb;
- box-shadow:inset 0 0 0 1px #b5f5cb38,0 0 14px #b5f5cb25;
+.sticky-bar #ui-overlay-toggle::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ transform-origin:left center;transform:scaleX(var(--ui-phase-progress,0));
+ background:linear-gradient(100deg,#ffd3a979,#fff2d8b2);
 }
-#ui-overlay-toggle[aria-pressed=true] .ui-toggle-led{background:currentColor;box-shadow:0 0 9px currentColor;opacity:1}
+.sticky-bar #ui-overlay-toggle[data-phase=dark]::before{
+ background:linear-gradient(100deg,#4c2a26b8,#221f2cdd);
+}
+.sticky-bar #ui-overlay-toggle:hover{filter:brightness(1.07)}
+.sticky-bar #ui-overlay-toggle:focus-visible{outline:3px solid currentColor;outline-offset:4px}
+#ui-overlay-toggle[aria-pressed=true]{border-color:#fff3cf;box-shadow:inset 0 1px 1px #fff8f1,0 0 13px #ffe2ac55,0 4px 12px #4f170c33}
+.ui-toggle-text{position:relative;z-index:1}
+/* A very light full-page wash makes the passage of UI time obvious even when
+   the viewer is looking at a tile instead of the navigation button. */
+.ui-screen-wash{
+ position:fixed;inset:0;z-index:7;pointer-events:none;
+ transform-origin:left center;transform:scaleX(var(--ui-phase-progress,0));
+ background:linear-gradient(90deg,#ffbb690c,#ffe8bc31);
+ border-right:2px solid #ffe4a1a6;box-shadow:6px 0 19px #f9bc743d;
+}
+.ui-screen-wash[data-phase=dark]{
+ background:linear-gradient(90deg,#0d1c3133,#1f22394a);
+ border-right-color:#202b4ad5;box-shadow:6px 0 20px #18233b55;
+}
+.ui-screen-wash[hidden]{display:none}
+@media(prefers-reduced-motion:reduce){
+ .ui-screen-wash,.sticky-bar #ui-overlay-toggle::before{display:none}
+}
 @media(max-width:620px){
  .sticky-bar{gap:8px;padding-right:10px;padding-left:12px}
  .sticky-bar>a[href="#work"]{font-size:12px;white-space:nowrap;padding-inline:10px}
- .sticky-bar #ui-overlay-toggle{min-width:65px;padding-inline:9px;gap:5px}
+ .sticky-bar #ui-overlay-toggle{font-size:12px;padding-inline:10px}
  .sticky-bar b{font-size:26px}
 }
-/* The manual scrubber remains a separate way to reveal header UI. */
+/* The manual scrubber independently reveals the header UI even when the
+   optional overlay mode times out and returns to the clean view. */
 .ui-overlay :is(.guides,.tracks),.ui-overlay #vectors,.ui-overlay .type-editor{visibility:visible}
 .ui-overlay .guides{border:none;background:none}
 .ui-overlay .tracks{
@@ -352,6 +376,17 @@ footer>div:last-child a+a{margin-top:4px}
 }
 .ui-wire[hidden]{display:none}
 .ui-wire-art{border-color:#b5f5cb;color:#b5f5cb}
+/* One tight transform-tracking box for each individual ribbon disc.
+   It is only rendered for the disc currently under the mouse or pen. */
+.ui-wire-disc{
+ border:1px solid #fff2a4;color:#fff2a4;z-index:4;
+ box-shadow:inset 0 0 0 1px #1727ab55,0 0 10px #fff2a433;
+}
+.ui-wire-disc .ui-wire-label{
+ top:auto;bottom:calc(100% + 2px);left:0;
+ background:#222631f2;color:#fff2a4;
+}
+
 .ui-wire-copy{border-color:#ffbd77;color:#ffbd77}
 .ui-wire-feature{
  border-color:#ffbd77;color:#ffbd77;
