@@ -5,6 +5,26 @@
  const ns='http://www.w3.org/2000/svg';
  const outlines=strokes.map(()=>{const p=document.createElementNS(ns,'path');p.setAttribute('stroke','#ffe6aa');p.setAttribute('stroke-width','1.2');q('#speed-ink').append(p);return p});
  const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**4;
+ let exchange=0, target=false, envelope=0, phase=0, previous=0, hoverRAF=0;
+ let base=[24,24], offsets=[0,0];
+ function shape(i){
+  const delta=exchange*(i?-1:1)*Math.min(5.5,base[i]*.2), weight=base[i]+delta;
+  const span=i?182:96, left=i?151:18;
+  const sx=(span+base[i])/(span+weight);
+  const shift=offsets[i]+left-base[i]/2-sx*(left-weight/2);
+  for(const node of [strokes[i],outlines[i],guides[i]])node.setAttribute('transform','matrix('+sx+' 0 0 1 '+shift+' 0)');
+  strokes[i].style.strokeWidth=weight+'px';return weight;
+ }
+ function breathe(now){
+  const dt=Math.min(50,now-previous);previous=now;
+  envelope+=((target?1:0)-envelope)*(-Math.expm1(-dt/210));phase+=dt*.0018;
+  exchange=rm.matches?0:envelope*Math.sin(phase);
+  if(!target && envelope<.002 || rm.matches){exchange=envelope=0;hoverRAF=0}else hoverRAF=requestAnimationFrame(breathe);
+  shape(0);shape(1);
+ }
+ const mark=q('.ident');
+ mark.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||rm.matches)return;target=true;if(!hoverRAF){phase=.6;previous=performance.now();hoverRAF=requestAnimationFrame(breathe)}});
+ mark.addEventListener('pointerleave',()=>{target=false});
  function draw(f){
  frame=clamp(f/72)*72;
  const rest=document.body.dataset.look==='tools'?46:document.body.dataset.look==='lab'?15:24;
@@ -12,12 +32,11 @@
  // Centre the full mark while leaving 13 units between the two ink edges.
  const advance=(weights[0]+weights[1])/2+13-(151-114);
  const centreShift=-(advance+(weights[1]-weights[0])/2)/2;
+ base=weights;offsets=[centreShift,centreShift+advance];
  strokes.forEach((p,i)=>{
  const age=frame-i*11,u=burst(age/(i?43:35)), fill=burst((age-2.4)/(i?46:38)), settle=burst(age/40);
  p.setAttribute('d',i?'M151 196V'+(37-8*(1-settle))+'L241 '+(155+19*(1-settle))+'L333 37V196':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
- const matrix='translate('+(centreShift+(i?advance:0))+' 0)';
- [p,outlines[i],guides[i]].forEach(el=>el.setAttribute('transform',matrix));
- const len=p.getTotalLength(),w=weights[i];
+ const len=p.getTotalLength(),w=shape(i);
  p.style.strokeWidth=w+'px';p.setAttribute('stroke-linecap','butt');p.setAttribute('stroke-linejoin','round');
  p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
  const rails=[[],[]];for(let j=0;j<=24;j++){const d=len*(fill+(u-fill)*j/24),pt=p.getPointAtLength(d),a=p.getPointAtLength(Math.max(0,d-.3)),b=p.getPointAtLength(Math.min(len,d+.3)),dx=b.x-a.x,dy=b.y-a.y,k=w/2/(Math.hypot(dx,dy)||1);rails.forEach((r,n)=>r.push([pt.x+(n?1:-1)*dy*k,pt.y-(n?1:-1)*dx*k].join(',')))}
