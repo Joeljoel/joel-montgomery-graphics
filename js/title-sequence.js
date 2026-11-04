@@ -315,7 +315,7 @@
    a separate glitch graphic. The strips stretch back towards their previous
    position and settle after the heading has finished moving. */
 (() => {
- const pull=[.20,.23,.26,.24,.28,.31,.29,.26,.27,.30,.27,.25,.23,.24,.20,.18];
+ const pull=[.14,.15,.17,.16,.18,.20,.19,.17,.18,.20,.18,.17,.16,.17,.15,.14];
  const offsets=[0,17,35,11,29,45,22,39,8,31,48,20,42,13,34,4];
  for(const heading of document.querySelectorAll('.work h3')){
   const layer=heading.querySelector('.title-smear');
@@ -333,8 +333,8 @@
    segment.style.setProperty('--band-bottom',bottom+'%');
    segment.style.setProperty('--band-pull',(-amount).toFixed(3)+'em');
    segment.style.setProperty('--band-half',(-amount*.44).toFixed(3)+'em');
-   segment.style.setProperty('--band-stretch',(1+amount*.22).toFixed(3));
-   segment.style.setProperty('--band-mid-stretch',(1+amount*.075).toFixed(3));
+   segment.style.setProperty('--band-stretch',(1+amount*.13).toFixed(3));
+   segment.style.setProperty('--band-mid-stretch',(1+amount*.05).toFixed(3));
    segment.style.setProperty('--band-delay',offsets[i]+'ms');
    fragments.append(segment);
   });
