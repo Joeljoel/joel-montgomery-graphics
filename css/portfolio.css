@@ -11,3 +11,18 @@
 @keyframes register { from { transform: translateY(.12em); text-shadow: -.07em 0 #739dff,.07em 0 #d771b7; } to { transform: none; text-shadow: 0 0 transparent; } }
 @keyframes ribbon { 45% { transform: translateY(-23px); } }
 @keyframes ribbon-replay { 45% { transform: translateY(-23px); } }
+
+/* One scrolling box for each colour field, including the strip behind Safari. */
+html[data-side-strip] { overflow-x: hidden; }
+html[data-side-strip]:not([data-magnified]) body { touch-action: pan-y pinch-zoom; }
+html[data-side-strip] :is(header,main,footer) {
+  width: calc(100% + var(--strip));
+  padding-right: calc(max(6vw, (100vw - 1260px)/2) + var(--strip));
+}
+html[data-side-strip] :is(main,footer) { background: var(--paper); }
+@media(max-width:620px) {
+  .hero { grid-template-columns: auto minmax(0,1fr); }
+  nav a, footer a { display: inline-flex; align-items: center; min-height: 44px; }
+  footer a { display:flex; }
+  footer { padding-bottom:max(52px,env(safe-area-inset-bottom)); }
+}
