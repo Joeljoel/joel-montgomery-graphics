@@ -108,3 +108,23 @@ main{overflow-x:clip}
 .scoreboard[data-state="final"][data-lit="false"] .scores output { visibility: hidden; }
 .scoreboard[data-state="off"] span { color: #655b59; }
 .scoreboard .clock output.urgent { color: #ff534b; }
+
+
+/* Extend scenery even when Safari reports identical screen and layout widths. */
+html{overflow-x:hidden;overscroll-behavior-x:none;background:#191d1e}
+body{width:100%;max-width:100%;overflow-x:visible;touch-action:pan-y pinch-zoom}
+button{touch-action:manipulation}
+@media(max-width:1000px){
+ .office{right:auto;width:calc(100% + max(var(--duo-side,0px),120px));min-height:100lvh}
+ main{padding-top:12px}
+ .game-layout{display:block;container-type:inline-size}
+ .machine{width:100%;max-width:none}
+ /* Keep the court full size. Reclaim only the decorative leg area beneath
+    its 800×960 input canvas; never cover the balls or shooting surface. */
+ .panel{
+  position:relative;z-index:4;width:100%;
+  margin-top:max(-35cqw,min(12px,calc(min(100svh,var(--duo-usable-height,100svh)) - 125px - 155cqw)));
+ }
+
+ .controls button{min-height:48px}
+}
