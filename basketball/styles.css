@@ -117,10 +117,14 @@ button{touch-action:manipulation}
 @media(max-width:1000px){
  .office{right:auto;width:calc(100% + max(var(--duo-side,0px),120px));min-height:100lvh}
  main{padding-top:12px}
- .machine{
-  width:100%;
-  max-width:max(140px,calc((min(100svh,var(--duo-usable-height,100svh)) - 132px - max(48px,env(safe-area-inset-bottom))) / 1.55));
+ .game-layout{display:block;container-type:inline-size}
+ .machine{width:100%;max-width:none}
+ /* Keep the court full size. Reclaim only the decorative leg area beneath
+    its 800×960 input canvas; never cover the balls or shooting surface. */
+ .panel{
+  position:relative;z-index:4;width:100%;
+  margin-top:max(-35cqw,min(12px,calc(min(100svh,var(--duo-usable-height,100svh)) - 125px - 155cqw)));
  }
- .panel{width:100%}
+
  .controls button{min-height:48px}
 }
