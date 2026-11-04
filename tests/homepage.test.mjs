@@ -35,6 +35,18 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
+test('featured card title smears stay decorative and motion-aware', () => {
+  const headings = [...home.matchAll(/<h3>([^<]+)<span class="title-smear" aria-hidden="true" data-smear="([^"]+)"><\/span><\/h3>/g)];
+  assert.equal(headings.length, 3);
+  for (const match of headings) assert.equal(match[1], match[2]);
+  assert.match(styles, /@media\(prefers-reduced-motion:no-preference\)\{\s*\.work \.title-smear::before/);
+  assert.match(styles, /@keyframes title-smear-top/);
+  assert.match(styles, /@keyframes title-smear-bottom/);
+  assert.match(styles, /body\[data-look=tools\] \.work a:first-child/);
+  assert.match(styles, /body\[data-look=lab\] \.work a:nth-child\(2\)/);
+  assert.match(styles, /body\[data-look=basketball\] \.work a:nth-child\(3\)/);
+});
+
 test('pre-redesign homepage is archived without a link from the new page', () => {
   const legacy = content('legacy/index.html');
   assert.match(legacy, /<meta name="robots" content="noindex,follow">/);
