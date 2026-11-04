@@ -24,8 +24,22 @@
  }
  const mark=q('.ident');
  function wake(){if(!hoverRAF){previous=performance.now();hoverRAF=requestAnimationFrame(breathe)}}
- mark.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||rm.matches)return;const b=mark.getBoundingClientRect();target=Math.tanh((.39-(e.clientX-b.left)/b.width)*6);wake()});
- mark.addEventListener('pointerleave',()=>{target=0;wake()});
+ // Use the same deformation for mouse and touch. Touch moves remain passive so
+ // the surrounding header keeps its native scrolling and title-warp gestures.
+ function aimAt(clientX){
+  if(rm.matches)return;
+  const b=mark.getBoundingClientRect();
+  if(!b.width)return;
+  target=Math.tanh((.39-(clientX-b.left)/b.width)*6);
+  wake();
+ }
+ function releaseMark(){target=0;wake()}
+ mark.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'||e.pointerType==='pen')aimAt(e.clientX)});
+ mark.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse'||e.pointerType==='pen')releaseMark()});
+ mark.addEventListener('touchstart',e=>{if(e.touches.length===1)aimAt(e.touches[0].clientX)},{passive:true});
+ mark.addEventListener('touchmove',e=>{if(e.touches.length===1)aimAt(e.touches[0].clientX)},{passive:true});
+ mark.addEventListener('touchend',e=>{if(!e.touches.length)releaseMark()},{passive:true});
+ mark.addEventListener('touchcancel',releaseMark,{passive:true});
  function draw(f){
  frame=clamp(f/72)*72;
  const rest=document.body.dataset.look==='tools'?46:document.body.dataset.look==='lab'?15:24;
