@@ -470,17 +470,22 @@ footer>div:last-child a+a{margin-top:4px}
 @media (hover:none) and (pointer:coarse) {
  html:root {
   --edge-blue:#1727ab;--edge-paper:#faf6ea;--edge-angle:125deg;
-  background-color:var(--edge-paper);
+  background-color:var(--edge-base,var(--edge-paper));
   background-image:
    linear-gradient(var(--edge-angle),var(--edge-blue) 15%,color-mix(in srgb,var(--edge-blue) 57%,#090a29) 105%),
    linear-gradient(color-mix(in srgb,var(--edge-paper) 90%,transparent),color-mix(in srgb,var(--edge-paper) 90%,transparent)),
    url("grain-stock.webp");
   background-size:100% var(--header-paint-height,100svh),100% 100%,311px 311px;
   background-position:0 0;
-  background-repeat:no-repeat,no-repeat,repeat;
+  background-repeat:repeat-x,repeat,repeat;
   background-attachment:scroll;
  }
  html:has(body[data-look=tools]){--edge-blue:#552153;--edge-paper:#ffdda8;--edge-angle:235deg}
  html:has(body[data-look=lab]){--edge-blue:#104959;--edge-paper:#d1ffec;--edge-angle:48deg}
  html:has(body[data-look=basketball]){--edge-blue:#84214e;--edge-paper:#ffe0ec;--edge-angle:315deg}
+}
+
+/* Safari may sample only the root's solid colour for browser-owned regions. */
+@media (hover:none) and (pointer:coarse) {
+ html[data-header-backdrop]{--edge-base:var(--edge-blue)}
 }
