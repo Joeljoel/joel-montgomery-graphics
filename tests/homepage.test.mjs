@@ -35,17 +35,23 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('featured title smear uses layered motion fragments with reduced-motion support', () => {
+test('featured titles use bounded, cohesive motion blur with reduced-motion support', () => {
   const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><span class="title-smear" aria-hidden="true" data-smear="([^"]+)"><\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
   for (const match of headings) assert.equal(match[1], match[2]);
-  assert.match(animations, /const bands=\[/);
-  assert.match(animations, /const trails=\[/);
+  assert.match(home, /<filter id="title-velocity-blur"/);
+  assert.match(home, /<feGaussianBlur stdDeviation="6 0\.2"/);
+  assert.match(animations, /const pull=\[/);
+  assert.match(animations, /segment\.className='smear-band'/);
+  assert.match(animations, /segment\.textContent=label\.textContent/);
   assert.match(animations, /layer\.replaceChildren\(fragments\)/);
-  assert.match(animations, /span\.textContent=label\.textContent/);
-  assert.match(styles, /@keyframes title-ink-drag/);
-  assert.match(styles, /@keyframes title-scanline-tear/);
-  assert.match(styles, /@keyframes title-velocity-line/);
+  assert.doesNotMatch(animations, /smear-trail/);
+  const pull = animations.match(/const pull=\[([^\]]+)\]/);
+  assert.ok(pull);
+  assert.ok(pull[1].split(',').every(value => Math.abs(Number(value)) <= 0.2));
+  assert.match(styles, /filter:url\(#title-velocity-blur\)/);
+  assert.match(styles, /@keyframes title-ink-smear/);
+  assert.doesNotMatch(styles, /title-scanline-tear|title-velocity-line/);
   assert.match(styles, /prefers-reduced-motion:reduce\)\{\.work \.title-smear\{display:none\}/);
   assert.match(styles, /body\[data-look=tools\] \.work a:first-child/);
   assert.match(styles, /body\[data-look=lab\] \.work a:nth-child\(2\)/);
