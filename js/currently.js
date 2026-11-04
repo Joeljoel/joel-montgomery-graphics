@@ -55,7 +55,7 @@
     const status = selectStatus(new Date());
     if (status === previous) return;
     previous = status;
-    root.querySelector('[data-currently-text]').textContent = status.text;
+    root.querySelector('[data-currently-text]').textContent = 'Currently: ' + status.text;
     const image = root.querySelector('img');
     image.hidden = !status.logo;
     if (status.logo) {
