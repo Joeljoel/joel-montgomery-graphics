@@ -140,7 +140,7 @@
   for(const [j,echo] of ensureIntroEchoes(el,i).entries()){
    const past=introProgress(i,frame-(j+1)*.6);
    const delta=introX(i,past)-position;
-   echo.style.display=u>.025&&past>.015&&Math.abs(delta)>.003?'block':'none';
+   echo.style.display=!rm.matches&&u>.025&&past>.015&&Math.abs(delta)>.003?'block':'none';
    echo.style.transform='translateX('+delta.toFixed(4)+'em)';
    echo.style.clipPath=i===1
     ?'inset(-25% -3% -35% '+100*(1-past)+'%)'
