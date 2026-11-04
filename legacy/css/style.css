@@ -1,0 +1,201 @@
+html,body
+{
+	height:100%;
+}
+*{
+    margin:0;
+    padding:0;
+}
+@font-face 
+{
+	font-family: 'BasicTitle';
+	src: url('fonts/BASICTITLE.eot');
+	src: local('â˜º'), url('fonts/BASICTITLE.woff') format('woff'), url('fonts/BASICTITLE.ttf') format('truetype'), url('fonts/BASICTITLE.svg') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+h1
+{
+	font-family:'BasicTitle';
+	font-size:42px;
+	text-align:center;
+}
+a:visited
+{
+    color: #FFFFFF;
+}
+a
+{
+	color: #FFFFFF;
+    text-decoration: none;
+}
+#start
+{
+	background:#55A9DE;
+	height:100vh;
+	min-width:100%;
+	z-index:2;
+	position:relative;
+}
+#main
+{
+	padding-top:200px;
+	height:100%;
+	min-width:100%;
+}
+#logo
+{
+	height:470px;
+	width:434px;
+	margin:0 auto;
+	margin: auto;
+	position: absolute;
+	top:0;left:0;bottom:10%;right:4%;
+}
+#arrow
+{
+	height:50px;
+	width:40px;
+	margin:0 auto;
+	margin: auto;
+	position: absolute;
+	top:0;left:0;bottom:-95%;right:0;
+}
+#header
+{
+	width:100%;
+	height:150px;
+	background:#4B4E53;
+	position: fixed;
+	z-index:1;
+	margin:0 auto;
+}
+#hLogo
+{
+	height:89px;
+	width:83px;
+	margin:0 auto;
+	margin: auto;
+	position: absolute;
+	top:0;left:0;bottom:0;right:1%;
+}
+#body
+{
+	max-width:1000px;
+	margin:0 auto;
+	font:helvetica;
+	font-family:Helvetica, Arial, sans-serif;
+	font-size:16px;
+	padding-left:10px;
+	padding-right:10px;
+}
+.text
+{
+	line-height:1.6;
+	
+}
+#hContent
+{
+	max-width:1000px;
+	min-width:700px;
+	height:100px;
+	margin:0 auto;
+	margin: auto;
+	position: absolute;
+	top:0;left:0;bottom:0;right:0;
+}
+#hLeft
+{
+	width:400px;
+	height:40px;
+	float:left;
+	margin: auto;
+	position: absolute;
+	top:0;bottom:0;left:0;
+	color:#FFFFFF;
+}
+#hRight
+{
+	width:400px;
+	height:40px;
+	float:right;
+	margin: auto;
+	position: absolute;
+	top:0;bottom:0;right:0;
+	color:#FFFFFF;
+}
+#grid
+{
+	width:100%;
+	margin:0 auto;
+}
+#wrap
+{
+	overflow:hidden;
+}
+.box
+{
+	width:20%;
+	padding-bottom:20%;
+	color:#FFFFFF;
+	position:relative;
+	float:left;
+}
+.boxInner
+{
+	position:absolute;
+	left:10px;
+	right:10px;
+	top:10px;
+	bottom:10px;
+}
+.boxInner img
+{
+	width:100%;
+}
+/* Keep the original stacking: the blue opening panel scrolls over the grey header. */
+.home { --intro-blue: #55A9DE; --nav-grey: #4B4E53; --nav-height: 150px; }
+.home-scene { position: relative; min-height: 100%; }
+.home #main { height: 100vh; }
+.home #start { background-color: var(--intro-blue); }
+.home #header { top: 0; background-color: var(--nav-grey); height: var(--nav-height); }
+.home-edge { display: none; }
+html[data-home-edge] { overflow-x: hidden; }
+html[data-home-edge]:not([data-home-zoom]), html[data-home-edge]:not([data-home-zoom]) .home {
+  touch-action: pan-y pinch-zoom;
+}
+html[data-home-edge] .home-edge {
+  display: block; position: absolute; top: var(--home-scroll, 0px); height: var(--nav-height); left: 100%;
+  width: var(--home-bleed); pointer-events: none;
+}
+.home-edge { background: var(--nav-grey); }
+.intro-edge { display: none; }
+html[data-home-edge] .intro-edge {
+  display: block; position: absolute; left: 100%; top: 0; bottom: 0;
+  width: var(--home-bleed); background: inherit; pointer-events: none;
+}
+@media (max-width: 700px) {
+  .home #hContent { min-width: 0; }
+  .home #hLeft, .home #hRight { width: 30%; }
+  .home #logo { width: min(52vw, 240px, 44vh); height: auto; aspect-ratio: 434 / 470; }
+  .home #logo img { width: 100%; height: auto; }
+}
+
+html[data-home-edge] #start { height: max(100vh, var(--home-screen-height)); }
+@media (max-width: 700px) {
+  .home { --nav-height: 72px; }
+  .home #hContent { height: 100%; }
+  .home #hLogo { width: 42px; height: 45px; }
+  .home #hLogo img { width: 100%; height: auto; }
+  .home #hLeft { height: auto; bottom: auto; top: 50%; transform: translateY(-50%); }
+  .home #hLeft h1 { font-size: 24px; }
+  .home #body h1 { font-size: 30px; }
+  .home #main { padding-top: calc(var(--nav-height) + 28px); }
+  .home #arrow {
+    inset: auto; left: 50%; margin: 0; transform: translateX(-50%);
+    top: calc(min(100svh, var(--home-visible-height, 100svh)) - max(16px, env(safe-area-inset-bottom)) - 44px);
+    height: 44px; width: 44px;
+  }
+  .home #arrow a { display: grid; height: 44px; place-items: center; }
+  .home #arrow img { width: 28px; height: auto; }
+}
