@@ -87,7 +87,7 @@
 (() => {
  const hero=document.querySelector('.hero'), header=document.querySelector('header'), reduced=matchMedia('(prefers-reduced-motion: reduce)');
  const runs=[...hero.querySelectorAll('h1 .type-line')].map(line=>{
-  const text=line.textContent,run=document.createElement('span');run.className='word-run';line.setAttribute('aria-label',text);run.setAttribute('aria-hidden','true');
+  const text=line.textContent,run=document.createElement('span');run.className='word-run';line.setAttribute('aria-hidden','true');run.setAttribute('aria-hidden','true');
   const glyphs=[...text].map(c=>{const el=document.createElement('span');el.textContent=c;return el});run.append(...glyphs);line.replaceChildren(run);return {line,run,glyphs,ratio:0}
  });
  // Capture the resting advance in em; subsequent weight changes flow through the whole word.
@@ -111,7 +111,7 @@
 
  // Sparse, independently timed glyphs share the cursor field with the title.
  const grid=document.createElement('canvas');grid.className='motion-grid';grid.setAttribute('aria-hidden','true');header.prepend(grid);
- const gctx=grid.getContext('2d');let dots=[],gw=0,gh=0,ink='#faf6ea';
+ const gctx=grid.getContext('2d');let dots=[],gw=0,gh=0,ink='#faf6ea',inkTransitionUntil=0;
  function sizeGrid(){
   gw=header.clientWidth;gh=header.clientHeight;const dpr=Math.min(devicePixelRatio||1,1.5);
   grid.width=Math.round(gw*dpr);grid.height=Math.round(gh*dpr);gctx.setTransform(dpr,0,0,dpr,0,0);
@@ -127,6 +127,7 @@
   else{gctx.moveTo(xx-3,yy-3);gctx.lineTo(xx+3,yy+3);gctx.moveTo(xx+3,yy-3);gctx.lineTo(xx-3,yy+3);gctx.stroke()}
  }
  function paintGrid(now,cx,cy,strength){
+  if(now<inkTransitionUntil)ink=getComputedStyle(header).color;
   const bounds=header.getBoundingClientRect();cx-=bounds.left;cy-=bounds.top;
   gctx.clearRect(0,0,gw,gh);gctx.fillStyle=ink;gctx.strokeStyle=ink;gctx.lineWidth=1.1;
   for(const d of dots){
@@ -139,7 +140,7 @@
   }
  }
  sizeGrid();new ResizeObserver(()=>{sizeGrid();paintGrid(performance.now(),0,0,0)}).observe(header);
- new MutationObserver(()=>{ink=getComputedStyle(header).color}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
+ new MutationObserver(()=>{inkTransitionUntil=performance.now()+550;ink=getComputedStyle(header).color}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
 
  let point=null,aimX=0,aimY=0,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
  function pointAt(clientX,clientY){if(reduced.matches)return;point=[clientX,clientY];if(!ready){[x,y]=point;[aimX,aimY]=point;ready=true}}
@@ -183,7 +184,7 @@
  }else{hero.style.filter='';ready=false}
  paintGrid(now,x,y,power);
  raf=requestAnimationFrame(draw)}
- function sync(){cancelAnimationFrame(raf);paintGrid(performance.now(),0,0,0);hero.style.filter='';point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
+ function sync(){cancelAnimationFrame(raf);ink=getComputedStyle(header).color;paintGrid(performance.now(),0,0,0);hero.style.filter='';point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
  new IntersectionObserver(([e])=>{visible=e.isIntersecting;sync()}).observe(hero);reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
 })();
 /* Echo the header's changing glyph field behind the footer links.
@@ -199,7 +200,7 @@
  const ctx=canvas.getContext('2d');
  if(!ctx)return;
  let dots=[],width=0,height=0,point=null,power=0,raf=0,last=0,visible=false;
- let x=0,y=0,ready=false;
+ let x=0,y=0,ready=false,ink=getComputedStyle(footer).color,inkTransitionUntil=0;
  function size(){
   width=footer.clientWidth;height=footer.clientHeight;
   const dpr=Math.min(devicePixelRatio||1,1.5);
@@ -226,7 +227,8 @@
   }else ready=false;
   power+=((point&&!reduced.matches?1:0)-power)*(-Math.expm1(-dt/(point?230:420)));
   ctx.clearRect(0,0,width,height);
-  const ink=getComputedStyle(footer).color;ctx.fillStyle=ink;ctx.strokeStyle=ink;ctx.lineWidth=1.1;
+  if(now<inkTransitionUntil)ink=getComputedStyle(footer).color;
+  ctx.fillStyle=ink;ctx.strokeStyle=ink;ctx.lineWidth=1.1;
   for(const d of dots){
    if(!reduced.matches&&now>d.next){
     d.from=d.to;d.to=d.to===0?1+Math.floor(Math.random()*3):0;
@@ -244,6 +246,7 @@
  }
  function sync(){
   cancelAnimationFrame(raf);raf=0;
+  ink=getComputedStyle(footer).color;
   if(visible&&!document.hidden){last=performance.now();draw(last)}
  }
  function aim(clientX,clientY){
@@ -259,6 +262,7 @@
  const release=()=>{point=null};
  footer.addEventListener('touchend',release,{passive:true});
  footer.addEventListener('touchcancel',release,{passive:true});
+ new MutationObserver(()=>{inkTransitionUntil=performance.now()+550;if(reduced.matches)sync()}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
  new ResizeObserver(()=>{size();sync()}).observe(footer);
  new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;sync()}).observe(footer);
  reduced.addEventListener('change',()=>{point=null;power=0;sync()});
