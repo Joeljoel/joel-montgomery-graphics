@@ -7,13 +7,17 @@
  const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**3;
  function draw(f){
  frame=clamp(f/72)*72;
+ const rest=document.body.dataset.look==='tools'?31:document.body.dataset.look==='lab'?15:24;
+ const weights=[0,11].map(delay=>{const t=clamp((frame-delay)/42);return 5+(rest-5)*burst(t)+17*Math.sin(Math.PI*t)**2});
+ // Centre the full mark while leaving 13 units between the two ink edges.
+ const advance=(weights[0]+weights[1])/2+13-(151-114);
+ const centreShift=-(advance+(weights[1]-weights[0])/2)/2;
  strokes.forEach((p,i)=>{
  const age=frame-i*11,u=burst(age/(i?43:35)), fill=burst((age-2.4)/(i?46:38)), settle=burst(age/40);
  p.setAttribute('d',i?'M151 196V'+(37-8*(1-settle))+'L241 '+(155+19*(1-settle))+'L333 37V196':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
- const width=.42+.58*settle+.24*Math.sin(Math.PI*clamp(age/42));
- const x=i?241:114, matrix='translate('+x+' 0) scale('+width+' 1) translate('+(-x)+' 0)';
+ const matrix='translate('+(centreShift+(i?advance:0))+' 0)';
  [p,outlines[i],guides[i]].forEach(el=>el.setAttribute('transform',matrix));
- const len=p.getTotalLength(),w=18+6*settle+4*Math.sin(settle*Math.PI);
+ const len=p.getTotalLength(),w=weights[i];
  p.style.strokeWidth=w+'px';p.setAttribute('stroke-linecap','butt');p.setAttribute('stroke-linejoin','round');
  p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
  const rails=[[],[]];for(let j=0;j<=24;j++){const d=len*(fill+(u-fill)*j/24),pt=p.getPointAtLength(d),a=p.getPointAtLength(Math.max(0,d-.3)),b=p.getPointAtLength(Math.min(len,d+.3)),dx=b.x-a.x,dy=b.y-a.y,k=w/2/(Math.hypot(dx,dy)||1);rails.forEach((r,n)=>r.push([pt.x+(n?1:-1)*dy*k,pt.y-(n?1:-1)*dx*k].join(',')))}
@@ -34,6 +38,7 @@
  function play(){document.body.classList.remove('editing');if(frame>=72)draw(0);start=performance.now()-frame/.03;btn.textContent='Pause';run=requestAnimationFrame(tick)}
  function edit(){stop();document.body.classList.add('editing');draw(frame)}
  range.addEventListener('pointerdown',edit);range.oninput=()=>{const requested=Number(range.value);stop();document.body.classList.add("editing");draw(requested);stop()};btn.onclick=()=>run?stop():play();
+ new MutationObserver(()=>draw(frame)).observe(document.body,{attributes:true,attributeFilter:['data-look']});
  q('.transport').hidden=false;draw(72);stop();if(!rm.matches)play();rm.onchange=()=>{draw(72);stop();document.body.classList.remove('editing')};
 })();
 (() => {
