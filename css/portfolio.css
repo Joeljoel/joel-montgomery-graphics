@@ -167,7 +167,7 @@ body[data-look=basketball] :is(header,.sticky-bar){--wash-angle:315deg}
 
 /* Joelsketball: an angled cabinet sits on the right; the ball travels along
    one clear up-and-right trajectory toward the left rim on hover/focus. */
-.hoopboard{background:#171f68;isolation:isolate}
+.hoopboard{background:#171f68;isolation:isolate;container-type:inline-size}
 .hoopboard svg{display:block;width:100%;height:100%;transform-origin:62% 51%}
 .hoopboard .hoop-ball{transform-box:fill-box;transform-origin:center}
 .hoopboard .jb-speed-back{opacity:.56}
@@ -185,7 +185,7 @@ body[data-look=basketball] :is(header,.sticky-bar){--wash-angle:315deg}
  .hoopboard .jb-rim-glint{transition:opacity .18s ease .33s}
  .work a:is(:hover,:focus-visible) .hoopboard svg{transform:scale(1.085) translate(-6px,-1px)}
  /* The ball lands above the left orange rim (x≈252,y≈139), as though about to score. */
- .work a:is(:hover,:focus-visible) .hoopboard .hoop-ball{transform:translate(170px,-80px) rotate(38deg) scale(.68)}
+ .work a:is(:hover,:focus-visible) .hoopboard .hoop-ball{transform:translate(35.4167cqw,-16.6667cqw) rotate(38deg) scale(.68)}
  .work a:is(:hover,:focus-visible) .hoopboard .jb-speed-back{transform:translate(15px,-6px);opacity:.95}
  .work a:is(:hover,:focus-visible) .hoopboard .jb-flight-trail{opacity:.85;transform:translate(7px,-3px)}
  .work a:is(:hover,:focus-visible) .hoopboard .jb-flight-echoes{opacity:.58}
