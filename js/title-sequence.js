@@ -308,3 +308,54 @@
  new ResizeObserver(([e])=>{room=Math.max(0,e.contentRect.width-16);if(reduced.matches)sync()}).observe(brand);
  document.fonts.ready.then(sync);reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
 })();
+
+
+/* Fragmented title motion: row-specific displacements and trailing scanline
+   wisps. Built once; CSS drives the short effect whenever a tile is selected. */
+(() => {
+ const bands=[
+  [0,7,-.56,1.38,0], [8,8,-.92,1.70,42], [17,5,-.26,1.25,15],
+  [23,10,-.71,1.57,35], [34,6,-1.02,1.78,0],
+  [41,7,-.38,1.31,51], [49,11,-.85,1.63,18],
+  [61,6,-.29,1.26,44], [68,8,-.95,1.68,7],
+  [78,5,-.47,1.43,32], [84,9,-.72,1.52,11], [94,6,-.22,1.22,40]
+ ];
+ const trails=[
+  [7,-12,78,2,15],[19,-7,61,4,43],[32,-18,89,2,3],
+  [46,-10,69,3,27],[60,-16,80,2,51],[75,-13,56,4,12],[91,-8,72,2,36]
+ ];
+ for(const heading of document.querySelectorAll('.work h3')){
+  const layer=heading.querySelector('.title-smear');
+  const label=heading.querySelector('.title-label');
+  if(!layer||!label)continue;
+  const fragments=document.createDocumentFragment();
+  bands.forEach(([top,height,dx,stretch,delay],i)=>{
+   const span=document.createElement('span');
+   span.className='smear-slice smear-tone-'+i%3;
+   span.textContent=label.textContent;
+   const vars={
+    '--slice-top':top+'%',
+    '--slice-bottom':100-top-height+'%',
+    '--slice-drift':dx+'em',
+    '--slice-half':dx*.47+'em',
+    '--slice-stretch':stretch,
+    '--slice-contract':1+(stretch-1)*.36,
+    '--smear-lag':delay+'ms'
+   };
+   for(const [name,value] of Object.entries(vars))span.style.setProperty(name,value);
+   fragments.append(span);
+  });
+  trails.forEach(([y,left,width,thickness,delay],i)=>{
+   const span=document.createElement('span');
+   span.className='smear-trail smear-tone-'+i%3;
+   const vars={
+    '--trail-y':y+'%', '--trail-left':left+'%',
+    '--trail-width':width+'%', '--trail-thickness':thickness+'px',
+    '--smear-lag':delay+'ms'
+   };
+   for(const [name,value] of Object.entries(vars))span.style.setProperty(name,value);
+   fragments.append(span);
+  });
+  layer.replaceChildren(fragments);
+ }
+})();
