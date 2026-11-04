@@ -4,9 +4,18 @@
  const keys=new Map(),states=['untested','absent','present','correct'];let busy=false;
  const improved=()=>body.classList.contains('improved'),active=()=>cells.filter(c=>!c.disabled);
  const sheet=document.querySelector('#resultSheet'),view=document.querySelector('#viewResult');
+ let resetTimer=0;
+ function updateReset(){
+  const now=new Date(),midnight=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+1);
+  const minutes=Math.ceil((midnight-now.getTime())/60000);
+  const text='Resets in '+String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
+  const label=document.querySelector('#nextPuzzle');if(label.textContent!==text)label.textContent=text;
+ }
+ sheet.addEventListener('close',()=>{clearInterval(resetTimer);resetTimer=0});
+ document.addEventListener('visibilitychange',()=>{if(sheet.open)updateReset()});
  function openResult(){if(!improved()||active().length||sheet.open)return;
  document.querySelector('#resultTitle').textContent=message.textContent||'Round complete';
- document.querySelector('#resultNote').textContent=document.querySelector('#roundKind').textContent+(document.querySelector('#streak').textContent?' · '+document.querySelector('#streak').textContent:'');document.querySelector('#copied').textContent='';document.querySelector('#nextPuzzle').textContent='The next daily puzzle arrives at midnight. The provider does not specify its timezone.';sheet.showModal()}
+ document.querySelector('#resultNote').textContent=document.querySelector('#roundKind').textContent+(document.querySelector('#streak').textContent?' · '+document.querySelector('#streak').textContent:'');document.querySelector('#copied').textContent='';updateReset();sheet.showModal();clearInterval(resetTimer);resetTimer=setInterval(updateReset,1000)}
  view.onclick=openResult;document.querySelector('#again').onclick=()=>{sheet.close();prizes.querySelector('[onclick]').click()};
  function refresh(){document.querySelector('#roundKind').textContent=puzzleURL.includes('random=1')?'Random puzzle':'Daily puzzle';
  const done=!active().length;body.classList.toggle('round-ended',done);view.hidden=!done;document.querySelector('#roundCount').textContent=done?message.textContent:'Guess '+guessNumber+' / 6';
@@ -49,14 +58,14 @@
   }catch{}
  }
  document.addEventListener('puzzle-ready',restore);if(puzzleState==='ready')restore();
- async function input(k){const row=active();if(!improved()||busy||!row.length)return;const empty=row.find(c=>!c.value);row.forEach(c=>c.classList.remove('invalidWord'));
+ async function input(k){const row=active();if(!improved()||busy||!row.length)return;document.querySelector('#checking').textContent='';const empty=row.find(c=>!c.value);row.forEach(c=>c.classList.remove('invalidWord'));
  if(k==='⌫'){const c=row.filter(c=>c.value).pop();if(c){c.value=''}message.textContent='';return}
  if(k!=='✓'){if(empty){empty.value=k;message.textContent=''}return}
  if(empty){message.textContent='Enter five letters.';return}
  if(!correctWord){message.textContent=puzzleState==='loading'?'Puzzle is still loading.':'Use Retry to load the puzzle.';return}
- busy=true;message.textContent='';document.querySelector('#checking').textContent='Checking…';const word=row.map(c=>c.value).join('').toLowerCase();try{const response=await fetch('https://words.dev-apis.com/validate-word',{method:'POST',signal:AbortSignal.timeout(10000),body:JSON.stringify({word})});if(!response.ok)throw Error();if(!(await response.json()).validWord){message.textContent='Word not recognised.';return}
+ busy=true;message.textContent='';document.querySelector('#checking').textContent='Checking…';const word=row.map(c=>c.value).join('').toLowerCase();try{const response=await fetch('https://words.dev-apis.com/validate-word',{method:'POST',signal:AbortSignal.timeout(10000),body:JSON.stringify({word})});if(!response.ok)throw Error();if(!(await response.json()).validWord){document.querySelector('#checking').textContent='Not a Word';return}
  message.textContent='';finishGuess(word,row);submitted=cells.filter(c=>c.disabled&&c.value).map(c=>c.value.toLowerCase()).join('').match(/.{5}/g)||[];save()
- }catch{message.textContent='Couldn’t check that word. Try again.'}finally{busy=false;document.querySelector('#checking').textContent=''}}
+ }catch{message.textContent='Couldn’t check that word. Try again.'}finally{busy=false;const status=document.querySelector('#checking');if(status.textContent==='Checking…')status.textContent=''}}
  document.addEventListener('keydown',e=>{if(sheet.open||!improved()||e.metaKey||e.ctrlKey||e.altKey||e.isComposing)return;if(e.target.closest('button,a')&&e.key==='Enter')return;let k=e.key==='Enter'?'✓':e.key==='Backspace'?'⌫':/^[a-z]$/i.test(e.key)?e.key.toUpperCase():null;if(k){e.preventDefault();e.stopImmediatePropagation();input(k)}},true);
  document.querySelector('#retry').onclick=()=>{message.textContent='';loadPuzzle(puzzleURL)};
  prizes.addEventListener('click',e=>{if(!e.target.closest('[onclick]'))return;clearCelebration();cells.forEach(c=>{delete c.dataset.state;c.classList.remove('revealed')});refresh()});
