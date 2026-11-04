@@ -64,7 +64,15 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   assert.doesNotMatch(echoStyle, /blur\(|opacity:/);
   assert.match(echoStyle, /color:var\(--blue\);display:none;/);
   assert.match(animations, /positionAt\(item,now-\(i\+1\)\*spacing\)/);
-  assert.match(animations, /1-Math\.pow\(1-t,3\)/);
+  assert.match(animations, /const ease=t<\.5\?4\*t\*t\*t:1-4\*Math\.pow\(1-t,3\)/);
+  // The travel starts and ends gently, peaks in the middle, and never reverses.
+  const ease=t=>t<.5?4*t*t*t:1-4*Math.pow(1-t,3);
+  const positions=Array.from({length:101},(_,i)=>ease(i/100));
+  assert.equal(positions[0],0);
+  assert.equal(positions.at(-1),1);
+  assert.ok(positions.every((p,i)=>i===0||p>=positions[i-1]));
+  assert.ok(ease(.25)<.1 && ease(.75)>.9);
+  assert.ok(ease(.51)-ease(.49) > .05);
   assert.match(animations, /item\.label\.style\.transform='translate3d\('/);
   assert.match(animations, /layer\.setAttribute\('aria-hidden','true'\)/);
   assert.match(animations, /enabled=!reduced\.matches/);
