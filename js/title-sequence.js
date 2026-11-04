@@ -331,7 +331,7 @@
 })();
 
 
-/* Temporal echo for the featured titles, after the supplied AE Echo reference.
+/* Solid-ink temporal echo for the featured titles, after the supplied AE Echo reference.
    The lead text only translates to the RIGHT on entry (no scale or skew).
    Closely-spaced samples of its actual previous positions form a continuous
    trailing ink smear, which catches up just after the lead finishes moving.
@@ -339,7 +339,8 @@
 (() => {
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  const looks=['tools','lab','basketball'];
- const duration=470,spacing=13,echoCount=18,trailTime=spacing*echoCount;
+ // Subpixel-spaced, opaque previous frames overlap into a single solid silhouette.
+ const duration=470,spacing=7,echoCount=40,trailTime=spacing*echoCount;
  const cards=[...document.querySelectorAll('.work h3')].map((heading,i)=>{
   const label=heading.querySelector('.title-label');
   if(!label)return null;
@@ -378,14 +379,11 @@
    if(now-item.lastChanged<duration+trailTime+80)stillMoving=true;
    for(let i=0;i<item.echoes.length;i++){
     const x=positionAt(item,now-(i+1)*spacing);
-    const distance=Math.abs(head-x);
-    const strength=Math.min(1,distance/1.5);
-    const fade=Math.pow(1-i/echoCount,.7);
     const echo=item.echoes[i];
-    // Closely stacked silhouettes produce a thick Echo-style temporal blend,
-    // not a single shadow clone or an extra-long decorative speed streak.
+    // Every echo is fully opaque: adjacent samples physically merge into
+    // one continuous ink shape, just like Echo's maximum compositing mode.
     echo.style.transform='translate3d('+x.toFixed(3)+'px,0,0)';
-    echo.style.opacity=smeared?(0.19*fade*strength).toFixed(3):'0';
+    echo.style.display=smeared?'block':'none';
    }
   }
   if(stillMoving)raf=requestAnimationFrame(render);
@@ -412,7 +410,7 @@
   for(const item of cards){
    item.heading.classList.toggle('title-echo-active',enabled);
    item.label.style.removeProperty('transform');
-   item.echoes.forEach(echo=>{echo.style.opacity='0';echo.style.removeProperty('transform')});
+   item.echoes.forEach(echo=>{echo.style.display='none';echo.style.removeProperty('transform')});
    const target=enabled&&document.body.dataset.look===item.look?
     parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
    item.goal=target;item.moves=[{at:-100000,from:target,to:target}];
@@ -431,7 +429,7 @@
     parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
    item.goal=next;item.moves=[{at:-100000,from:next,to:next}];
    item.label.style.transform='translate3d('+next.toFixed(3)+'px,0,0)';
-   item.echoes.forEach(echo=>echo.style.opacity='0');
+   item.echoes.forEach(echo=>echo.style.display='none');
    item.lastChanged=now-duration-trailTime;
   }
  },{passive:true});
