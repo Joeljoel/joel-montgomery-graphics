@@ -108,3 +108,24 @@ main{overflow-x:clip}
 .scoreboard[data-state="final"][data-lit="false"] .scores output { visibility: hidden; }
 .scoreboard[data-state="off"] span { color: #655b59; }
 .scoreboard .clock output.urgent { color: #ff534b; }
+
+
+/* Keep the playable layout within Safari's content width; only scenery bleeds. */
+html{overflow-x:hidden;overscroll-behavior-x:none;background:#191d1e}
+body{width:100%;max-width:100%;overflow-x:visible;touch-action:pan-y pinch-zoom}
+button{touch-action:manipulation}
+html[data-basketball-duo] .office{
+ right:auto;width:calc(100% + var(--duo-side,0px));
+ min-height:100lvh;
+}
+/* Fit the complete machine and Start Round into the visible outer display.
+   Statistics remain in normal flow below the button and can be scrolled to. */
+@media(max-width:1000px){
+ html[data-basketball-duo] main{padding-top:12px}
+ html[data-basketball-duo] .machine{
+  width:100%;
+  max-width:calc((min(100svh,var(--duo-usable-height,100svh)) - 132px) / 1.55);
+ }
+ html[data-basketball-duo] .panel{width:100%}
+ html[data-basketball-duo] .controls button{min-height:48px}
+}
