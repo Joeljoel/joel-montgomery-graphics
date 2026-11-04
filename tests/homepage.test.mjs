@@ -114,7 +114,7 @@ test('editing guide tracks Joel rendered glyph width as its letters stretch', ()
   // The font animation and its asynchronous width normalizer both refresh it.
   assert.match(animations, /lines\.slice\(0,2\)\.forEach\(\(line,i\)=>updateTextBounds\(i,line,introProgress\(i,frame\)\)\)/);
   assert.equal((animations.match(/hero\.dispatchEvent\(letterformsChanged\)/g)||[]).length,2);
-  assert.match(animations, /if\(document\.body\.classList\.contains\('editing'\)\)hero\.dispatchEvent\(letterformsChanged\)/);
+  assert.match(animations, /if\(document\.body\.classList\.contains\('editing'\)\|\|document\.body\.classList\.contains\('ui-overlay'\)\)hero\.dispatchEvent\(letterformsChanged\)/);
   assert.match(animations, /w===runs\[0\]\?Math\.min\(1,maxWidth\/currentWidth\)/);
 });
 
@@ -128,7 +128,7 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   assert.equal(385<470,true);
   assert.match(animations, /echo\.style\.display=smeared\?'block':'none'/);
   assert.doesNotMatch(animations, /echo\.style\.opacity/);
-  const echoStyle = styles.slice(styles.lastIndexOf('/* Solid-ink Echo trail'));
+  const echoStyle = styles.slice(styles.lastIndexOf('/* Solid-ink Echo trail'),styles.indexOf('/* Solid, same-ink temporal echoes'));
   assert.doesNotMatch(echoStyle, /blur\(|opacity:/);
   assert.match(echoStyle, /color:var\(--blue\);display:none;/);
   assert.match(animations, /positionAt\(item,now-\(i\+1\)\*spacing\)/);
