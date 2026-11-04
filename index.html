@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Joel Montgomery — Motion graphics &amp; UI design</title><meta name="description" content="Joel Montgomery is a motion graphics and UI designer. Explore selected work, design utilities, Joeldle and Joelsketball."><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wdth,wght@50..145,100..1000&amp;display=swap&amp;text=Joel%20Montgomery"><link rel="icon" href="favicon.ico?v=jm-2026"><link rel="icon" type="image/svg+xml" href="favicon.svg?v=jm-2026"><link rel="stylesheet" href="css/portfolio.css"><script defer src="js/portfolio-viewport.js"></script><script defer src="js/title-sequence.js"></script></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Joel Montgomery — Motion graphics &amp; UI design</title><meta name="description" content="Joel Montgomery is a motion graphics and UI designer. Explore selected work, design utilities, Joeldle and Joelsketball."><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Flex:wdth,wght@50..145,100..1000&amp;display=swap&amp;text=Joel%20Montgomery"><link rel="icon" href="favicon.ico?v=jm-2026"><link rel="icon" type="image/svg+xml" href="favicon.svg?v=jm-2026"><link rel="stylesheet" href="css/portfolio.css"><script defer src="js/portfolio-viewport.js"></script><script defer src="js/title-sequence.js"></script><script defer src="js/basketball-tile.js"></script></head><body>
 <a class="skip-link" href="#work">Skip to selected work</a>
 
 <header><div class="press" aria-hidden="true"><b>UTILITIES</b><b>JOELDLE</b><b>JOELSKETBALL</b></div><nav><a href="./" aria-label="Joel Montgomery home"><b>JM</b></a><a href="#work">Selected work ↓</a></nav><div class="hero"><div class="ident" aria-hidden="true"><svg viewBox="0 0 324 210" preserveAspectRatio="xMidYMid meet"><defs><clipPath id="m-cap-flat"><rect x="0" y="25" width="360" height="200"/></clipPath></defs><g class="ident-height" transform="translate(0 24.2) scale(1 .78)"><g id="speed-ink" fill="none" stroke-linecap="butt"></g><g id="strokes" fill="none" stroke="#faf6ea" stroke-width="24" stroke-linecap="round"><path d="M114 25V128C114 204 18 204 18 122"/><path clip-path="url(#m-cap-flat)" d="M151 196V25L224 155L297 25V196"/></g><g id="vectors" fill="none" stroke-width="1"><g stroke="#75caff"><path stroke-dasharray="2 2"/><rect/><rect/><rect/><circle r="2.5"/></g><g stroke="#ffbd77"><path stroke-dasharray="2 2"/><rect/><rect/><rect/><circle r="2.5"/></g></g></g></svg><div class="guides"><small>COMP 01 / LETTERFORMS</small><b>⊕</b></div></div><div><h1 aria-label="Joel Montgomery"><span class="type-line">Joel</span><span class="type-line">Montgomery</span></h1><p><span class="type-line">Motion graphics &amp; UI designer</span><span class="type-line">Gold Coast, Australia</span></p></div></div><div class="comp-row"><div class="transport" hidden><button type="button" id="play">Pause</button><input id="playhead" type="range" min="0" max="72" value="0" aria-label="Animation progress"><output>000 / 72</output></div><div class="tracks" aria-hidden="true"><strong>COMPOSITION　/　JM</strong><strong>00:00　　　　　　02:12</strong><span>01 / J</span><i style="--in:0%;--out:54%"></i><span>02 / M</span><i style="--in:16%;--out:83%"></i>
@@ -76,26 +76,14 @@
     <path d="M221 116H238" stroke="#fff3ec" stroke-width="2.2"/>
     <g fill="none" stroke-linecap="round">
       <path d="M120 145Q157 152 192 145M266 145Q303 152 337 145" stroke="#fba15b" stroke-width="7"/>
-      <path d="M126 148L133 171L154 186L178 172L187 149M270 148L278 171L299 186L323 172L332 149M133 152L177 173M178 151L134 173M277 152L322 173M322 152L278 173M141 163H171M286 163H316" stroke="#f5f5ed" stroke-width="2.2"/>
+      <path d="M270 148L278 171L299 186L323 172L332 149M277 152L322 173M322 152L278 173M286 163H316" stroke="#f5f5ed" stroke-width="2.2"/>
     </g>
   </g>
 </g>
-<!-- The curved path and afterimages follow the exact same up/right shot direction. -->
-<g class="jb-flight-trail" fill="none" stroke-linecap="round">
-  <path d="M70 214Q151 162 248 124" stroke="#f7f1e5" stroke-width="8" opacity=".55"/>
-  <path d="M43 224Q144 165 238 128" stroke="#ff7fae" stroke-width="3.6" opacity=".9"/>
-  <path d="M51 232Q151 175 244 137" stroke="#fff1dc" stroke-width="2" opacity=".6"/>
-</g>
-<g class="jb-flight-echoes">
-  <ellipse cx="141" cy="172" rx="24" ry="16" transform="rotate(-20 141 172)" fill="#f3ebdb" opacity=".31"/>
-  <ellipse cx="179" cy="152" rx="20" ry="13" transform="rotate(-20 179 152)" fill="#e6455a" opacity=".42"/>
-  <ellipse cx="215" cy="136" rx="15" ry="10" transform="rotate(-20 215 136)" fill="#d9eaf0" opacity=".64"/>
-</g>
-<!-- Small convergence glint sits at the front rim, just behind the arriving ball. -->
-<g class="jb-rim-glint" transform="translate(252 143)" stroke="#fff7e2" fill="none" stroke-width="2.8" stroke-linecap="round">
-  <path d="M-18 0H-29M18 0H29M0-18V-28M-13-13L-21-21M13-13L21-21"/>
-  <circle r="10" stroke="#ff9cbd" stroke-width="2"/>
-</g>
+<!-- Animated strokes are sampled from the ball's flight, in SVG coordinates. -->
+<g class="jb-flight-trail" fill="none" stroke-linecap="round"><path stroke="#ff559d" stroke-width="15"/><path stroke="#fff4df" stroke-width="5"/></g>
+<g class="jb-flight-echoes" fill="none" stroke="#ffd5e6" stroke-width="2"><ellipse/><ellipse/><ellipse/></g>
+<g class="jb-rim-glint" stroke="#fff5dc" fill="none" stroke-width="3" stroke-linecap="round"><path d="M-26 0H-43M26 0H43M0-26V-40M-19-19L-30-30M19-19L30-30M-20 18L-29 27M20 18L29 27"/><circle r="20" stroke="#ff70b2"/></g>
 <!-- Game-accurate panels: alternating dark red, warm off-white and navy, with black rubber seams. -->
 <g class="hoop-ball">
   <circle cx="82" cy="201" r="39" fill="#ebe6d7"/>
@@ -112,5 +100,9 @@
   <circle cx="82" cy="201" r="39" fill="url(#jb-ball-shadow)"/>
   <circle cx="82" cy="201" r="39" fill="none" stroke="#1b1a1c" stroke-width="2.7"/>
 </g>
+<g transform="translate(95 -4) scale(.92)"><g transform="matrix(.87 .12 -.09 .94 48 0)">
+<g class="jb-net" fill="none" stroke="#fff3e4" stroke-width="2.6" stroke-linejoin="round"><path d="M126 148L133 171L154 186L178 172L187 149M133 152L177 173M178 151L134 173M141 163H171"/></g>
+<path d="M120 145Q157 157 192 145" fill="none" stroke="#ffb36a" stroke-width="5" stroke-linecap="round"/>
+</g></g>
 </svg></div><h3><span class="title-label">Joelsketball <svg class="tile-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 19L19 5M9 5H19V15"/></svg></span></h3><p>A two-player arcade basketball game.</p></a></div></main>
 <footer><div><h2 class="footer-label">TOOLS</h2><a class="tools" href="tools/">Design Utilities ↗</a></div><div><h2 class="footer-label">EXPERIMENTS</h2><a href="calculator/">Joelculator ↗</a><a href="joeldle/">Joeldle ↗</a><a href="basketball/">Joelsketball ↗</a><a href="iphone-duo/">Joelport Lab ↗</a></div></footer></body></html>
