@@ -9,7 +9,10 @@
  frame=clamp(f/72)*72;
  strokes.forEach((p,i)=>{
  const age=frame-i*11,u=burst(age/(i?43:35)), fill=burst((age-2.4)/(i?46:38)), settle=burst(age/40);
- p.setAttribute('d',i?'M151 184V'+(25-8*(1-settle))+'L241 '+(143+19*(1-settle))+'L333 25V184':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
+ p.setAttribute('d',i?'M151 196V'+(37-8*(1-settle))+'L241 '+(155+19*(1-settle))+'L333 37V196':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
+ const width=.42+.58*settle+.24*Math.sin(Math.PI*clamp(age/42));
+ const x=i?241:114, matrix='translate('+x+' 0) scale('+width+' 1) translate('+(-x)+' 0)';
+ [p,outlines[i],guides[i]].forEach(el=>el.setAttribute('transform',matrix));
  const len=p.getTotalLength(),w=18+6*settle+4*Math.sin(settle*Math.PI);
  p.style.strokeWidth=w+'px';p.setAttribute('stroke-linecap','butt');p.setAttribute('stroke-linejoin','round');
  p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
@@ -22,7 +25,7 @@
  }
  });
  lines.forEach((el,i)=>{const u=burst((frame-[5,15,29,36][i])/[32,39,29,31][i]),k=1-u;
- el.style.transformOrigin=i===1?'right':'left';el.style.transform='scaleX('+(1+(i===1?.32:-.24)*k)+')';el.style.clipPath=i===1?'inset(0 0 0 '+100*k+'%)':'inset(0 '+100*k+'% 0 0)';el.style.textShadow=k>.01?(-12*k)+'px 0 #ff8060,'+ (8*k)+'px 0 #a5ffda':'none';
+ el.style.transformOrigin=i===1?'right':'left';el.style.transform='scaleX('+(1+(i===1?.32:-.24)*k)+')';el.style.clipPath=u===1?'none':i===1?'inset(-25% -3% -35% '+100*k+'%)':'inset(-25% '+100*k+'% -35% -3%)';el.style.letterSpacing=(-.055+.17*k)+'em';el.style.opacity=clamp(u*4);el.style.textShadow=k>.01?(-12*k)+'px 0 #ff8060,'+ (8*k)+'px 0 #a5ffda':'none';
  });
  document.querySelector('.tracks').style.setProperty('--time',100*frame/72+'%');range.value=Math.round(frame);out.value=String(Math.round(frame)).padStart(3,'0')+' / 72';
  }
@@ -34,15 +37,11 @@
  q('.transport').hidden=false;draw(72);stop();if(!rm.matches)play();rm.onchange=()=>{draw(72);stop();document.body.classList.remove('editing')};
 })();
 (() => {
- const body=document.body, cards=[...document.querySelectorAll('.work > a')], bar=document.querySelector('.audition'), buttons=[...bar.querySelectorAll('button')];
- let hover='', focus='', pinned='';
- function paint(){const look=hover||focus||pinned;if(look)body.dataset.look=look;else delete body.dataset.look;buttons.forEach(b=>b.setAttribute('aria-pressed',String(pinned===b.dataset.look)))}
- cards.forEach((card,i)=>{const look=buttons[i].dataset.look;
- card.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){hover=look;paint()}});
- card.addEventListener('pointerleave',()=>{hover='';paint()});
- card.addEventListener('focus',()=>{if(card.matches(':focus-visible')){focus=look;paint()}});
- card.addEventListener('blur',()=>{focus='';paint()});
- });
- buttons.forEach(b=>b.onclick=()=>{pinned=pinned===b.dataset.look?'':b.dataset.look;paint()});
- bar.hidden=false;
+ const cards=[...document.querySelectorAll('.work > a')], looks=['tools','lab'],touch=matchMedia('(hover:none)');
+ let hover='',focus='',scroll='',raf=0;
+ function paint(){const look=hover||focus||scroll;if(look)document.body.dataset.look=look;else delete document.body.dataset.look}
+ function scan(){raf=0;scroll='';if(touch.matches){const y=(window.visualViewport?.height||innerHeight)*.5;cards.forEach((c,i)=>{const r=c.getBoundingClientRect();if(r.top<=y && r.bottom>=y)scroll=looks[i]})}paint()}
+ function queue(){if(!raf)raf=requestAnimationFrame(scan)}
+ cards.forEach((c,i)=>{c.onpointerenter=e=>{if(e.pointerType==='mouse'){hover=looks[i];paint()}};c.onpointerleave=()=>{hover='';paint()};c.onfocus=()=>{if(c.matches(':focus-visible')){focus=looks[i];paint()}};c.onblur=()=>{focus='';paint()}});
+ addEventListener('scroll',queue,{passive:true});addEventListener('resize',queue);touch.addEventListener('change',queue);scan();
 })();
