@@ -11,28 +11,38 @@
   <clipPath id="jb-ball-mask"><circle cx="82" cy="201" r="39"/></clipPath>
 </defs>
 <rect width="480" height="240" fill="url(#jb-night)"/>
-<!-- A single shot axis: every background streak points from the lower left toward the basket. -->
-<path d="M0 240L256 114L309 135L59 240Z" fill="#e1c6ff" opacity=".075"/>
-<path d="M-45 239L239 120L224 139L14 240Z" fill="#fff3dd" opacity=".085"/>
-<g class="jb-speed-back" fill="none" stroke-linecap="round">
-  <path d="M-68 171L171 80M-48 191L192 99M-57 218L180 127" stroke="#fff4e1" stroke-width="3.8" opacity=".47"/>
-  <path d="M-27 238L201 151M17 245L222 167M-48 144L151 68" stroke="#ff76bc" stroke-width="8" opacity=".36"/>
-  <path d="M-59 121L130 49M47 238L216 174" stroke="#faf6ea" stroke-width="1.8" opacity=".7"/>
+<!-- Full-bleed parallel strokes run beyond every edge of the tile.
+     Their endpoints stay off-canvas, and the cabinet occludes them naturally. -->
+<g class="jb-speed-back" fill="none" stroke-linecap="butt">
+  <path d="M-120 155L540 -110M-120 219L540 -46M-120 283L540 18M-120 347L540 82"
+        stroke="#fff4e2" stroke-width="3.1" opacity=".58"/>
+  <path d="M-120 185L540 -80M-120 314L540 49"
+        stroke="#ed77c5" stroke-width="9" opacity=".25"/>
+  <path d="M-120 246L540 -19M-120 372L540 107"
+        stroke="#a9bcff" stroke-width="1.6" opacity=".64"/>
+</g>
+<g class="jb-speed-wash" opacity=".12" fill="#fff4e3">
+  <path d="M-100 271L540 14L540 26L-100 283Z"/>
+  <path d="M-100 202L540 -55L540 -50L-100 207Z"/>
 </g>
 <!-- The arcade cabinet is set farther into the right side of the frame. -->
 <g class="jb-machine" transform="translate(95 -4) scale(.92)">
-  <ellipse cx="314" cy="242" rx="149" ry="17" fill="#04091d" opacity=".55"/>
-  <!-- Projected black return chute and tubular cage are taken from the two-lane arcade machine. -->
-  <path d="M121 144L343 169L441 244L170 250Z" fill="#090f21" stroke="#607083" stroke-width="3"/>
-  <path d="M149 158L339 180L407 240L184 240Z" fill="#191c2b"/>
-  <path d="M160 174L337 195M172 199L366 223M188 221L395 239" stroke="#f2e7de" opacity=".23" stroke-width="2" fill="none"/>
-  <g fill="none" stroke="#f4f0e3" stroke-width="2.4" opacity=".6">
-    <path d="M143 151L113 236M356 163L429 235"/>
-    <path d="M137 173L153 196M131 192L150 211M123 212L141 225M356 187L389 218M363 203L407 229"/>
+  <!-- A single coherent black return-ramp plane, receding from the cabinet
+       to the near rail. Removing the free-floating diagonals fixes the base. -->
+  <path d="M117 163L365 192L428 260L182 260Z"
+        fill="#0b1020" stroke="#394657" stroke-width="2.5"/>
+  <path d="M127 166L362 194L407 251L191 251Z" fill="#171d2b"/>
+  <path d="M117 163L182 260L171 260L109 165Z" fill="#131b2a"/>
+  <path d="M365 192L428 260L437 259L373 191Z" fill="#0a1323"/>
+  <!-- Court markings follow the same foreshortening as the ramp. -->
+  <g fill="none" stroke="#b6c8cb" stroke-width="1.7" opacity=".44">
+    <path d="M175 186L221 249M309 203L358 249"/>
+    <path d="M221 249Q287 223 358 249"/>
   </g>
-  <g fill="none" stroke="url(#jb-steel)" stroke-width="4" stroke-linecap="round">
-    <path d="M121 144L112 237M348 170L440 236M170 237L441 237"/>
-    <path d="M110 237L170 237M345 169L416 221"/>
+  <!-- Three physically connected tubular frame edges, no crossed base lines. -->
+  <g fill="none" stroke="url(#jb-steel)" stroke-width="4"
+     stroke-linecap="round" stroke-linejoin="round">
+    <path d="M117 163L182 260H428L365 192"/>
   </g>
   <!-- A visible top and right-hand edge give the backboard its 3/4 cabinet perspective. -->
   <path d="M118 28L153 14L382 46L367 60Z" fill="#324454" stroke="#0a101d" stroke-width="3"/>
