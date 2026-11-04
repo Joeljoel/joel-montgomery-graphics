@@ -489,3 +489,10 @@ footer>div:last-child a+a{margin-top:4px}
 @media (hover:none) and (pointer:coarse) {
  html[data-header-backdrop]{--edge-base:var(--edge-blue)}
 }
+
+/* Keep the former oversized hover labels available, but out of the composition. */
+header > .press{display:none}
+/* Safari-owned strips retain the default blue in either inner-screen window. */
+@media (hover:none) and (pointer:coarse) {
+ html:root{--edge-blue:#1727ab!important;--edge-base:#1727ab!important;--edge-angle:125deg!important}
+}
