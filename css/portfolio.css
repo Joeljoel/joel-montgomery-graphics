@@ -213,16 +213,19 @@ footer>div:last-child a+a{margin-top:4px}
  footer a{display:flex;align-items:center;min-height:44px}
 }
 
-/* Elastic ink, applied to the actual heading glyphs.
-   The spring stretches and skews the one visible text layer, while its SVG
-   filter pulls a small amount of the same ink behind it. No ghost copies. */
-.work h3{position:relative}
-.work h3 .title-label{
- display:inline-block;max-width:100%;transform-origin:right center;
+/* AE-style Echo trail. The one sharp title translates in a single
+   direction; eighteen closely spaced samples of its previous positions form
+   a dense ink smear behind it, then catch up and disappear. */
+.work h3{position:relative;isolation:isolate}
+.work h3 .title-label{position:relative;z-index:2;display:inline-block}
+.work h3 .title-echoes{position:absolute;inset:0;z-index:1;pointer-events:none;user-select:none}
+.work h3 .title-echo{
+ position:absolute;left:0;top:0;display:inline-block;width:max-content;
+ white-space:nowrap;font:inherit;letter-spacing:inherit;line-height:inherit;
+ color:var(--blue);opacity:0;filter:blur(.35px);
 }
 @media(prefers-reduced-motion:no-preference){
- /* Once the spring is running, it owns the old .24em title slide. If JS is
-    unavailable the original CSS transition remains as a clean fallback. */
- .work h3.title-elastic{transform:none!important;transition:none!important}
- .work h3.title-elastic.is-moving .title-label{will-change:transform,filter}
+ /* Suppress the old slide only when JS takes control. No-JS still gets it. */
+ .work h3.title-echo-active{transform:none!important;transition:none!important}
 }
+@media(prefers-reduced-motion:reduce){.work .title-echoes{display:none}}
