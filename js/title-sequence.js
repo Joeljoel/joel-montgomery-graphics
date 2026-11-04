@@ -7,7 +7,7 @@
  const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**4;
  function draw(f){
  frame=clamp(f/72)*72;
- const rest=document.body.dataset.look==='tools'?31:document.body.dataset.look==='lab'?15:24;
+ const rest=document.body.dataset.look==='tools'?46:document.body.dataset.look==='lab'?15:24;
  const weights=[0,11].map(delay=>{const t=clamp((frame-delay)/42);return 5+(rest-5)*burst(t)+17*Math.sin(Math.PI*t)**2});
  // Centre the full mark while leaving 13 units between the two ink edges.
  const advance=(weights[0]+weights[1])/2+13-(151-114);
