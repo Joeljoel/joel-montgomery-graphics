@@ -454,7 +454,7 @@ footer>div:last-child a+a{margin-top:4px}
    Equal extra padding keeps the content box unchanged. Negative left overflow
    is not a scroll destination; the root clips positive horizontal overflow. */
 @media (hover:none) and (pointer:coarse) {
- html body > :is(header,main,footer) {
+ html:root body > :is(header,main,footer) {
   --bleed-left:max(120px,env(safe-area-inset-left,0px));
   --bleed-right:max(120px,var(--strip,0px),env(safe-area-inset-right,0px));
   width:calc(100% + var(--bleed-left) + var(--bleed-right));
