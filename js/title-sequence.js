@@ -242,11 +242,14 @@
  }});
  calibrate();runs.forEach(w=>observer.observe(w.run));
  let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
+ // Moderated twisting for the header's cursor warp and dot field.
+ // Font width/weight and interaction speed stay unchanged.
+ const WARP_SWIRL=.9,WARP_STRENGTH=88,GRID_SWIRL=.5;
  const ns='http://www.w3.org/2000/svg',mk=(name,attrs)=>{const el=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el};
  const svg=mk('svg',{width:0,height:0,'aria-hidden':'true'});svg.style.position='absolute';const filter=mk('filter',{id:'ink-pull',filterUnits:'userSpaceOnUse',primitiveUnits:'userSpaceOnUse',x:-60,y:-60,'color-interpolation-filters':'sRGB'});
  // RGB encodes inverse sampling direction: outward sampling pulls visible ink inward.
  const canvas=document.createElement('canvas');canvas.width=canvas.height=160;const ctx=canvas.getContext('2d'),im=ctx.createImageData(160,160);
- for(let y=0;y<160;y++)for(let x=0;x<160;x++){const a=(x-79.5)/80,b=(y-79.5)/80,r=Math.hypot(a,b),fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2,swirl=1.8*fall,j=(160*y+x)*4;
+ for(let y=0;y<160;y++)for(let x=0;x<160;x++){const a=(x-79.5)/80,b=(y-79.5)/80,r=Math.hypot(a,b),fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2,swirl=WARP_SWIRL*fall,j=(160*y+x)*4;
  im.data.set([128+250*fall*(a-b*swirl),128+250*fall*(b+a*swirl),128,255],j)}
  ctx.putImageData(im,0,0);const map=mk('feImage',{href:canvas.toDataURL(),width:840,height:840,result:'field'});
  const warp=mk('feDisplacementMap',{in:'SourceGraphic',in2:'map',xChannelSelector:'R',yChannelSelector:'G',scale:0});
@@ -279,7 +282,7 @@
    const t=reduced.matches?1:Math.min(1,(now-d.start)/180),mix=1-(1-t)**3;
    const dx=cx-d.x,dy=cy-d.y,r=Math.hypot(dx,dy)/420;
    const fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2;
-   const xx=d.x+strength*fall*(dx-dy*fall)*.28,yy=d.y+strength*fall*(dy+dx*fall)*.28;
+   const xx=d.x+strength*fall*(dx-dy*fall*GRID_SWIRL)*.28,yy=d.y+strength*fall*(dy+dx*fall*GRID_SWIRL)*.28;
    if(mix<1)glyph(d.from,xx,yy,1-mix);glyph(reduced.matches?0:d.to,xx,yy,mix);
   }
  }
@@ -356,7 +359,7 @@
   }
   filter.setAttribute('width',rect.width+120);filter.setAttribute('height',rect.height+120);
   map.setAttribute('x',x-rect.left-420);map.setAttribute('y',y-rect.top-420);
-  warp.setAttribute('scale',power*116);hero.style.filter='url(#ink-pull)';
+  warp.setAttribute('scale',power*WARP_STRENGTH);hero.style.filter='url(#ink-pull)';
  }else{hero.style.filter='';ready=false}
  paintGrid(now,x,y,power);
  raf=requestAnimationFrame(draw)}
