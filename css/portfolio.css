@@ -276,3 +276,13 @@ footer>div:last-child a+a{margin-top:4px}
 .tracks .type-track{display:none}
 .editing .tracks .type-track{display:block}
 .editing .tracks{grid-template-columns:minmax(116px,max-content) minmax(0,1fr)}
+
+/* Real vector arrows avoid iOS treating the Unicode north-east arrow as emoji.
+   The same styling applies to the motion-echo copies of each title. */
+.work h3 .tile-arrow{
+ display:inline-block;width:.82em;height:.82em;
+ margin-left:.09em;vertical-align:-.055em;
+ fill:none;stroke:currentColor;stroke-width:2.4;
+ stroke-linecap:square;stroke-linejoin:miter;
+ flex:none;overflow:visible;
+}
