@@ -43,7 +43,7 @@ test('individual name letters explore full font axes while word widths stay fixe
   assert.match(animations, /Math\.max\(100,Math\.min\(1000,/);
   assert.match(animations, /Math\.max\(50,Math\.min\(145,/);
   assert.match(animations, /Math\.max\(\.28,Math\.min\(3\.15,/);
-  assert.match(animations, /w\.run\.style\.transform='scaleX\('/);
+  assert.match(animations, /w\.run\.style\.transform=normalization/);
   assert.match(animations, /w\.ratio\*parseFloat\(getComputedStyle\(w\.line\)\.fontSize\)\/e\.contentRect\.width/);
   assert.match(animations, /observer\.observe\(w\.run\)/);
   // At rest each glyph can reach the actual native axis endpoints.
