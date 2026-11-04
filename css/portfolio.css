@@ -192,3 +192,23 @@ footer>div{position:relative;z-index:1}
  .work a:is(:hover,:focus-visible) .hoopboard .jb-flight-echoes{opacity:.58}
  .work a:is(:hover,:focus-visible) .hoopboard .jb-rim-glint{opacity:.72}
 }
+
+/* Final layout and accessibility refinements. */
+.skip-link{
+ position:fixed;z-index:12;top:12px;left:16px;
+ padding:10px 15px;background:var(--paper);color:var(--blue);
+ border:2px solid currentColor;border-radius:8px;
+ font:700 14px/1.3 Arial,Helvetica,sans-serif;
+ transform:translateY(calc(-100% - 24px));
+}
+.skip-link:focus-visible{transform:none}
+.footer-label{
+ margin:0 0 8px;
+ font:600 .78rem/1.5 monospace;letter-spacing:.08em;text-transform:uppercase;
+}
+footer a{text-underline-offset:.18em;text-decoration-thickness:1px}
+footer>div:last-child a+a{margin-top:4px}
+/* A tablet in landscape can still have touch input and needs generous targets. */
+@media(pointer:coarse) and (min-width:621px){
+ footer a{display:flex;align-items:center;min-height:44px}
+}
