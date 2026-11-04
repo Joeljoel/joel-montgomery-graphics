@@ -5,26 +5,27 @@
  const ns='http://www.w3.org/2000/svg';
  const outlines=strokes.map(()=>{const p=document.createElementNS(ns,'path');p.setAttribute('stroke','#ffe6aa');p.setAttribute('stroke-width','1.2');q('#speed-ink').append(p);return p});
  const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**4;
- let exchange=0, target=false, envelope=0, phase=0, previous=0, hoverRAF=0;
+ let exchange=0, target=0, previous=0, hoverRAF=0;
  let base=[24,24], offsets=[0,0];
  function shape(i){
-  const delta=exchange*(i?-1:1)*Math.min(5.5,base[i]*.2), weight=base[i]+delta;
+  const delta=exchange*(i?-1:1)*Math.min(13,base[i]*.52), weight=base[i]+delta;
   const span=i?182:96, left=i?151:18;
-  const sx=(span+base[i])/(span+weight);
-  const shift=offsets[i]+left-base[i]/2-sx*(left-weight/2);
+  const transfer=exchange*(exchange>0?44:30);
+  const sx=(span+base[i]+(i?-transfer:transfer))/(span+weight);
+  const shift=offsets[i]+(i?transfer:0)+left-base[i]/2-sx*(left-weight/2);
   for(const node of [strokes[i],outlines[i],guides[i]])node.setAttribute('transform','matrix('+sx+' 0 0 1 '+shift+' 0)');
   strokes[i].style.strokeWidth=weight+'px';return weight;
  }
  function breathe(now){
   const dt=Math.min(50,now-previous);previous=now;
-  envelope+=((target?1:0)-envelope)*(-Math.expm1(-dt/210));phase+=dt*.0018;
-  exchange=rm.matches?0:envelope*Math.sin(phase);
-  if(!target && envelope<.002 || rm.matches){exchange=envelope=0;hoverRAF=0}else hoverRAF=requestAnimationFrame(breathe);
+  exchange+=(target-exchange)*(-Math.expm1(-dt/135));
+  if(Math.abs(target-exchange)<.001 || rm.matches){exchange=rm.matches?0:target;hoverRAF=0}else hoverRAF=requestAnimationFrame(breathe);
   shape(0);shape(1);
  }
  const mark=q('.ident');
- mark.addEventListener('pointerenter',e=>{if(e.pointerType!=='mouse'||rm.matches)return;target=true;if(!hoverRAF){phase=.6;previous=performance.now();hoverRAF=requestAnimationFrame(breathe)}});
- mark.addEventListener('pointerleave',()=>{target=false});
+ function wake(){if(!hoverRAF){previous=performance.now();hoverRAF=requestAnimationFrame(breathe)}}
+ mark.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||rm.matches)return;const b=mark.getBoundingClientRect();target=Math.tanh((.39-(e.clientX-b.left)/b.width)*6);wake()});
+ mark.addEventListener('pointerleave',()=>{target=0;wake()});
  function draw(f){
  frame=clamp(f/72)*72;
  const rest=document.body.dataset.look==='tools'?46:document.body.dataset.look==='lab'?15:24;
@@ -97,7 +98,11 @@
  const dt=Math.min(50,now-last);last=now;const progress=Number(document.querySelector('#playhead').value)/72;
  const remaining=1-progress*progress*(3-2*progress);phase+=dt*(.00036+.00164*remaining);
  for(const [row,w] of runs.entries()){
- w.glyphs.forEach((g,j)=>{const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?550+400*n:650)+', "wdth" '+(variable?width:100);g.style.letterSpacing=(-.035+.019*n)+'em'});
+ const boxes=w.glyphs.map(g=>g.getBoundingClientRect()),r=w.run.getBoundingClientRect(),inside=point&&point[0]>=r.left&&point[0]<=r.right&&point[1]>=r.top&&point[1]<=r.bottom;
+ const radius=Math.max(16,r.height*.55),heat=boxes.map(b=>inside?Math.exp(-.5*((point[0]-b.left-b.width/2)/radius)**2):0);
+ const mean=heat.reduce((a,b)=>a+b,0)/heat.length;
+ w.influence??=heat.map(()=>0);w.mix??=0;const ease=-Math.expm1(-dt/145);w.mix+=((inside?1:0)-w.mix)*ease;
+ w.glyphs.forEach((g,j)=>{w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;const bias=w.influence[j];const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?Math.max(100,Math.min(1000,550+400*n*(1-.86*w.mix)+670*bias)):650)+', "wdth" '+(variable?Math.max(50,Math.min(145,100+(width-100)*(1-.86*w.mix)+88*bias)):100);g.style.letterSpacing=(-.035+.019*n)+'em'});
 
  }
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
