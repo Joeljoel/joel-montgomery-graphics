@@ -213,47 +213,70 @@ footer>div:last-child a+a{margin-top:4px}
  footer a{display:flex;align-items:center;min-height:44px}
 }
 
-/* Featured headings: two clipped, chromatic afterimages briefly trail the
-   existing horizontal slide. The actual heading remains sharp and selectable. */
-.work h3{position:relative}
-.work .title-smear{position:absolute;inset:0;pointer-events:none;user-select:none}
+/* Letterform velocity study. Twelve independently displaced scanline strips
+   and seven elongated, colour-split trails give the headings a fast shutter
+   smear as they travel. All copies are decorative and disappear at rest. */
+.work h3{position:relative;isolation:isolate}
+.work h3 .title-label{position:relative;z-index:1}
+.work .title-smear{position:absolute;inset:0;z-index:2;pointer-events:none;user-select:none}
+.work .smear-slice{
+ position:absolute;inset:0;display:block;font:inherit;letter-spacing:inherit;
+ white-space:inherit;opacity:0;transform-origin:left center;
+ clip-path:inset(var(--slice-top) -28% var(--slice-bottom) -28%);
+}
+.work .smear-trail{
+ position:absolute;top:var(--trail-y);left:var(--trail-left);
+ width:var(--trail-width);height:var(--trail-thickness);
+ opacity:0;transform-origin:right center;
+ background:linear-gradient(90deg,transparent 0%,color-mix(in srgb,var(--smear-ink) 35%,transparent) 28%,var(--smear-ink) 89%,transparent 100%);
+}
+.work .smear-tone-0{--smear-ink:color-mix(in srgb,var(--blue) 54%,#3bdeef);color:var(--smear-ink)}
+.work .smear-tone-1{--smear-ink:color-mix(in srgb,var(--blue) 70%,#ff77b1);color:var(--smear-ink)}
+.work .smear-tone-2{--smear-ink:var(--blue);color:var(--smear-ink)}
 @media(prefers-reduced-motion:no-preference){
- .work .title-smear::before,.work .title-smear::after{
-  content:attr(data-smear);position:absolute;inset:0;opacity:0;
-  transform-origin:left center;white-space:inherit;
- }
- .work .title-smear::before{
-  color:color-mix(in srgb,var(--blue) 62%,#28cddd);
-  clip-path:inset(0 0 49% 0);
-  text-shadow:-.075em 0 color-mix(in srgb,var(--blue) 45%,#57d7e8);
- }
- .work .title-smear::after{
-  color:color-mix(in srgb,var(--blue) 54%,#f570b2);
-  clip-path:inset(54% 0 0 0);
-  text-shadow:-.11em 0 color-mix(in srgb,var(--blue) 45%,#f47eaf);
+ .work h3{transition:transform .68s cubic-bezier(.16,.89,.24,1.07)}
+ :is(
+  body[data-look=tools] .work a:first-child,
+  body[data-look=lab] .work a:nth-child(2),
+  body[data-look=basketball] .work a:nth-child(3)
+ ) .title-label{animation:title-ink-drag .76s ease-out both}
+ :is(
+  body[data-look=tools] .work a:first-child,
+  body[data-look=lab] .work a:nth-child(2),
+  body[data-look=basketball] .work a:nth-child(3)
+ ) .smear-slice{
+  animation:title-scanline-tear .75s cubic-bezier(.14,.81,.2,1) both;
+  animation-delay:var(--smear-lag);
  }
  :is(
   body[data-look=tools] .work a:first-child,
   body[data-look=lab] .work a:nth-child(2),
   body[data-look=basketball] .work a:nth-child(3)
- ) .title-smear::before{animation:title-smear-top .62s cubic-bezier(.16,.85,.25,1) both}
- :is(
-  body[data-look=tools] .work a:first-child,
-  body[data-look=lab] .work a:nth-child(2),
-  body[data-look=basketball] .work a:nth-child(3)
- ) .title-smear::after{animation:title-smear-bottom .62s cubic-bezier(.16,.85,.25,1) both}
- @keyframes title-smear-top{
-  0%{opacity:0;transform:translateX(-.27em) skewX(-11deg) scaleX(1.25)}
-  14%{opacity:.75}
-  42%{opacity:.4;transform:translateX(-.13em) skewX(-6deg) scaleX(1.13)}
-  70%{opacity:.12;transform:translateX(-.025em) skewX(-2deg) scaleX(1.03)}
-  100%{opacity:0;transform:none}
+ ) .smear-trail{
+  animation:title-velocity-line .7s cubic-bezier(.12,.8,.2,1) both;
+  animation-delay:var(--smear-lag);
  }
- @keyframes title-smear-bottom{
-  0%,8%{opacity:0;transform:translateX(-.32em) skewX(-14deg) scaleX(1.29)}
-  23%{opacity:.67}
-  48%{opacity:.31;transform:translateX(-.16em) skewX(-7deg) scaleX(1.13)}
-  75%{opacity:.1;transform:translateX(-.025em) skewX(-2deg) scaleX(1.025)}
-  100%{opacity:0;transform:none}
+ @keyframes title-ink-drag{
+  0%,100%{text-shadow:none}
+  12%{text-shadow:-.33em 0 .10em color-mix(in srgb,var(--blue) 35%,#36d3ec),-.13em 0 .025em color-mix(in srgb,var(--blue) 45%,#f66eac)}
+  29%{text-shadow:-.24em 0 .07em color-mix(in srgb,var(--blue) 45%,#36d3ec),-.07em 0 .017em color-mix(in srgb,var(--blue) 65%,#f66eac)}
+  55%{text-shadow:-.09em 0 .025em color-mix(in srgb,var(--blue) 65%,#36d3ec)}
+  78%{text-shadow:-.025em 0 .005em color-mix(in srgb,var(--blue) 85%,#36d3ec)}
+ }
+ @keyframes title-scanline-tear{
+  0%{opacity:0;transform:translateX(var(--slice-drift)) scaleX(var(--slice-stretch)) skewX(-12deg);filter:blur(2px)}
+  13%{opacity:.75;filter:blur(.7px)}
+  27%{opacity:.92;transform:translateX(var(--slice-drift)) scaleX(var(--slice-stretch)) skewX(-9deg);filter:blur(.2px)}
+  48%{opacity:.61;transform:translateX(var(--slice-half)) scaleX(var(--slice-contract)) skewX(-4deg);filter:blur(.2px)}
+  72%{opacity:.16;transform:translateX(-.035em) scaleX(1.03);filter:blur(0)}
+  100%{opacity:0;transform:none;filter:none}
+ }
+ @keyframes title-velocity-line{
+  0%{opacity:0;transform:translateX(-.38em) scaleX(.15);filter:blur(3px)}
+  18%{opacity:.56;transform:translateX(-.26em) scaleX(1.65);filter:blur(1px)}
+  37%{opacity:.83;transform:translateX(-.12em) scaleX(1.22);filter:blur(.25px)}
+  61%{opacity:.24;transform:translateX(-.035em) scaleX(.62);filter:blur(.3px)}
+  100%{opacity:0;transform:translateX(.04em) scaleX(.08);filter:blur(0)}
  }
 }
+@media(prefers-reduced-motion:reduce){.work .title-smear{display:none}}
