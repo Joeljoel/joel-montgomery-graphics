@@ -78,3 +78,18 @@ body::after{content:none}
 header::after,main::before,footer::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:3;background:url("grain-field.svg") center / 100% 100% no-repeat;opacity:.055}
 header::after{opacity:.20}
 .transport{z-index:4}
+
+header::after,main::before,footer::before{content:none}
+body{min-height:100svh;--grain:url("grain-stock.webp")}
+body,html body :is(main,footer),html[data-side-strip] body :is(main,footer){
+ background-color:var(--paper);background-image:linear-gradient(color-mix(in srgb,var(--paper) 90%,transparent),color-mix(in srgb,var(--paper) 90%,transparent)),var(--grain);
+ background-size:auto,311px 311px}
+html body header{background-image:linear-gradient(color-mix(in srgb,var(--blue) 76%,transparent),color-mix(in srgb,var(--blue) 76%,transparent)),var(--grain);background-size:auto,337px 337px}
+.type-word,.type-word>span{display:inline-block}.type-word>span{transform-origin:50% 80%;-webkit-text-stroke-color:var(--paper)}
+.ident svg{transform-origin:center;transition:transform .45s}
+[data-look=tools] .ident svg{transform:scaleX(1.09)}
+[data-look=lab] .ident svg{transform:scaleX(.86)}
+[data-look=tools] #strokes path{stroke-width:31px!important}
+[data-look=lab] #strokes path{stroke-width:15px!important}
+#strokes path{transition:stroke-width .12s}
+@media(prefers-reduced-motion:reduce){.ident svg,#strokes path{transition:none}}

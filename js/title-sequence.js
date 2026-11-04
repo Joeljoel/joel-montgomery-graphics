@@ -2,28 +2,36 @@
  const q=s=>document.querySelector(s), strokes=[...document.querySelectorAll('#strokes path')], guides=[...document.querySelector('#vectors').children], range=q('#playhead'), btn=q('#play'), out=q('.transport output'), rm=matchMedia('(prefers-reduced-motion: reduce)');
  let frame=0,run=0,start=0;
  const lines=[...document.querySelectorAll('.type-line')];
- const trails=strokes.map(()=>['#ff8054','#c1ffdc','#1727ab'].map(col=>{
-  const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('stroke',col);q('#speed-ink').append(p);return p;
- }));
+ const ns='http://www.w3.org/2000/svg';
+ const outlines=strokes.map(()=>{const p=document.createElementNS(ns,'path');p.setAttribute('stroke','#ffe6aa');p.setAttribute('stroke-width','1.2');q('#speed-ink').append(p);return p});
+ const type=lines.map(line=>{
+  const text=line.textContent;line.setAttribute('aria-label',text);line.replaceChildren();
+  return text.split(/( )/).flatMap(word=>{
+   if(word===' '){line.append(' ');return []}
+   const wrap=document.createElement('span');wrap.className='type-word';wrap.setAttribute('aria-hidden','true');line.append(wrap);
+   return [...word].map(c=>{const el=document.createElement('span');el.textContent=c;wrap.append(el);return el})
+  })
+ });
  function draw(f){
  frame=Math.max(0,Math.min(210,f));const clamp=x=>Math.max(0,Math.min(1,x)), ease=x=>x*x*(3-2*x), mix=(a,b,t)=>a+(b-a)*t;
  const shapes=[[114,25,114,60,114,100,114,133],[114,133,114,203,18,204,18,122],[150,184,150,130,150,80,150,25],[150,25,180,63,210,102,241,142],[241,142,273,103,304,63,334,25],[334,25,334,78,334,132,334,184]];
  strokes.forEach((stroke,i)=>{
-  const a=shapes[i], from=[[114,25],[114,175],[151,184],[151,25],[241,157],[334,25]][i], to=[[114,175],[18,175],[151,25],[241,157],[334,25],[334,184]][i];
-  const start=from, age=frame-[0,17,33,47,61,75][i], morph=ease(clamp((frame-106)/66));
-  const pts=Array.from({length:4},(_,j)=>from.map((v,k)=>mix(mix(v,to[k],j/3),a[j*2+k],morph)));
-  const sample=t=>{
+  const a=shapes[i],start=a.slice(0,2),to=a.slice(6),age=frame-[0,11,37,49,61,73][i];
+  const settle=ease(clamp(age/37)), weight=14+10*settle+4*Math.sin(Math.PI*settle);
+  // Lower the entrance and lift the bowl independently as the pen rounds it.
+  const pts=Array.from({length:4},(_,j)=>[a[j*2],a[j*2+1]+(1-ease(clamp((frame-(i<2?0:37))/46)))*(a[j*2+1]-100)*.31]);
+  function geometry(t){
    const blend=(p,q)=>p.map((v,k)=>mix(v,q[k],t));
-   const [A,B,C,D]=pts,E=blend(A,B),F=blend(B,C),G=blend(C,D),H=blend(E,F),I=blend(F,G);
-   return 'M'+A+'C'+E+' '+H+' '+blend(H,I);
-  };
-  const weight=7+17*morph+6*Math.sin(Math.PI*morph), A=pts[0];
-  trails[i].forEach((p,k)=>{
-   const t=clamp((age-k*2)/16);
-   p.setAttribute('d',sample(t));p.setAttribute('stroke-width',[weight+6,weight+2,weight-1][k]);
-   p.setAttribute('opacity',age>k*2?1-ease(clamp((age-23)/12)):0);
-  });
-  stroke.setAttribute('d',sample(clamp((age-5)/16)));stroke.setAttribute('opacity',age>5?1:0);stroke.setAttribute('stroke-width',weight);
+   const [A,B,C,D]=pts,E=blend(A,B),F=blend(B,C),G=blend(C,D),H=blend(E,F),I=blend(F,G),J=blend(H,I);
+   return {d:'M'+A+'C'+E+' '+H+' '+J,tip:J,normal:[-(I[1]-H[1]),I[0]-H[0]]};
+  }
+  const lead=ease(clamp(age/20)),fill=ease(clamp((age-5)/22));
+  const rails=[[],[]];for(let k=0;k<=18;k++){const g=geometry(mix(fill,lead,k/18)),len=Math.hypot(...g.normal)||1;
+   rails.forEach((rail,j)=>rail.push(g.tip.map((v,m)=>v+(j?1:-1)*weight*.5*g.normal[m]/len).join(',')))}
+  outlines[i].setAttribute('d','M'+rails[0].join('L')+'L'+rails[1].reverse().join('L')+'Z');
+  outlines[i].style.opacity=lead>fill?1:0;
+  stroke.setAttribute('d',geometry(fill).d);stroke.style.strokeWidth=weight+'px';stroke.setAttribute('opacity',fill>0?1:0);
+  stroke.setAttribute('stroke-linecap','butt');
   if(document.body.classList.contains('editing')){
    const [route,box,first,last,anchor]=guides[i].children;
    route.setAttribute('d','M'+start+'L'+to);
@@ -33,7 +41,11 @@
    const tip=stroke.getPointAtLength(stroke.getTotalLength());anchor.setAttribute('cx',tip.x);anchor.setAttribute('cy',tip.y);
   }
  });
- lines.forEach((line,i)=>{const u=ease(clamp((frame-60-i*24)/68));line.style.opacity=u;line.style.transform='translateY('+((1-u)*.55)+'em)';line.style.clipPath='inset(0 0 '+((1-u)*100)+'% 0)';});
+ type.forEach((letters,row)=>letters.forEach((el,j)=>{
+  const order=row%2?letters.length-1-j:j,u=ease(clamp((frame-23-row*19-order*(row<2?3.3:1.1))/34)),k=1-u;
+  el.style.opacity=u;el.style.transform='perspective(220px) rotateX('+(k*(row%2?-86:86))+'deg) skewX('+(k*-20)+'deg) scaleX('+(1+k*.55)+')';
+  el.style.webkitTextStrokeWidth=k>.34?'0.7px':'0';el.style.color=k>.34?'transparent':'inherit';
+ }));
  document.querySelector('.tracks').style.setProperty('--time',(100*frame/210)+'%');
  range.value=Math.round(frame);out.value=String(Math.round(frame)).padStart(3,'0')+' / 210';
  }
