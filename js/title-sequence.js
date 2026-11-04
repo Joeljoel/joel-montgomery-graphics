@@ -14,3 +14,16 @@
  range.addEventListener('pointerdown',edit);range.oninput=()=>{edit();draw(+range.value);stop()};btn.onclick=()=>run?stop():play();
  q('.transport').hidden=false;draw(120);stop();if(!rm.matches)play();rm.onchange=()=>{draw(120);stop();document.body.classList.remove('editing')};
 })();
+(() => {
+ const body=document.body, cards=[...document.querySelectorAll('.work > a')], bar=document.querySelector('.audition'), buttons=[...bar.querySelectorAll('button')];
+ let hover='', focus='', pinned='';
+ function paint(){const look=hover||focus||pinned;if(look)body.dataset.look=look;else delete body.dataset.look;buttons.forEach(b=>b.setAttribute('aria-pressed',String(pinned===b.dataset.look)))}
+ cards.forEach((card,i)=>{const look=buttons[i].dataset.look;
+ card.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse'){hover=look;paint()}});
+ card.addEventListener('pointerleave',()=>{hover='';paint()});
+ card.addEventListener('focus',()=>{if(card.matches(':focus-visible')){focus=look;paint()}});
+ card.addEventListener('blur',()=>{focus='';paint()});
+ });
+ buttons.forEach(b=>b.onclick=()=>{pinned=pinned===b.dataset.look?'':b.dataset.look;paint()});
+ bar.hidden=false;
+})();
