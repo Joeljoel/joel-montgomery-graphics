@@ -21,6 +21,6 @@
  function paint(){raf=0;const show=scrollY>threshold;
   if(body.hasAttribute('data-sticky')!==show){body.toggleAttribute('data-sticky',show);nav.inert=!show}}
  function queue(){if(!raf)raf=requestAnimationFrame(paint)}
- new ResizeObserver(()=>{threshold=header.offsetHeight-64;queue()}).observe(header);
+ new ResizeObserver(()=>{threshold=header.querySelector("nav").offsetTop+header.querySelector("nav").offsetHeight+24;queue()}).observe(header);
  addEventListener('scroll',queue,{passive:true});addEventListener('pageshow',queue);queue();
 })();
