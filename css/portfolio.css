@@ -127,3 +127,10 @@ header::before{display:none}
 
 
 .hero h1 .word-run{display:inline-flex;align-items:baseline;vertical-align:baseline;width:max-content;white-space:pre;transform-origin:left center}.word-run>span{display:block;line-height:inherit}.hero h1 .type-line{font-synthesis:none}
+
+.word-run>span{flex:none;transform-origin:left center}
+@media(min-width:800px){
+ .comp-row{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-items:center;gap:5vw;margin-top:28px;height:54px}
+ .comp-row .transport{margin:0;min-width:0}.comp-row input{min-width:0;flex:1}
+ .comp-row .tracks{width:100%;padding:5px 8px}
+}

@@ -77,7 +77,9 @@
   const glyphs=[...text].map(c=>{const el=document.createElement('span');el.textContent=c;return el});run.append(...glyphs);line.replaceChildren(run);return {line,run,glyphs,ratio:0}
  });
  // Capture the resting advance in em; subsequent weight changes flow through the whole word.
- function calibrate(){for(const w of runs){w.glyphs.forEach(g=>g.style.fontVariationSettings='"wght" 650');w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
+ function calibrate(){for(const w of runs){w.glyphs.forEach(g=>{g.style.fontVariationSettings='"wght" 650';g.style.marginRight='';g.style.transform=''});
+ const widths=w.glyphs.map(g=>g.offsetWidth),total=widths.reduce((a,b)=>a+b,0)||1;let pos=0;
+ w.centres=widths.map(v=>{pos+=v;return (pos-v/2)/total});w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
  // ResizeObserver reports untransformed fractional advances without a synchronous layout read per frame.
  const observer=new ResizeObserver(entries=>{for(const e of entries){const w=runs.find(item=>item.run===e.target);if(w&&e.contentRect.width)w.run.style.transform='scaleX('+w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/e.contentRect.width+')'}});
  calibrate();runs.forEach(w=>observer.observe(w.run));
@@ -98,11 +100,17 @@
  const dt=Math.min(50,now-last);last=now;const progress=Number(document.querySelector('#playhead').value)/72;
  const remaining=1-progress*progress*(3-2*progress);phase+=dt*(.00036+.00164*remaining);
  for(const [row,w] of runs.entries()){
- const boxes=w.glyphs.map(g=>g.getBoundingClientRect()),r=w.run.getBoundingClientRect(),inside=point&&point[0]>=r.left&&point[0]<=r.right&&point[1]>=r.top&&point[1]<=r.bottom;
- const radius=Math.max(16,r.height*.55),heat=boxes.map(b=>inside?Math.exp(-.5*((point[0]-b.left-b.width/2)/radius)**2):0);
+ const r=w.run.getBoundingClientRect();
+ const dx=point?Math.max(r.left-point[0],0,point[0]-r.right):Infinity,dy=point?Math.max(r.top-point[1],0,point[1]-r.bottom):Infinity;
+ const near=Math.exp(-.5*((dx/115)**2+(dy/100)**2));
+ const radius=Math.max(18,r.height*.38),px=point?Math.max(r.left,Math.min(point[0],r.right)):0;
+ const heat=w.centres.map(f=>near*Math.exp(-.5*((px-r.left-f*r.width)/radius)**2));
  const mean=heat.reduce((a,b)=>a+b,0)/heat.length;
- w.influence??=heat.map(()=>0);w.mix??=0;const ease=-Math.expm1(-dt/145);w.mix+=((inside?1:0)-w.mix)*ease;
- w.glyphs.forEach((g,j)=>{w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;const bias=w.influence[j];const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?Math.max(100,Math.min(1000,550+400*n*(1-.86*w.mix)+670*bias)):650)+', "wdth" '+(variable?Math.max(50,Math.min(145,100+(width-100)*(1-.86*w.mix)+88*bias)):100);g.style.letterSpacing=(-.035+.019*n)+'em'});
+ w.influence??=heat.map(()=>0);w.mix??=0;const ease=-Math.expm1(-dt/145);w.mix+=(near-w.mix)*ease;
+ w.glyphs.forEach((g,j)=>{w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;const bias=w.influence[j];const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?Math.max(100,Math.min(1000,550+400*n*(1-.86*w.mix)+1050*bias)):650)+', "wdth" '+(variable?Math.max(50,Math.min(145,100+(width-100)*(1-.86*w.mix)+160*bias)):100);g.style.letterSpacing=(-.035+.019*n)+'em'});
+ // Stretch the ink as well as its advance; the run normalises back to its resting width.
+ const advances=w.glyphs.map(g=>g.offsetWidth);
+ w.glyphs.forEach((g,j)=>{const k=Math.max(.50,Math.min(2.8,Math.exp(1.72*w.influence[j])));g.style.transform='scaleX('+k+')';g.style.marginRight=(advances[j]*(k-1))+'px'});
 
  }
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
