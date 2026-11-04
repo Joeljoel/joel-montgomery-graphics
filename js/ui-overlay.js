@@ -47,6 +47,25 @@
   const feature=card.querySelector(spec.subject);
   return {card,art,heading,desc,feature,artWire,typeWire,copyWire,featureWire,stage,state,position,playhead};
  });
+ // The individual ribbon discs receive their own live edit frames on hover.
+ // Their positions include SVG transforms and the existing CSS hover motion.
+ const ribbon=layers[0];
+ if(ribbon){
+  const discWire=wire('disc','07.05 / DISC 01');
+  ribbon.discWire=discWire;
+  ribbon.discLabel=discWire.querySelector('.ui-wire-label');
+  ribbon.discWire.hidden=true;
+  ribbon.card.querySelector('.ui-card-overlay').append(discWire);
+  [...ribbon.card.querySelectorAll('.wave .disc')].forEach((disc,index)=>{
+   disc.addEventListener('pointerenter',e=>{
+    if(e.pointerType==='mouse'||e.pointerType==='pen')ribbon.hoveredDisc={disc,index};
+   },{passive:true});
+   disc.addEventListener('pointerleave',()=>{
+    if(ribbon.hoveredDisc?.disc===disc)ribbon.hoveredDisc=null;
+   },{passive:true});
+  });
+  ribbon.art.addEventListener('pointerleave',()=>ribbon.hoveredDisc=null,{passive:true});
+ }
  const footers=[...document.querySelectorAll('footer > div')];
  footers.forEach((section,i)=>{
   const guide=create('div','ui-footer-guide');
@@ -55,6 +74,11 @@
   for(const corner of ['tl','tr','bl','br'])guide.append(create('i','ui-wire-handle ui-corner-'+corner));
   section.append(guide);
  });
+ const ACTIVE_DURATION=22000,RETURN_DURATION=1400;
+ const wash=create('div','ui-screen-wash');
+ wash.setAttribute('aria-hidden','true');
+ wash.hidden=true;body.append(wash);
+ let phase='idle',phaseStart=0,hiddenSince=null;
  let raf=0,last=0;
  const place=(frame,rect,origin)=>{
   if(!rect||!rect.width||!rect.height){frame.hidden=true;return}
@@ -64,10 +88,51 @@
   frame.style.width=rect.width.toFixed(2)+'px';
   frame.style.height=rect.height.toFixed(2)+'px';
  };
+ function progress(amount){
+  const p=String(Math.max(0,Math.min(1,amount)));
+  button.style.setProperty('--ui-phase-progress',p);
+  wash.style.setProperty('--ui-phase-progress',p);
+ }
+ function setMode(on,animateReturn=true,now=performance.now()){
+  body.classList.toggle('ui-overlay',on);
+  button.setAttribute('aria-pressed',String(on));
+  button.setAttribute('aria-label',on?
+   'Hide composition UI across the homepage (automatically turns off after 22 seconds)':
+   'Show composition UI across the homepage');
+  button.querySelector('.ui-toggle-text').textContent=on?'UI ON':'UI OFF';
+  phase=on?'light':animateReturn?'dark':'idle';
+  phaseStart=now;
+  button.dataset.phase=phase;
+  wash.dataset.phase=phase;
+  wash.hidden=phase==='idle';
+  progress(0);
+  if(!on){
+   cards.forEach(card=>card.classList.remove('ui-card-active'));
+   if(ribbon){ribbon.hoveredDisc=null;ribbon.discWire.hidden=true}
+  }
+ }
+ function timer(now){
+  if(phase==='light'){
+   const p=Math.min(1,(now-phaseStart)/ACTIVE_DURATION);
+   progress(p);
+   if(p>=1)setMode(false,true,now);
+  }else if(phase==='dark'){
+   const p=Math.min(1,(now-phaseStart)/RETURN_DURATION);
+   progress(p);
+   if(p>=1){
+    phase='idle';
+    button.dataset.phase='idle';
+    wash.dataset.phase='idle';wash.hidden=true;
+    progress(0);
+   }
+  }
+ }
  function draw(now){
-  raf=0;if(!body.classList.contains('ui-overlay')||document.hidden)return;
-  if(now-last<28){raf=requestAnimationFrame(draw);return}
-  last=now;
+  raf=0;
+  if(document.hidden)return;
+  timer(now);
+  if(body.classList.contains('ui-overlay')&&now-last>=28){
+   last=now;
   for(const layer of layers){
    const origin=layer.card.getBoundingClientRect();
    const artRect=layer.art.getBoundingClientRect();
@@ -84,6 +149,20 @@
     layer.position.textContent='X '+String(Math.round((rect.left+rect.width/2-artRect.left)/artRect.width*480)).padStart(3,'0')+
      ' · Y '+String(Math.round((rect.top+rect.height/2-artRect.top)/artRect.height*240)).padStart(3,'0');
    }else layer.featureWire.hidden=true;
+   if(layer.discWire){
+    const hovered=layer.hoveredDisc;
+    if(hovered){
+     const r=hovered.disc.getBoundingClientRect();
+     // Keep the disc frame within the image canvas; update its actual
+     // geometry each frame as the ellipse moves or changes orientation.
+     const left=Math.max(r.left,artRect.left),right=Math.min(r.right,artRect.right);
+     const top=Math.max(r.top,artRect.top),bottom=Math.min(r.bottom,artRect.bottom);
+     if(right>left&&bottom>top)
+      place(layer.discWire,{left,top,width:right-left,height:bottom-top},origin);
+     else layer.discWire.hidden=true;
+     layer.discLabel.textContent='07.05 / DISC '+String(hovered.index+1).padStart(2,'0');
+    }else layer.discWire.hidden=true;
+   }
    layer.stage.style.left=(artRect.right-origin.left-10).toFixed(2)+'px';
    layer.stage.style.top=(artRect.top-origin.top+10).toFixed(2)+'px';
    const active=layer.card.matches(':hover,:focus-within');
@@ -91,24 +170,29 @@
    layer.state.textContent=active?'KEYFRAMES  •  ACTIVE':'READY  •  IDLE';
    layer.playhead.style.left=active?'78%':'17%';
   }
-  raf=requestAnimationFrame(draw);
+  }
+  if(phase!=='idle')raf=requestAnimationFrame(draw);
  }
  function start(){
-  cancelAnimationFrame(raf);raf=0;
-  if(body.classList.contains('ui-overlay')){last=0;draw(performance.now())}
-  else cards.forEach(card=>card.classList.remove('ui-card-active'));
+  cancelAnimationFrame(raf);raf=0;last=0;
+  if(!document.hidden&&phase!=='idle')draw(performance.now());
  }
- function toggle(force){
-  const on=typeof force==='boolean'?force:!body.classList.contains('ui-overlay');
-  body.classList.toggle('ui-overlay',on);
-  button.setAttribute('aria-pressed',String(on));
-  button.setAttribute('aria-label',on?'Hide composition UI across the homepage':'Show composition UI across the homepage');
-  button.querySelector('.ui-toggle-text').textContent=on?'UI ON':'UI OFF';
+ button.addEventListener('click',()=>{
+  setMode(!body.classList.contains('ui-overlay'));
   start();
- }
- button.addEventListener('click',()=>toggle());
- document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0}else start()});
- window.addEventListener('resize',()=>{if(body.classList.contains('ui-overlay'))start()},{passive:true});
- // Do not persist this opt-in across page loads: normal view is the default.
- toggle(false);
+ });
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+   hiddenSince=performance.now();
+   cancelAnimationFrame(raf);raf=0;
+  }else{
+   if(hiddenSince!==null){phaseStart+=performance.now()-hiddenSince;hiddenSince=null}
+   start();
+  }
+ });
+ window.addEventListener('resize',()=>{
+  if(body.classList.contains('ui-overlay'))start();
+ },{passive:true});
+ // UI mode is always opt-in and the timer resets on every activation.
+ setMode(false,false);
 })();
