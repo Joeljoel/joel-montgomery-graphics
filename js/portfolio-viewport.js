@@ -26,11 +26,11 @@
  let theme=document.querySelector('meta[name="theme-color"]');
  if(!theme){theme=document.createElement('meta');theme.name='theme-color';document.head.append(theme)}
  function syncTheme(){
-  const colour=getComputedStyle(body).getPropertyValue('--blue').trim()||'#1727ab';
+  const colour='#1727ab';
   root.style.backgroundColor=colour;
   theme.content=colour;
  }
  syncTheme();
- new MutationObserver(syncTheme).observe(body,{attributes:true,attributeFilter:['data-look']});
+
  addEventListener('pageshow',syncTheme);
 })();
