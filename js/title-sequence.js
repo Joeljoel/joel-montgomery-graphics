@@ -74,6 +74,24 @@
  }
  const ns='http://www.w3.org/2000/svg';
  const outlines=strokes.map(()=>{const p=document.createElementNS(ns,'path');p.setAttribute('stroke','#ffe6aa');p.setAttribute('stroke-width','1.2');q('#speed-ink').append(p);return p});
+ // Layer names attach to their corresponding vector boxes and inherit the
+ // mark's transforms, just like the J/M path controls.
+ const jmLabels=guides.map((guide,i)=>{
+  const layer=document.createElementNS(ns,'g');
+  layer.setAttribute('class','vector-layer-name');
+  layer.setAttribute('stroke','none');
+  const bg=document.createElementNS(ns,'rect');
+  bg.setAttribute('fill','#222631');
+  const name=document.createElementNS(ns,'text');
+  name.textContent=i?'02 / M · FOLD':'01 / J · BOWL';
+  name.setAttribute('fill',i?'#ffbd77':'#75caff');
+  name.setAttribute('stroke','none');
+  name.setAttribute('font-family','monospace');
+  name.setAttribute('font-weight','700');
+  name.setAttribute('font-size','9');
+  layer.append(bg,name);guide.append(layer);
+  return {bg,name};
+ });
  const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**4;
  let exchange=0, target=0, previous=0, hoverRAF=0;
  let base=[24,24], offsets=[0,0];
@@ -129,7 +147,13 @@
  if(document.body.classList.contains('editing')){
  const [route,box,first,last,dot]=guides[i].children,points=Array.from({length:33},(_,j)=>p.getPointAtLength(len*u*j/32)),xs=points.map(v=>v.x),ys=points.map(v=>v.y),tip=points.at(-1);
  route.setAttribute('d',p.getAttribute('d'));const rect=(el,x,y,width,height)=>Object.entries({x,y,width,height}).forEach(([k,v])=>el.setAttribute(k,v));
- rect(box,Math.min(...xs)-w/2,Math.min(...ys)-w/2,Math.max(...xs)-Math.min(...xs)+w,Math.max(...ys)-Math.min(...ys)+w);[first,last].forEach((el,j)=>{const v=p.getPointAtLength(j*len);rect(el,v.x-2,v.y-2,4,4)});dot.setAttribute('cx',tip.x);dot.setAttribute('cy',tip.y);
+ const minX=Math.min(...xs)-w/2,minY=Math.min(...ys)-w/2;
+ rect(box,minX,minY,Math.max(...xs)-Math.min(...xs)+w,Math.max(...ys)-Math.min(...ys)+w);
+ [first,last].forEach((el,j)=>{const v=p.getPointAtLength(j*len);rect(el,v.x-2,v.y-2,4,4)});
+ dot.setAttribute('cx',tip.x);dot.setAttribute('cy',tip.y);
+ const label=jmLabels[i],labelWidth=i?86:82,labelX=Math.max(0,Math.min(324-labelWidth,minX)),labelY=minY-17;
+ rect(label.bg,labelX,labelY,labelWidth,13);
+ label.name.setAttribute('x',labelX+4);label.name.setAttribute('y',labelY+9.5);
  }
  });
  lines.forEach((el,i)=>{
@@ -145,7 +169,13 @@
    :'inset(-25% '+100*k+'% -35% -3%)';
   el.style.letterSpacing=(-.055+.09*k)+'em';
   el.style.opacity=clamp(u*4);
-  el.style.textShadow=k>.01?(-12*k)+'px 0 #ff8060,'+(8*k)+'px 0 #a5ffda':'none';
+  // Apply the two ink highlights to the composited line, after the real
+  // letters and every solid Echo sample have been combined. Text-shadow
+  // inherits into each sample and creates unwanted colour between layers.
+  el.style.textShadow='none';
+  el.style.filter=k>.01
+   ?'drop-shadow('+(-12*k)+'px 0 #ff8060) drop-shadow('+(8*k)+'px 0 #a5ffda)'
+   :'none';
   // Eighteen solid past-position samples blend into a trailing stretch of
   // the letterforms while the line draws on. Scrubbing is deterministic:
   // every echo is computed from the requested composition frame.
@@ -490,9 +520,11 @@
    if(time>=item.moves[i].at){move=item.moves[i];break}
   }
   const t=Math.max(0,Math.min(1,(time-move.at)/(move.duration||exitDuration)));
-  // Strong, symmetric ease-in/out: nearly still at each end, fast through
-  // the midpoint. It stays monotone, so Echo samples only trail the motion.
-  const ease=t<.5?4*t*t*t:1-4*Math.pow(1-t,3);
+  // On entry, launch immediately and settle into place. Keep the existing
+  // symmetric ease-in/out on exit. Both curves remain monotonic.
+  const entering=move.to>move.from;
+  const ease=entering?1-Math.pow(1-t,3)
+   :(t<.5?4*t*t*t:1-4*Math.pow(1-t,3));
   return move.from+(move.to-move.from)*ease;
  }
  function render(now){
