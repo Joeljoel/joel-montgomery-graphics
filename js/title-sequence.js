@@ -8,9 +8,9 @@
  let exchange=0, target=0, previous=0, hoverRAF=0;
  let base=[24,24], offsets=[0,0];
  function shape(i){
-  const delta=exchange*(i?-1:1)*Math.min(13,base[i]*.52), weight=base[i]+delta;
+  const emphasis=exchange*(i?-1:1), weight=base[i]+emphasis*(emphasis<0?base[i]-2.5:Math.min(13,base[i]*.52));
   const span=i?182:96, left=i?151:18;
-  const transfer=exchange*(exchange>0?44:30);
+  const transfer=exchange*(exchange>0?(182+base[1])*.57:(96+base[0])*.53);
   const sx=(span+base[i]+(i?-transfer:transfer))/(span+weight);
   const shift=offsets[i]+(i?transfer:0)+left-base[i]/2-sx*(left-weight/2);
   for(const node of [strokes[i],outlines[i],guides[i]])node.setAttribute('transform','matrix('+sx+' 0 0 1 '+shift+' 0)');
@@ -107,10 +107,10 @@
  const heat=w.centres.map(f=>near*Math.exp(-.5*((px-r.left-f*r.width)/radius)**2));
  const mean=heat.reduce((a,b)=>a+b,0)/heat.length;
  w.influence??=heat.map(()=>0);w.mix??=0;const ease=-Math.expm1(-dt/145);w.mix+=(near-w.mix)*ease;
- w.glyphs.forEach((g,j)=>{w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;const bias=w.influence[j];const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?Math.max(100,Math.min(1000,550+400*n*(1-.86*w.mix)+1050*bias)):650)+', "wdth" '+(variable?Math.max(50,Math.min(145,100+(width-100)*(1-.86*w.mix)+160*bias)):100);g.style.letterSpacing=(-.035+.019*n)+'em'});
+ w.glyphs.forEach((g,j)=>{w.influence[j]+=(heat[j]-mean-w.influence[j])*ease;const bias=w.influence[j];const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?Math.max(100,Math.min(1000,550+400*n*(1-.86*w.mix)+(bias<0?2800:1050)*bias)):650)+', "wdth" '+(variable?Math.max(50,Math.min(145,100+(width-100)*(1-.86*w.mix)+(bias<0?340:160)*bias)):100);g.style.letterSpacing=(-.035+.019*n)+'em'});
  // Stretch the ink as well as its advance; the run normalises back to its resting width.
  const advances=w.glyphs.map(g=>g.offsetWidth);
- w.glyphs.forEach((g,j)=>{const k=Math.max(.50,Math.min(2.8,Math.exp(1.72*w.influence[j])));g.style.transform='scaleX('+k+')';g.style.marginRight=(advances[j]*(k-1))+'px'});
+ w.glyphs.forEach((g,j)=>{const k=Math.max(.34,Math.min(2.8,Math.exp((w.influence[j]<0?3.4:1.72)*w.influence[j])));g.style.transform='scaleX('+k+')';g.style.marginRight=(advances[j]*(k-1))+'px'});
 
  }
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
