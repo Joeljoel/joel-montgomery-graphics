@@ -36,7 +36,7 @@ test('UI mode reveals dynamic tile guides and returns to the clean view',()=>{
    getAttribute:k=>attrs[k],
    addEventListener(type,fn){listeners[type]=fn},
    fire(type,evt={}){listeners[type]?.(evt)},
-   getBoundingClientRect(){return node.rect||{left:0,top:0,width:0,height:0}},
+   getBoundingClientRect(){const r=node.rect||{left:0,top:0,width:0,height:0};return {...r,right:r.left+r.width,bottom:r.top+r.height}},
    matches(){return !!node.active}
   };
   return node;
