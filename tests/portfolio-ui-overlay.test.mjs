@@ -8,24 +8,32 @@ const css=read('css/portfolio.css');
 const animation=read('js/title-sequence.js');
 const overlayScript=read('js/ui-overlay.js');
 
-test('the nav toggle is accessible and overlays cannot intercept links',()=>{
- assert.match(html, /id="ui-overlay-toggle"[^>]*aria-pressed="false"/);
- assert.match(html, /src="js\/ui-overlay\.js"/);
- assert.match(css, /\.sticky-bar #ui-overlay-toggle\{/);
- assert.match(css, /\.ui-card-overlay\{[^}]*pointer-events:none/);
- assert.match(css, /\.ui-overlay \.ui-card-overlay\{visibility:visible;opacity:1\}/);
- assert.match(css, /\.ui-overlay \.ui-footer-guide\{display:block\}/);
- assert.match(css, /\.ui-overlay #vectors,\.ui-overlay \.type-editor\{visibility:visible\}/);
- assert.match(animation, /attributeFilter:\['data-look','class'\]/);
- assert.match(animation, /classList\.contains\('editing'\)\|\|document\.body\.classList\.contains\('ui-overlay'\)/);
- assert.match(animation, /range\.addEventListener\('pointerdown',edit\)/);
+test('orange glass toggle sits left of Selected Work and preserves manual scrub',()=>{
+ const nav=html.match(/<nav>[\s\S]*?<\/nav>/)?.[0];
+ assert.ok(nav);
+ assert.ok(nav.indexOf('id="ui-overlay-toggle"')<nav.indexOf('href="#work"'));
+ assert.match(nav,/id="ui-overlay-toggle"[^>]*aria-pressed="false"/);
+ assert.match(html,/src="js\/ui-overlay\.js"/);
+ assert.match(css,/\.sticky-bar #ui-overlay-toggle\{/);
+ assert.match(css,/font:inherit;letter-spacing:inherit/);
+ assert.match(css,/#a95729b5/);
+ assert.match(css,/backdrop-filter:blur\(9px\) saturate\(160%\)/);
+ assert.match(css,/\.ui-screen-wash\[data-phase=dark\]\{/);
+ assert.match(css,/\.ui-card-overlay\{[^}]*pointer-events:none/);
+ assert.match(css,/\.ui-overlay \.ui-card-overlay\{visibility:visible;opacity:1\}/);
+ assert.match(css,/\.ui-overlay \.ui-footer-guide\{display:block\}/);
+ assert.match(css,/\.ui-overlay #vectors,\.ui-overlay \.type-editor\{visibility:visible\}/);
+ assert.match(css,/\.ui-wire-disc\{/);
+ assert.match(animation,/attributeFilter:\['data-look','class'\]/);
+ assert.match(animation,/classList\.contains\('editing'\)\|\|document\.body\.classList\.contains\('ui-overlay'\)/);
+ assert.match(animation,/range\.addEventListener\('pointerdown',edit\)/);
 });
 
-test('UI mode reveals dynamic tile guides and returns to the clean view',()=>{
+function buildOverlay(){
  const make=(name='div')=>{
   const attrs={},classes=new Set(),listeners={};
   const node={
-   name,style:{},children:[],hidden:false,textContent:'',className:'',
+   name,style:{setProperty(k,v){this[k]=v}},dataset:{},children:[],hidden:false,textContent:'',className:'',
    classList:{
     contains:c=>classes.has(c),
     toggle(c,force){const next=force===undefined?!classes.has(c):force;if(next)classes.add(c);else classes.delete(c);return next},
@@ -36,13 +44,21 @@ test('UI mode reveals dynamic tile guides and returns to the clean view',()=>{
    getAttribute:k=>attrs[k],
    addEventListener(type,fn){listeners[type]=fn},
    fire(type,evt={}){listeners[type]?.(evt)},
-   getBoundingClientRect(){const r=node.rect||{left:0,top:0,width:0,height:0};return {...r,right:r.left+r.width,bottom:r.top+r.height}},
-   matches(){return !!node.active}
+   getBoundingClientRect(){
+    const r=node.rect||{left:0,top:0,width:0,height:0};
+    return {...r,right:r.left+r.width,bottom:r.top+r.height};
+   },
+   matches(){return !!node.active},
+   querySelector(s){
+    if(s==='.ui-wire-label')return node.children.find(n=>n.className==='ui-wire-label');
+    return null;
+   },
+   querySelectorAll(){return []}
   };
   return node;
  };
  const body=make('body'),button=make('button'),label=make('span');
- button.querySelector=()=>label;
+ button.querySelector=s=>s==='.ui-toggle-text'?label:null;
  const cards=[0,1,2].map(i=>{
   const card=make('a'),x=100+i*360;
   card.rect={left:x,top:200,width:310,height:250};
@@ -51,8 +67,13 @@ test('UI mode reveals dynamic tile guides and returns to the clean view',()=>{
   heading.rect={left:x+8,top:367,width:150,height:45};
   desc.rect={left:x+8,top:426,width:190,height:20};
   feature.rect={left:x+90,top:232,width:62,height:55};
-  card.querySelector=s=>s==='.art'?art:s==='h3 .title-label'?heading:s==='p'?desc:feature;
-  card.parts={art,heading,desc,feature};
+  const discs=i===0?[0,1,2].map(j=>{
+   const d=make('g');d.rect={left:x+40+j*32,top:235,width:45,height:72};return d;
+  }):[];
+  card.querySelector=s=>s==='.art'?art:s==='h3 .title-label'?heading:s==='p'?desc:
+   s==='.ui-card-overlay'?card.children.find(n=>n.className==='ui-card-overlay'):feature;
+  card.querySelectorAll=s=>s==='.wave .disc'?discs:[];
+  card.parts={art,heading,desc,feature,discs};
   return card;
  });
  const footer=[make(),make()];
@@ -61,41 +82,121 @@ test('UI mode reveals dynamic tile guides and returns to the clean view',()=>{
   querySelector:q=>q==='#ui-overlay-toggle'?button:null,
   querySelectorAll:q=>q==='.work > a'?cards:q==='footer > div'?footer:[],
   createElement:make,
-  addEventListener(){}
+  addEventListener(type,fn){this['on'+type]=fn}
  };
- let raf=null,next=1;
- const requestAnimationFrame=fn=>{raf=fn;return next++};
+ let raf=null,nextId=1,now=1000;
+ const requestAnimationFrame=fn=>{raf=fn;return nextId++};
  const cancelAnimationFrame=()=>{raf=null};
  const window={addEventListener(){}};
  new Function('document','window','requestAnimationFrame','cancelAnimationFrame','performance',
-  overlayScript)(document,window,requestAnimationFrame,cancelAnimationFrame,{now:()=>1000});
+  overlayScript)(document,window,requestAnimationFrame,cancelAnimationFrame,{now:()=>now});
+ const tick=time=>{
+  now=time;
+  const fn=raf;
+  assert.equal(typeof fn,'function','an animation frame should be scheduled');
+  raf=null;fn(time);
+ };
+ const press=()=>button.fire('click');
+ return {body,button,label,cards,footer,document,tick,press,
+  setTime(value){now=value},getRaf(){return raf},
+  wash:body.children.find(n=>n.className==='ui-screen-wash')};
+}
+
+test('UI timer fills lightly for 22s, switches off, then dark-wipes the page',()=>{
+ const ui=buildOverlay(),{body,button,label,footer,wash,cards}=ui;
+ assert.ok(wash);
+ assert.equal(wash.hidden,true);
  assert.equal(body.classList.contains('ui-overlay'),false);
  assert.equal(button.getAttribute('aria-pressed'),'false');
  assert.equal(label.textContent,'UI OFF');
  assert.equal(cards.every(c=>c.children.some(n=>n.className==='ui-card-overlay')),true);
  assert.equal(footer.every(f=>f.children.some(n=>n.className==='ui-footer-guide')),true);
- button.fire('click');
+ ui.press();
  assert.equal(body.classList.contains('ui-overlay'),true);
  assert.equal(button.getAttribute('aria-pressed'),'true');
+ assert.equal(button.dataset.phase,'light');
+ assert.equal(wash.hidden,false);
  assert.equal(label.textContent,'UI ON');
  const root=cards[1].children.find(n=>n.className==='ui-card-overlay');
  const titleWire=root.children.find(n=>n.className==='ui-wire ui-wire-type');
- const artWire=root.children.find(n=>n.className==='ui-wire ui-wire-art');
  const featureWire=root.children.find(n=>n.className==='ui-wire ui-wire-feature');
- assert.equal(artWire.style.width,'310.00px');
  assert.equal(titleWire.style.left,'8.00px');
  assert.equal(featureWire.style.width,'62.00px');
- // Simulate the Echo title sliding and a tracked art feature shifting.
+ // Both the animated Echo heading and feature guide track live geometry.
  cards[1].parts.heading.rect={...cards[1].parts.heading.rect,left:cards[1].rect.left+36,width:167};
  cards[1].parts.feature.rect={...cards[1].parts.feature.rect,left:cards[1].rect.left+114};
- const pending=raf;
- assert.equal(typeof pending,'function');
- pending(1050);
+ ui.tick(1050);
  assert.equal(titleWire.style.left,'36.00px');
  assert.equal(titleWire.style.width,'167.00px');
  assert.equal(featureWire.style.left,'114.00px');
- button.fire('click');
+ ui.tick(12000);
+ assert.equal(button.style['--ui-phase-progress'],'0.5');
+ assert.equal(wash.style['--ui-phase-progress'],'0.5');
+ assert.equal(body.classList.contains('ui-overlay'),true);
+ ui.tick(23000);
  assert.equal(body.classList.contains('ui-overlay'),false);
  assert.equal(button.getAttribute('aria-pressed'),'false');
- assert.equal(raf,null);
+ assert.equal(button.dataset.phase,'dark');
+ assert.equal(wash.dataset.phase,'dark');
+ assert.equal(wash.hidden,false);
+ assert.equal(label.textContent,'UI OFF');
+ ui.tick(23700);
+ assert.equal(button.style['--ui-phase-progress'],'0.5');
+ ui.tick(24400);
+ assert.equal(button.dataset.phase,'idle');
+ assert.equal(wash.hidden,true);
+ assert.equal(ui.getRaf(),null);
+});
+
+test('each ribbon disc gets its own animated bounding box only while hovered',()=>{
+ const ui=buildOverlay();
+ ui.press();
+ const card=ui.cards[0];
+ const root=card.children.find(n=>n.className==='ui-card-overlay');
+ const frame=root.children.find(n=>n.className==='ui-wire ui-wire-disc');
+ assert.ok(frame);
+ assert.equal(frame.hidden,true);
+ const second=card.parts.discs[1];
+ second.fire('pointerenter',{pointerType:'mouse'});
+ ui.tick(1050);
+ assert.equal(frame.hidden,false);
+ assert.equal(frame.style.left,'72.00px');
+ assert.equal(frame.style.width,'45.00px');
+ assert.equal(frame.querySelector('.ui-wire-label').textContent,'07.05 / DISC 02');
+ second.rect={...second.rect,left:second.rect.left+20,width:56};
+ ui.tick(1100);
+ assert.equal(frame.style.left,'92.00px');
+ assert.equal(frame.style.width,'56.00px');
+ second.fire('pointerleave');
+ ui.tick(1150);
+ assert.equal(frame.hidden,true);
+ // A pen behaves like a mouse, but touch does not create hover overlays.
+ const third=card.parts.discs[2];
+ third.fire('pointerenter',{pointerType:'touch'});
+ ui.tick(1200);
+ assert.equal(frame.hidden,true);
+ third.fire('pointerenter',{pointerType:'pen'});
+ ui.tick(1250);
+ assert.equal(frame.querySelector('.ui-wire-label').textContent,'07.05 / DISC 03');
+ ui.press();
+ assert.equal(ui.body.classList.contains('ui-overlay'),false);
+ assert.equal(frame.hidden,true);
+});
+
+test('visibility pause preserves the remaining UI timer and manual exit dark-wipes',()=>{
+ const ui=buildOverlay();
+ ui.press();
+ ui.tick(6000);
+ ui.document.hidden=true;
+ ui.setTime(6000);ui.document.onvisibilitychange();
+ ui.setTime(26000);ui.document.hidden=false;ui.document.onvisibilitychange();
+ // Time spent in a hidden tab must not consume the 22-second interval.
+ assert.equal(ui.body.classList.contains('ui-overlay'),true);
+ assert.equal(ui.button.dataset.phase,'light');
+ assert.ok(Number(ui.button.style['--ui-phase-progress'])<.3);
+ ui.press();
+ assert.equal(ui.body.classList.contains('ui-overlay'),false);
+ assert.equal(ui.button.dataset.phase,'dark');
+ ui.tick(27400);
+ assert.equal(ui.wash.hidden,true);
 });
