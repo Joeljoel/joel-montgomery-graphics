@@ -9,8 +9,8 @@
  let base=[24,24], offsets=[0,0];
  function shape(i){
   const emphasis=exchange*(i?-1:1), weight=base[i]+emphasis*(emphasis<0?base[i]-2.5:Math.min(13,base[i]*.52));
-  const span=i?182:96, left=i?151:18;
-  const transfer=exchange*(exchange>0?(182+base[1])*.57:(96+base[0])*.53);
+  const span=i?146:96, left=i?151:18;
+  const transfer=exchange*(exchange>0?(146+base[1])*.57:(96+base[0])*.53);
   const sx=(span+base[i]+(i?-transfer:transfer))/(span+weight);
   const shift=offsets[i]+(i?transfer:0)+left-base[i]/2-sx*(left-weight/2);
   for(const node of [strokes[i],outlines[i],guides[i]])node.setAttribute('transform','matrix('+sx+' 0 0 1 '+shift+' 0)');
@@ -36,9 +36,9 @@
  base=weights;offsets=[centreShift,centreShift+advance];
  strokes.forEach((p,i)=>{
  const age=frame-i*11,u=burst(age/(i?43:35)), fill=burst((age-2.4)/(i?46:38)), settle=burst(age/40);
- p.setAttribute('d',i?'M151 196V'+(37-8*(1-settle))+'L241 '+(155+19*(1-settle))+'L333 37V196':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
+ p.setAttribute('d',i?'M151 196V'+(37-8*(1-settle))+'L224 '+(155+19*(1-settle))+'L297 37V196':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
  const len=p.getTotalLength(),w=shape(i);
- p.style.strokeWidth=w+'px';p.setAttribute('stroke-linecap','butt');p.setAttribute('stroke-linejoin','round');
+ p.style.strokeWidth=w+'px';p.setAttribute('stroke-linecap','butt');p.setAttribute('stroke-linejoin',i?'miter':'round');p.setAttribute('stroke-miterlimit','2');
  p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
  const rails=[[],[]];for(let j=0;j<=24;j++){const d=len*(fill+(u-fill)*j/24),pt=p.getPointAtLength(d),a=p.getPointAtLength(Math.max(0,d-.3)),b=p.getPointAtLength(Math.min(len,d+.3)),dx=b.x-a.x,dy=b.y-a.y,k=w/2/(Math.hypot(dx,dy)||1);rails.forEach((r,n)=>r.push([pt.x+(n?1:-1)*dy*k,pt.y-(n?1:-1)*dx*k].join(',')))}
  outlines[i].setAttribute('d','M'+rails[0].join('L')+'L'+rails[1].reverse().join('L')+'Z');outlines[i].style.opacity=u>fill?1:0;
@@ -95,7 +95,15 @@
  filter.append(mk('feFlood',{'flood-color':'#808080',result:'neutral'}),map,mk('feComposite',{in:'field',in2:'neutral',operator:'over',result:'map'}),warp);
  svg.append(filter);document.body.append(svg);
  let point=null,aimX=0,aimY=0,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
- header.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||reduced.matches)return;point=[e.clientX,e.clientY];if(!ready){[x,y]=point;[aimX,aimY]=point;ready=true}});header.addEventListener('pointerleave',()=>point=null);
+ function pointAt(clientX,clientY){if(reduced.matches)return;point=[clientX,clientY];if(!ready){[x,y]=point;[aimX,aimY]=point;ready=true}}
+ header.addEventListener('pointermove',e=>{if(e.pointerType==='mouse')pointAt(e.clientX,e.clientY)},{passive:true});
+ header.addEventListener('pointerleave',()=>point=null);
+ // Listen without capturing or cancelling: Safari owns the scroll gesture.
+ let touching=false;
+ header.addEventListener('touchstart',e=>{touching=e.touches.length===1&&!e.target.closest('input,button,a');if(touching)pointAt(e.touches[0].clientX,e.touches[0].clientY)},{passive:true});
+ header.addEventListener('touchmove',e=>{if(touching&&e.touches.length===1)pointAt(e.touches[0].clientX,e.touches[0].clientY);else point=null},{passive:true});
+ const release=()=>{touching=false;point=null};
+ header.addEventListener('touchend',release,{passive:true});header.addEventListener('touchcancel',release,{passive:true});
  function draw(now){raf=0;if(!visible||document.hidden||reduced.matches)return;
  const dt=Math.min(50,now-last);last=now;const progress=Number(document.querySelector('#playhead').value)/72;
  const remaining=1-progress*progress*(3-2*progress);phase+=dt*(.00036+.00164*remaining);
