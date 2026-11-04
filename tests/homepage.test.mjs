@@ -57,7 +57,10 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
   assert.doesNotMatch(home, /id="title-elastic-|title-velocity-blur|title-smear/);
-  assert.match(animations, /const duration=470,spacing=7,echoCount=40/);
+  assert.match(animations, /const enterDuration=385,exitDuration=470,spacing=7,echoCount=40/);
+  assert.match(animations, /const duration=next>from\?enterDuration:exitDuration/);
+  assert.match(animations, /move\.duration\|\|exitDuration/);
+  assert.equal(385<470,true);
   assert.match(animations, /echo\.style\.display=smeared\?'block':'none'/);
   assert.doesNotMatch(animations, /echo\.style\.opacity/);
   const echoStyle = styles.slice(styles.lastIndexOf('/* Solid-ink Echo trail'));
@@ -81,6 +84,25 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   assert.match(styles, /\.work h3\.title-echo-active\{transform:none!important/);
   assert.match(styles, /\.work h3 \.title-echoes/);
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)\{\.work \.title-echoes\{display:none\}/);
+});
+
+test('hero name has solid ink echoes and scrub-only typography controls', () => {
+  assert.match(animations, /const introEchoes=new Map\(\)/);
+  assert.match(animations, /real\.cloneNode\(true\)/);
+  assert.match(animations, /frame-\(j\+1\)\*\.6/);
+  assert.match(animations, /echo\.style\.display=!rm\.matches/);
+  assert.match(animations, /updateTextBounds\(i,el,u\)/);
+  assert.match(animations, /document\.body\.classList\.contains\('editing'\)/);
+  assert.match(animations, /line\.querySelector\('\.word-run'\)/);
+  assert.match(animations, /rect\.width\*\(1-u\)/);
+  assert.match(animations, /const labels=\['01 \/ JOEL','02 \/ MONTGOMERY','03 \/ ROLE','04 \/ LOCATION'\]/);
+  assert.equal((home.match(/class="type-track"/g)||[]).length,8);
+  assert.match(styles, /\.tracks \.type-track\{display:none\}/);
+  assert.match(styles, /\.editing \.tracks \.type-track\{display:block\}/);
+  assert.match(styles, /\.editing \.type-editor\{visibility:visible\}/);
+  assert.match(styles, /\.hero h1 \.type-intro-echo\{/);
+  assert.match(styles, /\.type-edit-handle\.h3/);
+  assert.match(animations, /range\.oninput=\(\)=>/);
 });
 
 test('pre-redesign homepage is archived without a link from the new page', () => {
