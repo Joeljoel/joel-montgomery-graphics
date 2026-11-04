@@ -302,8 +302,8 @@ footer>div:last-child a+a{margin-top:4px}
 }
 
 
-/* A glassy orange composition toggle, styled at the same text size and
-   weight as Selected Work. Its inset fill reflects the visible UI timer. */
+/* Orange glass UI toggle, matched to Selected Work typography.
+   Only the button fills: light while UI is OFF, dark while UI is ON. */
 .sticky-bar #ui-overlay-toggle{
  position:relative;isolation:isolate;overflow:hidden;
  display:inline-flex;align-items:center;justify-content:center;
@@ -327,21 +327,9 @@ footer>div:last-child a+a{margin-top:4px}
 .sticky-bar #ui-overlay-toggle:focus-visible{outline:3px solid currentColor;outline-offset:4px}
 #ui-overlay-toggle[aria-pressed=true]{border-color:#fff3cf;box-shadow:inset 0 1px 1px #fff8f1,0 0 13px #ffe2ac55,0 4px 12px #4f170c33}
 .ui-toggle-text{position:relative;z-index:1}
-/* A very light full-page wash makes the passage of UI time obvious even when
-   the viewer is looking at a tile instead of the navigation button. */
-.ui-screen-wash{
- position:fixed;inset:0;z-index:7;pointer-events:none;
- transform-origin:left center;transform:scaleX(var(--ui-phase-progress,0));
- background:linear-gradient(90deg,#ffbb690c,#ffe8bc31);
- border-right:2px solid #ffe4a1a6;box-shadow:6px 0 19px #f9bc743d;
-}
-.ui-screen-wash[data-phase=dark]{
- background:linear-gradient(90deg,#0d1c3133,#1f22394a);
- border-right-color:#202b4ad5;box-shadow:6px 0 20px #18233b55;
-}
-.ui-screen-wash[hidden]{display:none}
+/* Reduced-motion users retain the UI toggle without the animated fill. */
 @media(prefers-reduced-motion:reduce){
- .ui-screen-wash,.sticky-bar #ui-overlay-toggle::before{display:none}
+ .sticky-bar #ui-overlay-toggle::before{display:none}
 }
 @media(max-width:620px){
  .sticky-bar{gap:8px;padding-right:10px;padding-left:12px}
