@@ -140,7 +140,7 @@
   }
  }
  sizeGrid();new ResizeObserver(()=>{sizeGrid();paintGrid(performance.now(),0,0,0)}).observe(header);
- new MutationObserver(()=>{inkTransitionUntil=performance.now()+550;ink=getComputedStyle(header).color}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
+ new MutationObserver(()=>{inkTransitionUntil=performance.now()+550;ink=getComputedStyle(header).color;if(reduced.matches)paintGrid(performance.now(),0,0,0)}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
 
  let point=null,aimX=0,aimY=0,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
  function pointAt(clientX,clientY){if(reduced.matches)return;point=[clientX,clientY];if(!ready){[x,y]=point;[aimX,aimY]=point;ready=true}}
