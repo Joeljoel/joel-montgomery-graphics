@@ -23,14 +23,19 @@
       return {x:82 - 5*q,y:201 + 4*q,s:1,stretch:1 - .16*q,r:-8*q};
     }
     if (t < 610) {
-      const q = clamp((t - 130) / 480), u = ease(q);
-      // Quadratic arc with a high control point; rapid launch eases at its apex.
-      return {x:mix(77,251,u),y:(1-u)**2*205 + 2*(1-u)*u*(-65) + u*u*82,
-        s:mix(1,.43,u),stretch:1 + .45*Math.sin(q*Math.PI),r:mix(-8,160,u)};
+      const q = clamp((t - 130) / 480);
+      // Ballistic approach retains velocity right up to backboard contact.
+      return {x:mix(77,270,q),y:205 - 307.36*q + 207.36*q*q,
+        s:mix(1,.43,q),stretch:1 + .25*Math.sin(q*Math.PI),r:mix(-8,160,q)};
     }
-    const q = clamp((t - 610) / 420);
-    return {x:251 + 8*q*q,y:82 + 173*q*q,s:.43,stretch:1 + .14*Math.sin(q*Math.PI),r:160 + 100*q};
+    const seconds = Math.max(0,(t - 610) / 1000);
+    // Contact reverses horizontal velocity and absorbs some downward energy.
+    // The rebound immediately moves left/out towards the hoop, without a hold.
+    const compression = Math.sin(clamp(seconds/.09)*Math.PI)*.17;
+    return {x:270 - 80*seconds,y:105 + 70*seconds + 380*seconds*seconds,
+      s:.43,stretch:1-compression,r:160 + 185*seconds};
   }
+
   function reset() {
     cancelAnimationFrame(frame); frame = 0;
     ball.removeAttribute('transform'); ball.style.opacity = '';
@@ -47,7 +52,7 @@
       ball.style.opacity = returnProgress;
     } else {
       ball.setAttribute('transform',`translate(${p.x} ${p.y}) rotate(${p.r}) scale(${p.s/p.stretch} ${p.s*p.stretch}) translate(-82 -201)`);
-      ball.style.opacity = 1 - clamp((t - 970) / 90);
+      ball.style.opacity = 1 - clamp((t - 1030) / 90);
     }
     // Short history of the actual flight, rather than a fixed streak behind a stationary ball.
     const active = t > 145 && t < 980;
@@ -61,7 +66,7 @@
       el.setAttribute('rx',39*old.s); el.setAttribute('ry',34*old.s);
       el.setAttribute('opacity',.5-i*.13);
     });
-    // The ball crosses the rim at ~856ms. Net displacement decays without moving its attachment.
+    // The ball crosses the rim at ~847ms. Net displacement decays without moving its attachment.
     const hit = Math.max(0,t-850), kick = t < 850 ? 0 : Math.sin(hit/70)*Math.exp(-hit/180);
     net.setAttribute('transform',`translate(156 148) skewX(${kick*5}) scale(1 ${1+kick*.42}) translate(-156 -148)`);
     const burst = clamp(hit/230);
