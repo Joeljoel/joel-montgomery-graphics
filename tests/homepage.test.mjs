@@ -216,3 +216,22 @@ test('header cursor warp is gentler without changing type or footer interactions
   assert.match(headerAnimation, /97\.5\+47\.5\*wave\*activity/);
   assert.match(headerAnimation, /header\.addEventListener\('touchmove'/);
 });
+
+test('scrub-mode letter inspector follows live glyph geometry and neighbours', () => {
+  assert.match(animations, /const glyphInspector=document\.createElement\('div'\)/);
+  assert.match(animations, /glyphInspector\.setAttribute\('aria-hidden','true'\)/);
+  assert.match(animations, /glyphInspector\.hidden=true/);
+  assert.match(animations, /const glyphTags=Array\.from\(\{length:3\}/);
+  assert.match(animations, /document\.body\.classList\.contains\('editing'\)/);
+  assert.match(animations, /w\.glyphs\.map\(g=>g\.getBoundingClientRect\(\)\)/);
+  assert.match(animations, /\[nearest-1,nearest,nearest\+1\]\.filter/);
+  assert.match(animations, /String\(row\+3\)\.padStart\(2,'0'\)/);
+  assert.match(animations, /renderGlyphInspector\(\);\n \/\/ Two first-order/);
+  assert.match(animations, /nameHeading\.addEventListener\('pointermove'/);
+  assert.match(animations, /nameHeading\.addEventListener\('pointerleave'/);
+  assert.match(animations, /entry\.pin\.style\.left=\(p\.center-lefts\[i\]\)/);
+  assert.match(styles, /\.editing \.glyph-inspector:not\(\[hidden\]\)\{visibility:visible\}/);
+  assert.match(styles, /\.glyph-inspector\[hidden\],\.glyph-inspector-tag\[hidden\]\{display:none\}/);
+  assert.match(styles, /\.glyph-inspector-pin\{/);
+  assert.match(animations, /const WARP_SWIRL=\.9,WARP_STRENGTH=88,GRID_SWIRL=\.5/);
+});
