@@ -19,6 +19,10 @@
  body.insertBefore(nav,header);
  // Paint Safari's out-of-layout strip on the root canvas itself. Its background
  // scrolls with the document, avoiding a separately positioned scroll follower.
- const sizeBackdrop=()=>root.style.setProperty('--header-paint-height',header.offsetHeight+'px');
+ const syncBackdrop=()=>root.toggleAttribute('data-header-backdrop',header.getBoundingClientRect().bottom>0);
+ const sizeBackdrop=()=>{root.style.setProperty('--header-paint-height',header.offsetHeight+'px');syncBackdrop()};
+ // Change the sampled solid colour only when crossing the header boundary.
+ addEventListener('scroll',syncBackdrop,{passive:true});
+ addEventListener('pageshow',syncBackdrop);
  sizeBackdrop();new ResizeObserver(sizeBackdrop).observe(header);
 })();
