@@ -361,11 +361,11 @@
 
  // Sparse, independently timed glyphs share the cursor field with the title.
  const grid=document.createElement('canvas');grid.className='motion-grid';grid.setAttribute('aria-hidden','true');header.prepend(grid);
- const gctx=grid.getContext('2d');let dots=[],gw=0,gh=0,ink='#faf6ea',inkTransitionUntil=0;
+ const gctx=grid.getContext('2d');let gridStep=40;let dots=[],gw=0,gh=0,ink='#faf6ea',inkTransitionUntil=0;
  function sizeGrid(){
   gw=header.clientWidth;gh=header.clientHeight;const dpr=Math.min(devicePixelRatio||1,1.5);
   grid.width=Math.round(gw*dpr);grid.height=Math.round(gh*dpr);gctx.setTransform(dpr,0,0,dpr,0,0);
-  dots=[];const step=Math.max(40,Math.sqrt(gw*gh/900));
+  dots=[];const step=gridStep=Math.max(40,Math.sqrt(gw*gh/900));
   for(let yy=22;yy<gh;yy+=step)for(let xx=22;xx<gw;xx+=step)dots.push({x:xx,y:yy,from:0,to:0,start:0,next:performance.now()+1000+Math.random()*12000});
   ink=getComputedStyle(header).color;
  }
@@ -376,10 +376,74 @@
   else if(type===2)gctx.strokeRect(xx-3,yy-3,6,6);
   else{gctx.moveTo(xx-3,yy-3);gctx.lineTo(xx+3,yy+3);gctx.moveTo(xx+3,yy-3);gctx.lineTo(xx-3,yy+3);gctx.stroke()}
  }
+
+ // Tile illustrations use the same lattice and displacement as the dots.
+ let motifLook=document.body.dataset.look||'',motifPrevious='',motifStart=performance.now();
+ function motifPaths(look){
+  const cols=Math.max(1,Math.floor((gw-44)/gridStep)),rows=Math.max(1,Math.floor((gh-44)/gridStep));
+  const paths=[],add=p=>paths.push(p);
+  const rect=(x,y,w,h)=>add([[x,y],[x+w,y],[x+w,y+h],[x,y+h],[x,y]]);
+  let width=6,height=4;
+  if(look==='lab'){
+   const cell=cols>=14?2:1,gap=cols>=14?1:0;
+   width=5*cell+4*gap;height=cell+1;
+   for(let i=0;i<5;i++)rect(i*(cell+gap),0,cell,height);
+  }else if(look==='basketball'){
+   rect(0,0,6,3);rect(2,1,2,2);
+   add([[2,3],[4,3],[4,4],[3,5],[2,4],[2,3]]);
+   add([[2,3],[4,4]]);add([[4,3],[2,4]]);
+   add([[3,5],[3,6]]);add([[1,6],[5,6]]);height=6;
+  }else if(look==='tools'){
+   width=cols>=12?12:6;height=4;
+   // Three flowing contours, joined at grid anchors like a vector construction.
+   for(let line=0;line<3;line++){
+    const p=[];
+    for(let i=0;i<=width;i++){
+     p.push([i,Math.round(1.2*Math.sin(i/width*Math.PI*2))+line+1]);
+    }
+    add(p);
+   }
+   add([[0,1],[0,3]]);add([[width,1],[width,3]]);
+  }else return [];
+  const ox=22+Math.max(0,Math.floor((cols-width)/2))*gridStep;
+  const oy=22+Math.max(0,Math.floor((rows-height)/2))*gridStep;
+  return paths.map(p=>p.map(([x,y])=>[ox+x*gridStep,oy+y*gridStep]));
+ }
+ function paintMotif(look,progress,opacity,cx,cy,strength){
+  if(!look||opacity<=0)return;
+  const paths=motifPaths(look);
+  const warpPoint=([px,py])=>{
+   const dx=cx-px,dy=cy-py,r=Math.hypot(dx,dy)/420;
+   const fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2;
+   return [px+strength*fall*(dx-dy*fall*GRID_SWIRL)*.28,py+strength*fall*(dy+dx*fall*GRID_SWIRL)*.28];
+  };
+  gctx.save();gctx.lineWidth=1.25;gctx.lineJoin='round';gctx.lineCap='round';
+  gctx.globalAlpha=opacity*.38;
+  // Stagger individual strokes; sample long segments so they bend with the field.
+  paths.forEach((path,index)=>{
+   let remaining=Math.max(0,Math.min(1,progress*1.3-index/Math.max(1,paths.length)*.3));
+   const lengths=path.slice(1).map((p,i)=>Math.hypot(p[0]-path[i][0],p[1]-path[i][1]));
+   let budget=lengths.reduce((a,b)=>a+b,0)*remaining;
+   gctx.beginPath();gctx.moveTo(...warpPoint(path[0]));
+   for(let i=0;i<lengths.length&&budget>0;i++){
+    const length=lengths[i],fraction=Math.min(1,budget/length),steps=Math.max(1,Math.ceil(length*fraction/8));
+    for(let j=1;j<=steps;j++){
+     const t=fraction*j/steps;
+     gctx.lineTo(...warpPoint([path[i][0]+(path[i+1][0]-path[i][0])*t,path[i][1]+(path[i+1][1]-path[i][1])*t]));
+    }
+    budget-=length;
+   }
+   gctx.stroke();
+  });
+  gctx.restore();
+ }
  function paintGrid(now,cx,cy,strength){
   if(now<inkTransitionUntil)ink=getComputedStyle(header).color;
   const bounds=header.getBoundingClientRect();cx-=bounds.left;cy-=bounds.top;
   gctx.clearRect(0,0,gw,gh);gctx.fillStyle=ink;gctx.strokeStyle=ink;gctx.lineWidth=1.1;
+  const elapsed=reduced.matches?1:Math.min(1,(now-motifStart)/720);
+  paintMotif(motifPrevious,1,1-Math.min(1,elapsed*2.5),cx,cy,strength);
+  paintMotif(motifLook,1-(1-elapsed)**3,Math.min(1,elapsed*3),cx,cy,strength);
   for(const d of dots){
    if(!reduced.matches&&now>d.next){d.from=d.to;d.to=d.to===0?1+Math.floor(Math.random()*3):0;d.start=now;d.next=now+(d.to?700+Math.random()*1900:3500+Math.random()*10000)}
    const t=reduced.matches?1:Math.min(1,(now-d.start)/180),mix=1-(1-t)**3;
@@ -390,7 +454,9 @@
   }
  }
  sizeGrid();new ResizeObserver(()=>{sizeGrid();paintGrid(performance.now(),0,0,0)}).observe(header);
- new MutationObserver(()=>{inkTransitionUntil=performance.now()+550;ink=getComputedStyle(header).color;if(reduced.matches)paintGrid(performance.now(),0,0,0)}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
+ new MutationObserver(()=>{
+  motifPrevious=motifLook;motifLook=document.body.dataset.look||'';motifStart=performance.now();
+  inkTransitionUntil=performance.now()+550;ink=getComputedStyle(header).color;if(reduced.matches)paintGrid(performance.now(),0,0,0)}).observe(document.body,{attributes:true,attributeFilter:['data-look']});
 
  let point=null,aimX=0,aimY=0,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
  function pointAt(clientX,clientY){if(reduced.matches)return;point=[clientX,clientY];if(!ready){[x,y]=point;[aimX,aimY]=point;ready=true}}
