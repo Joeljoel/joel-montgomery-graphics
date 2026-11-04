@@ -67,15 +67,23 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   assert.doesNotMatch(echoStyle, /blur\(|opacity:/);
   assert.match(echoStyle, /color:var\(--blue\);display:none;/);
   assert.match(animations, /positionAt\(item,now-\(i\+1\)\*spacing\)/);
-  assert.match(animations, /const ease=t<\.5\?4\*t\*t\*t:1-4\*Math\.pow\(1-t,3\)/);
-  // The travel starts and ends gently, peaks in the middle, and never reverses.
-  const ease=t=>t<.5?4*t*t*t:1-4*Math.pow(1-t,3);
-  const positions=Array.from({length:101},(_,i)=>ease(i/100));
-  assert.equal(positions[0],0);
-  assert.equal(positions.at(-1),1);
-  assert.ok(positions.every((p,i)=>i===0||p>=positions[i-1]));
-  assert.ok(ease(.25)<.1 && ease(.75)>.9);
-  assert.ok(ease(.51)-ease(.49) > .05);
+  assert.match(animations, /const entering=move\.to>move\.from/);
+  assert.match(animations, /const ease=entering\?1-Math\.pow\(1-t,3\)/);
+  assert.match(animations, /:\(t<\.5\?4\*t\*t\*t:1-4\*Math\.pow\(1-t,3\)\)/);
+  // Entry responds immediately and then eases out. Exit retains its original
+  // symmetric ease-in/out. Neither curve reverses or overshoots.
+  const enter=t=>1-Math.pow(1-t,3);
+  const exit=t=>t<.5?4*t*t*t:1-4*Math.pow(1-t,3);
+  for(const ease of [enter,exit]){
+    const positions=Array.from({length:101},(_,i)=>ease(i/100));
+    assert.equal(positions[0],0);
+    assert.equal(positions.at(-1),1);
+    assert.ok(positions.every((p,i)=>i===0||p>=positions[i-1]));
+  }
+  assert.ok(enter(.01)>.025);
+  assert.ok(enter(.5)>.85);
+  assert.ok(exit(.01)<.001);
+  assert.ok(exit(.5)===.5);
   assert.match(animations, /item\.label\.style\.transform='translate3d\('/);
   assert.match(animations, /layer\.setAttribute\('aria-hidden','true'\)/);
   assert.match(animations, /enabled=!reduced\.matches/);
@@ -112,6 +120,22 @@ test('hero name has solid ink echoes and scrub-only typography controls', () => 
   assert.match(styles, /\.hero h1 \.type-intro-echo\{/);
   assert.match(styles, /\.type-edit-handle\.h3/);
   assert.match(animations, /range\.oninput=\(\)=>/);
+});
+
+test('JM vector layer labels track edit boxes and highlights sit below complete name ink', () => {
+  assert.match(animations, /const jmLabels=guides\.map\(\(guide,i\)=>/);
+  assert.match(animations, /name\.textContent=i\?'02 \/ M · FOLD':'01 \/ J · BOWL'/);
+  assert.match(animations, /layer\.append\(bg,name\);guide\.append\(layer\)/);
+  assert.match(animations, /const label=jmLabels\[i\],labelWidth=/);
+  assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,13\)/);
+  assert.match(animations, /label\.name\.setAttribute\('x',labelX\+4\)/);
+  // The highlight must filter the combined real lettering and Echo layer,
+  // rather than creating a separately inherited text-shadow on each copy.
+  assert.match(animations, /el\.style\.textShadow='none'/);
+  assert.match(animations, /el\.style\.filter=k>\.01/);
+  assert.match(animations, /drop-shadow\('/);
+  assert.doesNotMatch(animations, /el\.style\.textShadow=k>\.01/);
+  assert.match(styles, /\.hero h1 \.type-intro-echoes\{/);
 });
 
 test('hero Echo glyphs track live font variation, transforms and word width', () => {
