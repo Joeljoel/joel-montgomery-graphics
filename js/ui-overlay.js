@@ -77,7 +77,7 @@
  // The OFF/ON cycle begins on page load and repeats every ten seconds.
  // The light/dark fill is confined to the button itself.
  const CYCLE_DURATION=10000;
- let phaseStart=0,hiddenSince=null;
+ let phaseStart=0,hiddenSince=null,autoCycle=true;
  let raf=0,last=0;
  const place=(frame,rect,origin)=>{
   if(!rect||!rect.width||!rect.height){frame.hidden=true;return}
@@ -93,11 +93,10 @@
  function setMode(on,now=performance.now()){
   body.classList.toggle('ui-overlay',on);
   button.setAttribute('aria-pressed',String(on));
-  button.setAttribute('aria-label',on?
-   'Turn composition UI off (automatically switches in 10 seconds)':
-   'Turn composition UI on (automatically switches in 10 seconds)');
+  button.setAttribute('aria-label',(on?'Turn composition UI off':'Turn composition UI on')+
+   (autoCycle?' (automatically switches in 10 seconds)':''));
   button.querySelector('.ui-toggle-text').textContent=on?'UI ON':'UI OFF';
-  button.dataset.phase=on?'dark':'light';
+  button.dataset.phase=autoCycle?(on?'dark':'light'):'manual';
   phaseStart=now;
   progress(0);
   if(!on){
@@ -106,6 +105,7 @@
   }
  }
  function timer(now){
+  if(!autoCycle)return;
   const elapsed=Math.max(0,now-phaseStart);
   if(elapsed>=CYCLE_DURATION){
    // Catch up if the browser throttles a frame. Hidden time is excluded.
@@ -159,13 +159,15 @@
    layer.playhead.style.left=active?'78%':'17%';
   }
   }
-  raf=requestAnimationFrame(draw);
+  if(autoCycle||body.classList.contains('ui-overlay'))raf=requestAnimationFrame(draw);
  }
  function start(){
   cancelAnimationFrame(raf);raf=0;last=0;
-  if(!document.hidden)draw(performance.now());
+  if(!document.hidden&&(autoCycle||body.classList.contains('ui-overlay')))draw(performance.now());
  }
  button.addEventListener('click',()=>{
+  // The first explicit choice disables auto-cycling until the next page load.
+  autoCycle=false;
   setMode(!body.classList.contains('ui-overlay'));
   start();
  });
@@ -174,13 +176,13 @@
    hiddenSince=performance.now();
    cancelAnimationFrame(raf);raf=0;
   }else{
-   if(hiddenSince!==null){phaseStart+=performance.now()-hiddenSince;hiddenSince=null}
+   if(hiddenSince!==null){if(autoCycle)phaseStart+=performance.now()-hiddenSince;hiddenSince=null}
    start();
   }
  });
  window.addEventListener('resize',()=>{
   if(body.classList.contains('ui-overlay'))start();
  },{passive:true});
- // Start the first light-fill countdown immediately, with the UI hidden.
+ // Start the automatic light-fill countdown immediately; clicks take over manually.
  setMode(false);start();
 })();
