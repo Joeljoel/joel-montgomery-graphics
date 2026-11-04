@@ -200,3 +200,19 @@ test('homepage favicon uses the JM squircle while legacy and tools retain theirs
   assert.ok(exists('tools/assets/favicon.ico'));
 });
 
+test('header cursor warp is gentler without changing type or footer interactions', () => {
+  const footerStart = animations.indexOf("/* Echo the header's changing glyph field behind the footer links.");
+  assert.ok(footerStart > 0);
+  const headerAnimation = animations.slice(0, footerStart);
+  const footerAnimation = animations.slice(footerStart);
+  assert.match(headerAnimation, /const WARP_SWIRL=\.9,WARP_STRENGTH=88,GRID_SWIRL=\.5/);
+  assert.match(headerAnimation, /swirl=WARP_SWIRL\*fall/);
+  assert.match(headerAnimation, /warp\.setAttribute\('scale',power\*WARP_STRENGTH\)/);
+  assert.match(headerAnimation, /\(dx-dy\*fall\*GRID_SWIRL\)\*\.28/);
+  assert.match(headerAnimation, /\(dy\+dx\*fall\*GRID_SWIRL\)\*\.28/);
+  assert.doesNotMatch(headerAnimation, /swirl=1\.8\*fall|power\*116/);
+  assert.match(footerAnimation, /\(dx-dy\*fall\)\*\.28/);
+  assert.match(headerAnimation, /550\+450\*n\*activity/);
+  assert.match(headerAnimation, /97\.5\+47\.5\*wave\*activity/);
+  assert.match(headerAnimation, /header\.addEventListener\('touchmove'/);
+});
