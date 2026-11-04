@@ -431,7 +431,10 @@
   layer.className='title-echoes';layer.setAttribute('aria-hidden','true');
   const echoes=Array.from({length:echoCount},()=>{
    const echo=document.createElement('span');
-   echo.className='title-echo';echo.textContent=label.textContent;
+   echo.className='title-echo';
+   // Clone the entire heading content, including the vector arrow, so the
+   // solid temporal trail remains visually identical to the leading title.
+   echo.append(...Array.from(label.childNodes,node=>node.cloneNode(true)));
    layer.append(echo);
    return echo;
   });
