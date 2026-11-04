@@ -424,7 +424,10 @@
   const usedWidth=Math.round(width*sx),usedHeight=Math.round(height*sy);
   const ox=22+Math.max(0,Math.floor((cols-usedWidth)/2))*gridStep;
   const oy=22+Math.max(0,Math.floor((rows-usedHeight)/2))*gridStep;
-  return paths.map(p=>p.map(([x,y])=>[ox+x*sx*gridStep,oy+y*sy*gridStep]));
+  return paths.map(p=>p.map(([x,y])=>[
+   ox+Math.round(x*sx)*gridStep,oy+Math.round(y*sy)*gridStep
+  ]).filter((p,i,points)=>i===0||p[0]!==points[i-1][0]||p[1]!==points[i-1][1]))
+   .filter(p=>p.length>1);
  }
  function paintMotif(look,progress,opacity,cx,cy,strength){
   if(!look||opacity<=0)return;
