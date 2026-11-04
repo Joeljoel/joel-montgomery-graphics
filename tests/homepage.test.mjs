@@ -188,3 +188,15 @@ test('pre-redesign homepage is archived without a link from the new page', () =>
     'legacy/favicon.ico'
   ]) assert.ok(exists(path), 'Archive asset missing: ' + path);
 });
+
+test('homepage favicon uses the JM squircle while legacy and tools retain theirs', () => {
+  const icon=content('favicon.svg');
+  assert.match(home, /href="favicon\.ico\?v=jm-2026"/);
+  assert.match(home, /href="favicon\.svg\?v=jm-2026"/);
+  assert.match(icon, /fill="#1d2792"/);
+  assert.match(icon, /fill="#fefaed"/);
+  assert.ok(exists('favicon.ico'));
+  assert.ok(exists('legacy/favicon.ico'));
+  assert.ok(exists('tools/assets/favicon.ico'));
+});
+
