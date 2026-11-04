@@ -82,6 +82,42 @@ test('Joel width stays natural until capped to the actual Montgomery limit', () 
   assert.match(animations, /w\.line\.style\.setProperty\('--intro-run-transform',normalization\)/);
 });
 
+test('editing guide tracks Joel rendered glyph width as its letters stretch', () => {
+  const begin=animations.indexOf(' function updateTextBounds(i,line,u){');
+  const end=animations.indexOf(" const ns='http://www.w3.org/2000/svg';",begin);
+  assert.ok(begin>=0 && end>begin);
+  const glyphs=[
+    {left:120,right:148,top:40,bottom:96},
+    {left:148,right:180,top:40,bottom:96}
+  ];
+  const real={
+    children:glyphs.map((rect)=>({getBoundingClientRect:()=>rect})),
+    getBoundingClientRect:()=>({left:100,top:40,width:300,height:56})
+  };
+  const line={querySelector:()=>real};
+  const box={hidden:false,style:{}};
+  const document={body:{classList:{contains:name=>name==='editing'}}};
+  const copy={getBoundingClientRect:()=>({left:100,top:10})};
+  const update=new Function('document','editBoxes','copy',
+    animations.slice(begin,end)+'return updateTextBounds;')(document,[box],copy);
+  update(0,line,1);
+  assert.equal(box.style.left,'20.00px');
+  assert.equal(box.style.width,'60.00px');
+  assert.equal(box.style.height,'56.00px');
+  // The glyph outline grows while the old word-run layout box stays static.
+  glyphs[1].right=230;
+  update(0,line,1);
+  assert.equal(box.style.width,'110.00px');
+  // Preserve the intro reveal progression when scrubbing an early frame.
+  update(0,line,.5);
+  assert.equal(box.style.width,'55.00px');
+  // The font animation and its asynchronous width normalizer both refresh it.
+  assert.match(animations, /lines\.slice\(0,2\)\.forEach\(\(line,i\)=>updateTextBounds\(i,line,introProgress\(i,frame\)\)\)/);
+  assert.equal((animations.match(/hero\.dispatchEvent\(letterformsChanged\)/g)||[]).length,2);
+  assert.match(animations, /if\(document\.body\.classList\.contains\('editing'\)\)hero\.dispatchEvent\(letterformsChanged\)/);
+  assert.match(animations, /w===runs\[0\]\?Math\.min\(1,maxWidth\/currentWidth\)/);
+});
+
 test('featured title Echo effect samples past positions with no lead scaling', () => {
   const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+) <svg class="tile-arrow"[^>]*>[\s\S]*?<\/svg><\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
