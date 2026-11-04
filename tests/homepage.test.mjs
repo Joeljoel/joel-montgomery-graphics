@@ -35,13 +35,18 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('featured card title smears stay decorative and motion-aware', () => {
-  const headings = [...home.matchAll(/<h3>([^<]+)<span class="title-smear" aria-hidden="true" data-smear="([^"]+)"><\/span><\/h3>/g)];
+test('featured title smear uses layered motion fragments with reduced-motion support', () => {
+  const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><span class="title-smear" aria-hidden="true" data-smear="([^"]+)"><\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
   for (const match of headings) assert.equal(match[1], match[2]);
-  assert.match(styles, /@media\(prefers-reduced-motion:no-preference\)\{\s*\.work \.title-smear::before/);
-  assert.match(styles, /@keyframes title-smear-top/);
-  assert.match(styles, /@keyframes title-smear-bottom/);
+  assert.match(animations, /const bands=\[/);
+  assert.match(animations, /const trails=\[/);
+  assert.match(animations, /layer\.replaceChildren\(fragments\)/);
+  assert.match(animations, /span\.textContent=label\.textContent/);
+  assert.match(styles, /@keyframes title-ink-drag/);
+  assert.match(styles, /@keyframes title-scanline-tear/);
+  assert.match(styles, /@keyframes title-velocity-line/);
+  assert.match(styles, /prefers-reduced-motion:reduce\)\{\.work \.title-smear\{display:none\}/);
   assert.match(styles, /body\[data-look=tools\] \.work a:first-child/);
   assert.match(styles, /body\[data-look=lab\] \.work a:nth-child\(2\)/);
   assert.match(styles, /body\[data-look=basketball\] \.work a:nth-child\(3\)/);
