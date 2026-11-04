@@ -331,105 +331,111 @@
 })();
 
 
-/* Elastic title drag: deform the real heading instead of drawing a ghost copy.
-   A damped spring moves the ink, while horizontal stretch, skew and the ink's
-   own morphological trail resist the pull and settle just after the move.
-   The existing data-look state covers hover, keyboard focus and mobile scroll. */
+/* Temporal echo for the featured titles, after the supplied AE Echo reference.
+   The lead text only translates to the RIGHT on entry (no scale or skew).
+   Closely-spaced samples of its actual previous positions form a continuous
+   trailing ink smear, which catches up just after the lead finishes moving.
+   Echo elements are decorative and never contribute to the word's layout. */
 (() => {
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  const looks=['tools','lab','basketball'];
+ const duration=470,spacing=13,echoCount=18,trailTime=spacing*echoCount;
  const cards=[...document.querySelectorAll('.work h3')].map((heading,i)=>{
   const label=heading.querySelector('.title-label');
-  const filter=document.getElementById('title-elastic-'+i);
-  const morph=filter?.querySelector('feMorphology');
-  const offset=filter?.querySelector('feOffset');
-  if(!label||!morph||!offset)return null;
-  return {heading,label,morph,offset,filterId:filter.id,look:looks[i],
-   x:0,v:0,stretch:1,stretchV:0,skew:0,skewV:0,target:0,direction:1};
+  if(!label)return null;
+  const layer=document.createElement('span');
+  layer.className='title-echoes';layer.setAttribute('aria-hidden','true');
+  const echoes=Array.from({length:echoCount},()=>{
+   const echo=document.createElement('span');
+   echo.className='title-echo';echo.textContent=label.textContent;
+   layer.append(echo);
+   return echo;
+  });
+  heading.append(layer);
+  return {heading,label,echoes,look:looks[i],goal:0,
+   moves:[{at:-100000,from:0,to:0}],lastChanged:-100000};
  }).filter(Boolean);
  if(!cards.length)return;
- let enabled=false,raf=0,last=0;
- const targetFor=item=>document.body.dataset.look===item.look
-  ?parseFloat(getComputedStyle(item.heading).fontSize)*.28:0;
- function render(item,moving){
-  item.label.style.transformOrigin=item.direction>0?'right center':'left center';
-  item.label.style.transform='translate3d('+item.x.toFixed(2)+'px,0,0) scaleX('+
-   item.stretch.toFixed(4)+') skewX('+item.skew.toFixed(2)+'deg)';
-  item.heading.classList.toggle('is-moving',moving);
-  if(!moving){item.label.style.filter='none';return}
-  const gap=item.target-item.x;
-  // Morphology thickens existing ink behind the moving letterforms; it never
-  // draws a second text copy and is capped to avoid long stray trails.
-  const tail=Math.min(3.1,Math.abs(item.v)*.034+Math.abs(gap)*.055);
-  item.morph.setAttribute('radius',tail.toFixed(2)+' 0');
-  item.offset.setAttribute('dx',((item.direction>0?-1:1)*tail).toFixed(2));
-  item.label.style.filter='url(#'+item.filterId+')';
- }
- function frame(now){
-  raf=0;
-  const dt=Math.min(.033,Math.max(.008,(now-last)/1000||.016));last=now;
-  let running=false;
-  for(const item of cards){
-   const gap=item.target-item.x;
-   item.v+=(gap*74-item.v*14.8)*dt;
-   item.x+=item.v*dt;
-   // The leading edge moves first; the rest of the glyph stretches with
-   // inertia, then contracts after the translation has nearly stopped.
-   const desired=1+Math.min(.16,Math.abs(gap)*.011+Math.abs(item.v)*.00072);
-   item.stretchV+=((desired-item.stretch)*105-item.stretchV*17)*dt;
-   item.stretch+=item.stretchV*dt;
-   const wantedSkew=Math.max(-7,Math.min(7,-item.v*.095));
-   item.skewV+=((wantedSkew-item.skew)*130-item.skewV*21)*dt;
-   item.skew+=item.skewV*dt;
-   const moving=Math.abs(item.target-item.x)>.025||Math.abs(item.v)>.22||
-    Math.abs(item.stretch-1)>.001||Math.abs(item.stretchV)>.008||
-    Math.abs(item.skew)>.02;
-   if(!moving){
-    item.x=item.target;item.v=0;item.stretch=1;item.stretchV=0;
-    item.skew=0;item.skewV=0;
-   }
-   render(item,moving);
-   running ||=moving;
+ let raf=0,enabled=false;
+ function positionAt(item,time){
+  let move=item.moves[0];
+  for(let i=item.moves.length-1;i>=0;i--){
+   if(time>=item.moves[i].at){move=item.moves[i];break}
   }
-  if(running&&enabled&&!document.hidden)raf=requestAnimationFrame(frame);
+  const t=Math.max(0,Math.min(1,(time-move.at)/duration));
+  // Monotone ease-out: the lead never goes left before travelling right.
+  const ease=1-Math.pow(1-t,3);
+  return move.from+(move.to-move.from)*ease;
  }
- function wake(){
-  if(enabled&&!raf&&!document.hidden){last=performance.now();raf=requestAnimationFrame(frame)}
+ function render(now){
+  raf=0;if(!enabled||document.hidden)return;
+  let stillMoving=false;
+  for(const item of cards){
+   const head=positionAt(item,now);
+   item.label.style.transform='translate3d('+head.toFixed(3)+'px,0,0)';
+   const oldest=positionAt(item,now-trailTime);
+   const smeared=Math.abs(head-oldest)>.12;
+   if(now-item.lastChanged<duration+trailTime+80)stillMoving=true;
+   for(let i=0;i<item.echoes.length;i++){
+    const x=positionAt(item,now-(i+1)*spacing);
+    const distance=Math.abs(head-x);
+    const strength=Math.min(1,distance/1.5);
+    const fade=Math.pow(1-i/echoCount,.7);
+    const echo=item.echoes[i];
+    // Closely stacked silhouettes produce a thick Echo-style temporal blend,
+    // not a single shadow clone or an extra-long decorative speed streak.
+    echo.style.transform='translate3d('+x.toFixed(3)+'px,0,0)';
+    echo.style.opacity=smeared?(0.19*fade*strength).toFixed(3):'0';
+   }
+  }
+  if(stillMoving)raf=requestAnimationFrame(render);
  }
- function changeLook(){
+ function wake(){if(enabled&&!raf&&!document.hidden)raf=requestAnimationFrame(render)}
+ function update(){
   if(!enabled)return;
+  const now=performance.now();
   let changed=false;
   for(const item of cards){
-   const next=targetFor(item);
-   if(Math.abs(next-item.target)<.01)continue;
-   item.direction=next>item.target?1:-1;
-   item.target=next;changed=true;
+   const next=document.body.dataset.look===item.look?
+    parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
+   if(Math.abs(next-item.goal)<.1)continue;
+   const from=positionAt(item,now);
+   item.moves.push({at:now,from,to:next});
+   item.goal=next;item.lastChanged=now;changed=true;
+   // Only recent transitions are needed to reconstruct the echo window.
+   item.moves=item.moves.filter((m,i)=>i===0||m.at>now-1600);
   }
   if(changed)wake();
  }
  function configure(){
-  cancelAnimationFrame(raf);raf=0;
-  enabled=!reduced.matches;
+  cancelAnimationFrame(raf);raf=0;enabled=!reduced.matches;
   for(const item of cards){
-   item.heading.classList.toggle('title-elastic',enabled);
-   item.heading.classList.remove('is-moving');
-   item.label.style.filter='none';
-   if(!enabled){item.label.style.removeProperty('transform');continue}
-   item.target=targetFor(item);
-   item.x=item.target;item.v=0;item.stretch=1;item.stretchV=0;
-   item.skew=0;item.skewV=0;
-   render(item,false);
+   item.heading.classList.toggle('title-echo-active',enabled);
+   item.label.style.removeProperty('transform');
+   item.echoes.forEach(echo=>{echo.style.opacity='0';echo.style.removeProperty('transform')});
+   const target=enabled&&document.body.dataset.look===item.look?
+    parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
+   item.goal=target;item.moves=[{at:-100000,from:target,to:target}];
+   item.lastChanged=-100000;
+   if(enabled)item.label.style.transform='translate3d('+target.toFixed(3)+'px,0,0)';
   }
  }
- new MutationObserver(changeLook).observe(document.body,{
+ new MutationObserver(update).observe(document.body,{
   attributes:true,attributeFilter:['data-look']
  });
- window.addEventListener('resize',changeLook,{passive:true});
- document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){cancelAnimationFrame(raf);raf=0}
-  else if(cards.some(item=>Math.abs(item.x-item.target)>.025||
-    Math.abs(item.stretch-1)>.001))wake();
- });
+ window.addEventListener('resize',()=>{
+  if(!enabled)return;
+  const now=performance.now();
+  for(const item of cards){
+   const next=document.body.dataset.look===item.look?
+    parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
+   item.goal=next;item.moves=[{at:-100000,from:next,to:next}];
+   item.label.style.transform='translate3d('+next.toFixed(3)+'px,0,0)';
+   item.echoes.forEach(echo=>echo.style.opacity='0');
+   item.lastChanged=now-duration-trailTime;
+  }
+ },{passive:true});
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0}else wake()});
  reduced.addEventListener('change',configure);
  configure();
 })();
