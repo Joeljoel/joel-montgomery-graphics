@@ -270,3 +270,9 @@ footer>div:last-child a+a{margin-top:4px}
  font:600 13px/1 monospace;color:inherit;
  text-shadow:-1px -1px #222631,1px 1px #222631;
 }
+
+/* The four typography layers expand the editing timeline only when scrubbing;
+   they do not add blank space to the usual compact header. */
+.tracks .type-track{display:none}
+.editing .tracks .type-track{display:block}
+.editing .tracks{grid-template-columns:minmax(116px,max-content) minmax(0,1fr)}
