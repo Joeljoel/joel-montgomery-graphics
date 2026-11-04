@@ -58,7 +58,9 @@
  });
  // Capture the resting advance in em; subsequent weight changes flow through the whole word.
  function calibrate(){for(const w of runs){w.glyphs.forEach(g=>g.style.fontVariationSettings='"wght" 650');w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
- calibrate();
+ // ResizeObserver reports untransformed fractional advances without a synchronous layout read per frame.
+ const observer=new ResizeObserver(entries=>{for(const e of entries){const w=runs.find(item=>item.run===e.target);if(w&&e.contentRect.width)w.run.style.transform='scaleX('+w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/e.contentRect.width+')'}});
+ calibrate();runs.forEach(w=>observer.observe(w.run));
  let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
  const ns='http://www.w3.org/2000/svg',mk=(name,attrs)=>{const el=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el};
  const svg=mk('svg',{width:0,height:0,'aria-hidden':'true'});svg.style.position='absolute';const filter=mk('filter',{id:'ink-pull',filterUnits:'userSpaceOnUse',primitiveUnits:'userSpaceOnUse',x:-60,y:-60,'color-interpolation-filters':'sRGB'});
@@ -66,21 +68,21 @@
  const canvas=document.createElement('canvas');canvas.width=canvas.height=160;const ctx=canvas.getContext('2d'),im=ctx.createImageData(160,160);
  for(let y=0;y<160;y++)for(let x=0;x<160;x++){const a=(x-79.5)/80,b=(y-79.5)/80,r=Math.hypot(a,b),fall=Math.max(0,1-r)**2,swirl=1.8*fall,j=(160*y+x)*4;
  im.data.set([128+250*fall*(a-b*swirl),128+250*fall*(b+a*swirl),128,255],j)}
- ctx.putImageData(im,0,0);const map=mk('feImage',{href:canvas.toDataURL(),width:340,height:340,result:'field'});
+ ctx.putImageData(im,0,0);const map=mk('feImage',{href:canvas.toDataURL(),width:480,height:480,result:'field'});
  const warp=mk('feDisplacementMap',{in:'SourceGraphic',in2:'map',xChannelSelector:'R',yChannelSelector:'G',scale:0});
  filter.append(mk('feFlood',{'flood-color':'#808080',result:'neutral'}),map,mk('feComposite',{in:'field',in2:'neutral',operator:'over',result:'map'}),warp);svg.append(filter);document.body.append(svg);
  let point=null,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
  header.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||reduced.matches)return;point=[e.clientX,e.clientY];if(!ready){[x,y]=point;ready=true}});header.addEventListener('pointerleave',()=>point=null);
  function draw(now){raf=0;if(!visible||document.hidden||reduced.matches)return;
- const dt=Math.min(50,now-last);last=now;phase+=dt*(document.querySelector('#playhead').value<72?.002:.00023);
- for(const [row,w] of runs.entries()){const size=parseFloat(getComputedStyle(w.line).fontSize);
+ const dt=Math.min(50,now-last);last=now;phase+=dt*(document.querySelector('#playhead').value<72?.002:.00036);
+ for(const [row,w] of runs.entries()){
  w.glyphs.forEach((g,j)=>{const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));g.style.fontVariationSettings='"wght" '+(variable?550+400*n:650);g.style.letterSpacing=(-.035+.019*n)+'em'});
 
- const natural=w.run.scrollWidth;if(natural)w.run.style.transform='scaleX('+w.ratio*size/natural+')';}
+ }
  power+=((point?1:0)-power)*(1-Math.exp(-dt/75));
  if(power>.008){const rect=hero.getBoundingClientRect(),k=1-Math.exp(-dt/52);if(point){x+=(point[0]-x)*k;y+=(point[1]-y)*k}
  filter.setAttribute('width',rect.width+120);filter.setAttribute('height',rect.height+120);
- map.setAttribute('x',x-rect.left-170);map.setAttribute('y',y-rect.top-170);warp.setAttribute('scale',power*205);hero.style.filter='url(#ink-pull)'}else{hero.style.filter='';ready=false}
+ map.setAttribute('x',x-rect.left-240);map.setAttribute('y',y-rect.top-240);warp.setAttribute('scale',power*165);hero.style.filter='url(#ink-pull)'}else{hero.style.filter='';ready=false}
  raf=requestAnimationFrame(draw)}
  function sync(){cancelAnimationFrame(raf);hero.style.filter='';point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
  new IntersectionObserver(([e])=>{visible=e.isIntersecting;sync()}).observe(hero);reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
