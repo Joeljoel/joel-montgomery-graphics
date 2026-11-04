@@ -217,6 +217,81 @@
   const text=line.textContent,run=document.createElement('span');run.className='word-run';line.setAttribute('aria-hidden','true');run.setAttribute('aria-hidden','true');
   const glyphs=[...text].map(c=>{const el=document.createElement('span');el.textContent=c;return el});run.append(...glyphs);line.replaceChildren(run);return {line,run,glyphs,ratio:0}
  });
+ // Contextual typography labels are visible only in scrub/edit mode.
+ // Their x positions are measured from transformed live glyphs each frame,
+ // including individual width/weight changes and whole-word normalization.
+ const nameHeading=hero.querySelector('h1'),nameContainer=hero.querySelector('.hero-copy');
+ const glyphInspector=document.createElement('div');
+ glyphInspector.className='glyph-inspector';
+ glyphInspector.setAttribute('aria-hidden','true');
+ glyphInspector.hidden=true;
+ const glyphTags=Array.from({length:3},()=>{
+  const tag=document.createElement('span'),label=document.createElement('span'),pin=document.createElement('i');
+  tag.className='glyph-inspector-tag';label.className='glyph-inspector-name';
+  pin.className='glyph-inspector-pin';tag.append(label,pin);glyphInspector.append(tag);
+  return {tag,label,pin};
+ });
+ nameContainer.append(glyphInspector);
+ let glyphPointer=null;
+ const hideGlyphInspector=()=>{glyphInspector.hidden=true};
+ function renderGlyphInspector(){
+  if(!glyphPointer||!document.body.classList.contains('editing')||document.hidden){
+   hideGlyphInspector();return;
+  }
+  const {x,y}=glyphPointer;
+  let selected=null;
+  for(const [row,w] of runs.entries()){
+   const bounds=w.line.getBoundingClientRect();
+   if(parseFloat(w.line.style.opacity||'1')<.15||y<bounds.top-4||y>bounds.bottom+4)continue;
+   const rects=w.glyphs.map(g=>g.getBoundingClientRect());
+   const left=Math.min(...rects.map(r=>r.left)),right=Math.max(...rects.map(r=>r.right));
+   if(x<left-7||x>right+7)continue;
+   let nearest=0,distance=Infinity;
+   rects.forEach((r,i)=>{
+    const gap=x<r.left?r.left-x:x>r.right?x-r.right:0;
+    const score=gap*3+Math.abs(x-(r.left+r.right)/2);
+    if(score<distance){distance=score;nearest=i}
+   });
+   selected={row,w,nearest,rects};break;
+  }
+  if(!selected){hideGlyphInspector();return}
+  const {row,w,nearest,rects}=selected;
+  const indices=[nearest-1,nearest,nearest+1].filter(i=>i>=0&&i<w.glyphs.length);
+  const container=nameContainer.getBoundingClientRect();
+  const positions=indices.map((index,i)=>{
+   const rect=rects[index],entry=glyphTags[i];
+   entry.label.textContent=String(row+3).padStart(2,'0')+'.'+String(index+1).padStart(2,'0')+' / '+w.glyphs[index].textContent.toUpperCase();
+   entry.tag.classList.toggle('is-hovered',index===nearest);
+   entry.tag.hidden=false;
+   return {entry,center:(rect.left+rect.right)/2-container.left,top:rect.top-container.top};
+  });
+  glyphTags.forEach((item,i)=>{item.tag.hidden=i>=positions.length});
+  glyphInspector.hidden=false;
+  const gap=4,widths=positions.map(p=>p.entry.tag.offsetWidth),available=container.width;
+  const lefts=positions.map((p,i)=>p.center-widths[i]/2);
+  for(let i=1;i<lefts.length;i++)lefts[i]=Math.max(lefts[i],lefts[i-1]+widths[i-1]+gap);
+  const right=lefts.at(-1)+widths.at(-1);
+  if(right>available)for(let i=0;i<lefts.length;i++)lefts[i]-=right-available;
+  if(lefts[0]<0)for(let i=0;i<lefts.length;i++)lefts[i]-=lefts[0];
+  const top=Math.min(...positions.map(p=>p.top))-27;
+  positions.forEach((p,i)=>{
+   p.entry.tag.style.left=lefts[i].toFixed(2)+'px';
+   p.entry.tag.style.top=top.toFixed(2)+'px';
+   p.entry.pin.style.left=(p.center-lefts[i]).toFixed(2)+'px';
+  });
+ }
+ nameHeading.addEventListener('pointermove',e=>{
+  if(e.pointerType!=='mouse'&&e.pointerType!=='pen')return;
+  glyphPointer={x:e.clientX,y:e.clientY};renderGlyphInspector();
+ },{passive:true});
+ nameHeading.addEventListener('pointerleave',()=>{
+  glyphPointer=null;hideGlyphInspector();
+ });
+ new MutationObserver(()=>{
+  if(!document.body.classList.contains('editing'))hideGlyphInspector();
+  else renderGlyphInspector();
+ }).observe(document.body,{attributes:true,attributeFilter:['class']});
+ addEventListener('resize',renderGlyphInspector,{passive:true});
  // Capture the resting advance in em; subsequent weight changes flow through the whole word.
  function calibrate(){for(const w of runs){w.glyphs.forEach((g,j)=>{
   g.style.fontVariationSettings='"wght" 650';g.style.marginRight='';g.style.transform='';
@@ -348,6 +423,8 @@
   });
 
  }
+ // Keep contextual labels attached to the changing character bounds.
+ renderGlyphInspector();
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
  power+=((point?1:0)-power)*(-Math.expm1(-dt/(point?290:490)));
  if(power>.002 || point){
