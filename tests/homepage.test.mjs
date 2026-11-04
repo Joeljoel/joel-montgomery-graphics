@@ -128,7 +128,7 @@ test('JM vector layer labels track edit boxes and highlights sit below complete 
   assert.match(animations, /layer\.append\(bg,name\);guide\.append\(layer\)/);
   assert.match(animations, /const label=jmLabels\[i\],labelWidth=/);
   assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,7\.5\)/);
-  assert.match(animations, /label\.name\.setAttribute\('x',labelX\+4\)/);
+  assert.match(animations, /label\.name\.setAttribute\('x',labelX\+2\)/);
   // The highlight must filter the combined real lettering and Echo layer,
   // rather than creating a separately inherited text-shadow on each copy.
   assert.match(animations, /el\.style\.textShadow='none'/);
