@@ -138,6 +138,19 @@ test('JM vector layer labels track edit boxes and highlights sit below complete 
   assert.match(styles, /\.hero h1 \.type-intro-echoes\{/);
 });
 
+test('JM scrub labels and composition panel stay compact without moving transport', () => {
+  assert.match(animations, /name\.setAttribute\('font-size','4\.2'\)/);
+  assert.match(animations, /labelWidth=i\?45:43/);
+  assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,7\.5\)/);
+  assert.match(home, /<span>J<\/span><i style="--in:0%;--out:54%"/);
+  assert.match(home, /<span>M<\/span><i style="--in:16%;--out:83%"/);
+  assert.doesNotMatch(home, /J · bowl|M · fold/);
+  assert.match(styles, /\.comp-row\{[^}]*grid-template-rows:54px/);
+  assert.match(styles, /\.comp-row \.transport\{grid-column:1;grid-row:1;align-self:center/);
+  assert.match(styles, /\.comp-row \.tracks\{grid-column:2;grid-row:1;align-self:end;[^}]*transform:translateY\(-12px\)/);
+  assert.match(styles, /\.editing \.tracks \.type-track\{display:block\}/);
+});
+
 test('hero Echo glyphs track live font variation, transforms and word width', () => {
   // Echoes must not capture a frozen snapshot of the variable-font glyphs.
   assert.match(animations, /copiedRun\.style\.transform='var\(--intro-run-transform, none\)'/);
