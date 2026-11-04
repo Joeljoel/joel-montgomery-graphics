@@ -8,7 +8,7 @@
  copy.classList.add('hero-copy');
  const textEditor=document.createElement('div');
  textEditor.className='type-editor';textEditor.setAttribute('aria-hidden','true');
- const labels=['01 / JOEL','02 / MONTGOMERY','03 / ROLE','04 / LOCATION'];
+ const labels=['03 / JOEL','04 / MONTGOMERY','05 / ROLE','06 / LOCATION'];
  const editBoxes=lines.map((_,i)=>{
   const box=document.createElement('div');
   box.className='type-edit-box'+(i<2?' is-heading':' is-caption');
@@ -83,14 +83,14 @@
   const bg=document.createElementNS(ns,'rect');
   bg.setAttribute('fill','#222631');
   const name=document.createElementNS(ns,'text');
-  name.textContent=i?'02 / M · FOLD':'01 / J · BOWL';
+  name.textContent=i?'02 / M':'01 / J';
   name.setAttribute('fill',i?'#ffbd77':'#75caff');
   name.setAttribute('stroke','none');
   name.setAttribute('font-family','monospace');
   name.setAttribute('font-weight','700');
   // JM is a large SVG: compensate for its viewport scale so these
   // labels resemble the 9px HTML typography-layer labels.
-  name.setAttribute('font-size','4.2');
+  name.setAttribute('font-size','5');
   layer.append(bg,name);guide.append(layer);
   return {bg,name};
  });
@@ -153,9 +153,9 @@
  rect(box,minX,minY,Math.max(...xs)-Math.min(...xs)+w,Math.max(...ys)-Math.min(...ys)+w);
  [first,last].forEach((el,j)=>{const v=p.getPointAtLength(j*len);rect(el,v.x-2,v.y-2,4,4)});
  dot.setAttribute('cx',tip.x);dot.setAttribute('cy',tip.y);
- const label=jmLabels[i],labelWidth=i?45:43,labelX=Math.max(0,Math.min(324-labelWidth,minX)),labelY=minY-9;
- rect(label.bg,labelX,labelY,labelWidth,7.5);
- label.name.setAttribute('x',labelX+2);label.name.setAttribute('y',labelY+5.4);
+ const label=jmLabels[i],labelWidth=24,labelX=Math.max(0,Math.min(324-labelWidth,minX)),labelY=minY-10;
+ rect(label.bg,labelX,labelY,labelWidth,8.5);
+ label.name.setAttribute('x',labelX+2);label.name.setAttribute('y',labelY+6.2);
  }
  });
  lines.forEach((el,i)=>{
