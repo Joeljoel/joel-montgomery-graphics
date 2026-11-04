@@ -19,10 +19,18 @@
  body.insertBefore(nav,header);
  // Paint Safari's out-of-layout strip on the root canvas itself. Its background
  // scrolls with the document, avoiding a separately positioned scroll follower.
- const syncBackdrop=()=>root.toggleAttribute('data-header-backdrop',header.getBoundingClientRect().bottom>0);
- const sizeBackdrop=()=>{root.style.setProperty('--header-paint-height',header.offsetHeight+'px');syncBackdrop()};
- // Change the sampled solid colour only when crossing the header boundary.
- addEventListener('scroll',syncBackdrop,{passive:true});
- addEventListener('pageshow',syncBackdrop);
+ const sizeBackdrop=()=>root.style.setProperty('--header-paint-height',header.offsetHeight+'px');
  sizeBackdrop();new ResizeObserver(sizeBackdrop).observe(header);
+ // Safari owns the side strip: provide a solid header theme for it to sample,
+ // including when the header itself has scrolled away but its bubble remains.
+ let theme=document.querySelector('meta[name="theme-color"]');
+ if(!theme){theme=document.createElement('meta');theme.name='theme-color';document.head.append(theme)}
+ function syncTheme(){
+  const colour=getComputedStyle(body).getPropertyValue('--blue').trim()||'#1727ab';
+  root.style.backgroundColor=colour;
+  theme.content=colour;
+ }
+ syncTheme();
+ new MutationObserver(syncTheme).observe(body,{attributes:true,attributeFilter:['data-look']});
+ addEventListener('pageshow',syncTheme);
 })();
