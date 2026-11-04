@@ -213,47 +213,16 @@ footer>div:last-child a+a{margin-top:4px}
  footer a{display:flex;align-items:center;min-height:44px}
 }
 
-/* The title's silhouette stretches back towards its previous position.
-   The letterforms blur only horizontally; individual ink rows then catch up
-   .24em slide. No independent streaks, chromatic shadows, or oversized copies. */
-.work h3{position:relative;isolation:isolate}
-.work h3 .title-label{position:relative;z-index:2}
-.work h3 .title-smear{position:absolute;inset:0;z-index:1;pointer-events:none;user-select:none}
-.work .smear-band{
- position:absolute;inset:0;display:block;width:max-content;
- font:inherit;letter-spacing:inherit;white-space:nowrap;
- color:var(--blue);opacity:0;transform-origin:right center;
- filter:url(#title-velocity-blur);
- clip-path:inset(var(--band-top) -.05em var(--band-bottom) -.42em);
+/* Elastic ink, applied to the actual heading glyphs.
+   The spring stretches and skews the one visible text layer, while its SVG
+   filter pulls a small amount of the same ink behind it. No ghost copies. */
+.work h3{position:relative}
+.work h3 .title-label{
+ display:inline-block;max-width:100%;transform-origin:right center;
 }
 @media(prefers-reduced-motion:no-preference){
- :is(
-  body[data-look=tools] .work a:first-child,
-  body[data-look=lab] .work a:nth-child(2),
-  body[data-look=basketball] .work a:nth-child(3)
- ) .smear-band{
-  animation:title-ink-smear .86s cubic-bezier(.18,.78,.2,1) both;
-  animation-delay:var(--band-delay);
- }
- @keyframes title-ink-smear{
-  0%{
-   opacity:0;
-   transform:translateX(var(--band-pull)) scaleX(var(--band-stretch));
-  }
-  10%{opacity:.45}
-  26%{
-   opacity:.52;
-   transform:translateX(var(--band-pull)) scaleX(var(--band-stretch));
-  }
-  55%{
-   opacity:.32;
-   transform:translateX(var(--band-half)) scaleX(var(--band-mid-stretch));
-  }
-  77%{
-   opacity:.10;
-   transform:translateX(-.017em) scaleX(1.006);
-  }
-  100%{opacity:0;transform:none}
- }
+ /* Once the spring is running, it owns the old .24em title slide. If JS is
+    unavailable the original CSS transition remains as a clean fallback. */
+ .work h3.title-elastic{transform:none!important;transition:none!important}
+ .work h3.title-elastic.is-moving .title-label{will-change:transform,filter}
 }
-@media(prefers-reduced-motion:reduce){.work .title-smear{display:none}}
