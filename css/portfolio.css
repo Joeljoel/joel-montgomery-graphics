@@ -26,3 +26,17 @@ html[data-side-strip] :is(main,footer) { background: var(--paper); }
   footer a { display:flex; }
   footer { padding-bottom:max(52px,env(safe-area-inset-bottom)); }
 }
+
+.signature {opacity:0}
+body.sequence .reel {height:175svh}
+body.sequence header {position:sticky;top:0;height:88svh;overflow:clip;display:flex;flex-direction:column;justify-content:space-between}
+body.sequence nav {position:relative;z-index:2}
+body.sequence .hero {margin:auto 0;width:100%;padding:0}
+body.sequence .hero .mark {animation:none;transform-origin:48% 55%}
+body.sequence main {position:relative;background:var(--paper)}
+.transport:not([hidden]) {position:fixed;bottom:max(1rem,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:.7rem;padding:0 .85rem;color:var(--paper);background:#10164d;border-radius:4px;font:12px monospace;white-space:nowrap}
+.transport input {height:44px;width:clamp(78px,20vw,180px);accent-color:#a9bfff}
+.traveller:not([hidden]) {position:fixed;pointer-events:none;z-index:3;overflow:visible}
+.wave svg.signature {width:278px;height:138px}
+
+.traveller[hidden]{display:none}
