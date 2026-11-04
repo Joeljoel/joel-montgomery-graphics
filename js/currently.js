@@ -4,14 +4,31 @@
   if (!root) return;
 
   const statuses = {
-    easil: { text: 'Designing and Building at', logo: 'tools/assets/easilLogo.png', name: 'Easil' }
+    easil: { text: 'Designing and Building at', logo: 'tools/assets/easilLogo.png', name: 'Easil' },
+    sleeping: { text: 'Sleeping 😴' },
+    workout: { text: 'Working Out 🏋️' },
+    ready: { text: 'Getting Ready 🚿' },
+    commute: { text: 'Driving to Work 🚗' },
+    home: { text: 'Driving Home 🏡' },
+    relaxing: { text: 'Relaxing 🛋️' }
   };
-  // Add rules in priority order once the schedule is supplied.
-  // days: 0 = Sunday … 6 = Saturday, start/end: Brisbane HH:MM.
-  // Overnight rules belong to the day they START; end times are exclusive.
-  // Example: { days: [1, 2, 3, 4, 5], start: '09:00', end: '17:00', status: 'easil' }
-  const schedule = [];
-  const fallback = 'easil';
+  const weekdays = [1, 2, 3, 4, 5];
+  const weekends = [0, 6];
+  // Brisbane local time; 0 = Sunday. Start inclusive, end exclusive.
+  // Split sleep at midnight so Saturday and Monday get their own wake-up times.
+  const schedule = [
+    { days: [0, 1, 2, 3, 4, 5, 6], start: '22:00', end: '24:00', status: 'sleeping' },
+    { days: weekdays, start: '00:00', end: '05:30', status: 'sleeping' },
+    { days: weekends, start: '00:00', end: '08:00', status: 'sleeping' },
+    { days: weekdays, start: '05:30', end: '07:00', status: 'workout' },
+    { days: weekdays, start: '07:00', end: '08:30', status: 'ready' },
+    { days: weekdays, start: '08:30', end: '09:00', status: 'commute' },
+    { days: weekdays, start: '09:00', end: '17:00', status: 'easil' },
+    { days: weekdays, start: '17:00', end: '17:30', status: 'home' },
+    { days: weekdays, start: '17:30', end: '22:00', status: 'relaxing' },
+    { days: weekends, start: '08:00', end: '22:00', status: 'relaxing' }
+  ];
+  const fallback = 'relaxing';
   const clock = new Intl.DateTimeFormat('en-AU', {
     timeZone: 'Australia/Brisbane', weekday: 'short',
     hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
@@ -45,7 +62,6 @@
       image.src = status.logo;
       image.alt = status.name;
     }
-    // Future emoji statuses can omit logo and include the emoji in their text.
   }
   update();
   window.setInterval(() => { if (!document.hidden) update(); }, 30000);
