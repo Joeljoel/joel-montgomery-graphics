@@ -47,3 +47,13 @@ html[data-paint="panorama"] #panorama {
   pointer-events: none;
 }
 html[data-paint="panorama"] header { position: relative; z-index: 2; text-shadow: 0 1px 4px #111e30; }
+
+#pose-status{margin-top:1rem;padding:.8rem;border:1px solid #ffc88b;border-radius:.6rem;color:#ffc88b;font-weight:700}
+#pose-detail{margin-top:.6rem}
+#pose-readings div{flex-wrap:wrap}
+#pose-history{font: .75rem/1.5 ui-monospace,monospace;padding-left:1.4rem;color:#c3d8d6}
+#posture-lab h3{font-size:1rem;margin-top:1.4rem}
+.segment-probe{position:fixed;visibility:hidden;pointer-events:none;width:0;height:0}
+#segment-map{position:relative;max-width:360px;max-height:240px;margin:1rem auto;background:#0b2025}
+#segment-map span{position:absolute;display:grid;place-items:center;border:2px solid #ffc88b;background:#ffc88b18;color:#ffc88b;font:700 1.5rem monospace}
+#segment-map[hidden]{display:none}
