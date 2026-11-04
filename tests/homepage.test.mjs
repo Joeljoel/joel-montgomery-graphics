@@ -35,6 +35,24 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
+test('individual name letters explore full font axes while word widths stay fixed', () => {
+  assert.match(home, /Roboto\+Flex:wdth,wght@50\.\.145,100\.\.1000/);
+  assert.match(animations, /const activity=1-\.36\*w\.mix/);
+  assert.match(animations, /550\+450\*n\*activity/);
+  assert.match(animations, /97\.5\+47\.5\*wave\*activity/);
+  assert.match(animations, /Math\.max\(100,Math\.min\(1000,/);
+  assert.match(animations, /Math\.max\(50,Math\.min\(145,/);
+  assert.match(animations, /Math\.max\(\.28,Math\.min\(3\.15,/);
+  assert.match(animations, /w\.run\.style\.transform='scaleX\('/);
+  assert.match(animations, /w\.ratio\*parseFloat\(getComputedStyle\(w\.line\)\.fontSize\)\/e\.contentRect\.width/);
+  assert.match(animations, /observer\.observe\(w\.run\)/);
+  // At rest each glyph can reach the actual native axis endpoints.
+  assert.equal(550-450,100);
+  assert.equal(550+450,1000);
+  assert.equal(97.5-47.5,50);
+  assert.equal(97.5+47.5,145);
+});
+
 test('featured headings deform their actual ink with a bounded spring', () => {
   const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
