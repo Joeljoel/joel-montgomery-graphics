@@ -17,4 +17,8 @@
  nav.replaceWith(space);nav.className='sticky-bar';nav.setAttribute('aria-label','Main navigation');// Keep keyboard and screen-reader order aligned with the fixed nav's visual position.
  // The skip link stays first, followed by navigation, then the header controls.
  body.insertBefore(nav,header);
+ // Paint Safari's out-of-layout strip on the root canvas itself. Its background
+ // scrolls with the document, avoiding a separately positioned scroll follower.
+ const sizeBackdrop=()=>root.style.setProperty('--header-paint-height',header.offsetHeight+'px');
+ sizeBackdrop();new ResizeObserver(sizeBackdrop).observe(header);
 })();
