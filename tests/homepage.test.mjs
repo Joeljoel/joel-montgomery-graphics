@@ -112,7 +112,7 @@ test('hero name has solid ink echoes and scrub-only typography controls', () => 
   assert.match(animations, /document\.body\.classList\.contains\('editing'\)/);
   assert.match(animations, /line\.querySelector\('\.word-run'\)/);
   assert.match(animations, /rect\.width\*\(1-u\)/);
-  assert.match(animations, /const labels=\['01 \/ JOEL','02 \/ MONTGOMERY','03 \/ ROLE','04 \/ LOCATION'\]/);
+  assert.match(animations, /const labels=\['03 \/ JOEL','04 \/ MONTGOMERY','05 \/ ROLE','06 \/ LOCATION'\]/);
   assert.equal((home.match(/class="type-track"/g)||[]).length,8);
   assert.match(styles, /\.tracks \.type-track\{display:none\}/);
   assert.match(styles, /\.editing \.tracks \.type-track\{display:block\}/);
@@ -124,10 +124,10 @@ test('hero name has solid ink echoes and scrub-only typography controls', () => 
 
 test('JM vector layer labels track edit boxes and highlights sit below complete name ink', () => {
   assert.match(animations, /const jmLabels=guides\.map\(\(guide,i\)=>/);
-  assert.match(animations, /name\.textContent=i\?'02 \/ M · FOLD':'01 \/ J · BOWL'/);
+  assert.match(animations, /name\.textContent=i\?'02 \/ M':'01 \/ J'/);
   assert.match(animations, /layer\.append\(bg,name\);guide\.append\(layer\)/);
   assert.match(animations, /const label=jmLabels\[i\],labelWidth=/);
-  assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,7\.5\)/);
+  assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,8\.5\)/);
   assert.match(animations, /label\.name\.setAttribute\('x',labelX\+2\)/);
   // The highlight must filter the combined real lettering and Echo layer,
   // rather than creating a separately inherited text-shadow on each copy.
@@ -139,12 +139,12 @@ test('JM vector layer labels track edit boxes and highlights sit below complete 
 });
 
 test('JM scrub labels and composition panel stay compact without moving transport', () => {
-  assert.match(animations, /name\.setAttribute\('font-size','4\.2'\)/);
-  assert.match(animations, /labelWidth=i\?45:43/);
-  assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,7\.5\)/);
-  assert.match(home, /<span>J<\/span><i style="--in:0%;--out:54%"/);
-  assert.match(home, /<span>M<\/span><i style="--in:16%;--out:83%"/);
-  assert.doesNotMatch(home, /J · bowl|M · fold/);
+  assert.match(animations, /name\.setAttribute\('font-size','5'\)/);
+  assert.match(animations, /labelWidth=24/);
+  assert.match(animations, /rect\(label\.bg,labelX,labelY,labelWidth,8\.5\)/);
+  assert.match(home, /<span>01 \/ J<\/span><i style="--in:0%;--out:54%"/);
+  assert.match(home, /<span>02 \/ M<\/span><i style="--in:16%;--out:83%"/);
+  assert.equal((home.match(/<span class="type-track">0[3-6] \/ /g)||[]).length,4);
   assert.match(styles, /\.comp-row\{[^}]*grid-template-rows:54px/);
   assert.match(styles, /\.comp-row \.transport\{grid-column:1;grid-row:1;align-self:center/);
   assert.match(styles, /\.comp-row \.tracks\{grid-column:2;grid-row:1;align-self:end;[^}]*transform:translateY\(-12px\)/);
