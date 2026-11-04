@@ -4,57 +4,34 @@
  const lines=[...document.querySelectorAll('.type-line')];
  const ns='http://www.w3.org/2000/svg';
  const outlines=strokes.map(()=>{const p=document.createElementNS(ns,'path');p.setAttribute('stroke','#ffe6aa');p.setAttribute('stroke-width','1.2');q('#speed-ink').append(p);return p});
- const type=lines.map(line=>{
-  const text=line.textContent;line.setAttribute('aria-label',text);line.replaceChildren();
-  return text.split(/( )/).flatMap(word=>{
-   if(word===' '){line.append(' ');return []}
-   const wrap=document.createElement('span');wrap.className='type-word';wrap.setAttribute('aria-hidden','true');line.append(wrap);
-   return [...word].map(c=>{const el=document.createElement('span');el.textContent=c;wrap.append(el);return el})
-  })
- });
+ const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**3;
  function draw(f){
- frame=Math.max(0,Math.min(210,f));const clamp=x=>Math.max(0,Math.min(1,x)), ease=x=>x*x*(3-2*x), mix=(a,b,t)=>a+(b-a)*t;
- const shapes=[[114,25,114,60,114,100,114,133],[114,133,114,203,18,204,18,122],[150,184,150,130,150,80,150,25],[150,25,180,63,210,102,241,142],[241,142,273,103,304,63,334,25],[334,25,334,78,334,132,334,184]];
- strokes.forEach((stroke,i)=>{
-  const a=shapes[i],start=a.slice(0,2),to=a.slice(6),age=frame-[0,11,37,49,61,73][i];
-  const settle=ease(clamp(age/37)), weight=14+10*settle+4*Math.sin(Math.PI*settle);
-  // Lower the entrance and lift the bowl independently as the pen rounds it.
-  const pts=Array.from({length:4},(_,j)=>[a[j*2],a[j*2+1]+(1-ease(clamp((frame-(i<2?0:37))/46)))*(a[j*2+1]-100)*.31]);
-  function geometry(t){
-   const blend=(p,q)=>p.map((v,k)=>mix(v,q[k],t));
-   const [A,B,C,D]=pts,E=blend(A,B),F=blend(B,C),G=blend(C,D),H=blend(E,F),I=blend(F,G),J=blend(H,I);
-   return {d:'M'+A+'C'+E+' '+H+' '+J,tip:J,normal:[-(I[1]-H[1]),I[0]-H[0]]};
-  }
-  const lead=ease(clamp(age/20)),fill=ease(clamp((age-5)/22));
-  const rails=[[],[]];for(let k=0;k<=18;k++){const g=geometry(mix(fill,lead,k/18)),len=Math.hypot(...g.normal)||1;
-   rails.forEach((rail,j)=>rail.push(g.tip.map((v,m)=>v+(j?1:-1)*weight*.5*g.normal[m]/len).join(',')))}
-  outlines[i].setAttribute('d','M'+rails[0].join('L')+'L'+rails[1].reverse().join('L')+'Z');
-  outlines[i].style.opacity=lead>fill?1:0;
-  stroke.setAttribute('d',geometry(fill).d);stroke.style.strokeWidth=weight+'px';stroke.setAttribute('opacity',fill>0?1:0);
-  stroke.setAttribute('stroke-linecap','butt');
-  if(document.body.classList.contains('editing')){
-   const [route,box,first,last,anchor]=guides[i].children;
-   route.setAttribute('d','M'+start+'L'+to);
-   const rect=(n,x,y,w,h)=>Object.entries({x,y,width:w,height:h}).forEach(([k,v])=>n.setAttribute(k,v));
-   const b=stroke.getBBox();rect(box,b.x-weight/2,b.y-weight/2,b.width+weight,b.height+weight);
-   rect(first,start[0]-2,start[1]-2,4,4);rect(last,to[0]-2,to[1]-2,4,4);
-   const tip=stroke.getPointAtLength(stroke.getTotalLength());anchor.setAttribute('cx',tip.x);anchor.setAttribute('cy',tip.y);
-  }
- });
- type.forEach((letters,row)=>letters.forEach((el,j)=>{
-  const order=row%2?letters.length-1-j:j,u=ease(clamp((frame-23-row*19-order*(row<2?3.3:1.1))/34)),k=1-u;
-  el.style.opacity=u;el.style.transform='perspective(220px) rotateX('+(k*(row%2?-86:86))+'deg) skewX('+(k*-20)+'deg) scaleX('+(1+k*.55)+')';
-  el.style.webkitTextStrokeWidth=k>.34?'0.7px':'0';el.style.color=k>.34?'transparent':'inherit';
- }));
- document.querySelector('.tracks').style.setProperty('--time',(100*frame/210)+'%');
- range.value=Math.round(frame);out.value=String(Math.round(frame)).padStart(3,'0')+' / 210';
+ frame=clamp(f/72)*72;
+ strokes.forEach((p,i)=>{
+ const age=frame-i*11,u=burst(age/(i?43:35)), fill=burst((age-2.4)/(i?46:38)), settle=burst(age/40);
+ p.setAttribute('d',i?'M151 184V'+(25-8*(1-settle))+'L241 '+(143+19*(1-settle))+'L333 25V184':'M114 '+(25-22*(1-settle))+'V128C114 '+(204+14*(1-settle))+' 18 '+(204+14*(1-settle))+' 18 122');
+ const len=p.getTotalLength(),w=18+6*settle+4*Math.sin(settle*Math.PI);
+ p.style.strokeWidth=w+'px';p.setAttribute('stroke-linecap','butt');p.setAttribute('stroke-linejoin','round');
+ p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
+ const rails=[[],[]];for(let j=0;j<=24;j++){const d=len*(fill+(u-fill)*j/24),pt=p.getPointAtLength(d),a=p.getPointAtLength(Math.max(0,d-.3)),b=p.getPointAtLength(Math.min(len,d+.3)),dx=b.x-a.x,dy=b.y-a.y,k=w/2/(Math.hypot(dx,dy)||1);rails.forEach((r,n)=>r.push([pt.x+(n?1:-1)*dy*k,pt.y-(n?1:-1)*dx*k].join(',')))}
+ outlines[i].setAttribute('d','M'+rails[0].join('L')+'L'+rails[1].reverse().join('L')+'Z');outlines[i].style.opacity=u>fill?1:0;
+ if(document.body.classList.contains('editing')){
+ const [route,box,first,last,dot]=guides[i].children,points=Array.from({length:33},(_,j)=>p.getPointAtLength(len*u*j/32)),xs=points.map(v=>v.x),ys=points.map(v=>v.y),tip=points.at(-1);
+ route.setAttribute('d',p.getAttribute('d'));const rect=(el,x,y,width,height)=>Object.entries({x,y,width,height}).forEach(([k,v])=>el.setAttribute(k,v));
+ rect(box,Math.min(...xs)-w/2,Math.min(...ys)-w/2,Math.max(...xs)-Math.min(...xs)+w,Math.max(...ys)-Math.min(...ys)+w);[first,last].forEach((el,j)=>{const v=p.getPointAtLength(j*len);rect(el,v.x-2,v.y-2,4,4)});dot.setAttribute('cx',tip.x);dot.setAttribute('cy',tip.y);
  }
- function stop(){cancelAnimationFrame(run);run=0;btn.textContent=frame>=210?'Replay':'Play'}
- function tick(now){draw((now-start)*.03);if(frame>=210)stop();else run=requestAnimationFrame(tick)}
- function play(){document.body.classList.remove('editing');if(frame>=210)draw(0);start=performance.now()-frame/.03;btn.textContent='Pause';run=requestAnimationFrame(tick)}
+ });
+ lines.forEach((el,i)=>{const u=burst((frame-[5,15,29,36][i])/[32,39,29,31][i]),k=1-u;
+ el.style.transformOrigin=i===1?'right':'left';el.style.transform='scaleX('+(1+(i===1?.32:-.24)*k)+')';el.style.clipPath=i===1?'inset(0 0 0 '+100*k+'%)':'inset(0 '+100*k+'% 0 0)';el.style.textShadow=k>.01?(-12*k)+'px 0 #ff8060,'+ (8*k)+'px 0 #a5ffda':'none';
+ });
+ document.querySelector('.tracks').style.setProperty('--time',100*frame/72+'%');range.value=Math.round(frame);out.value=String(Math.round(frame)).padStart(3,'0')+' / 72';
+ }
+ function stop(){cancelAnimationFrame(run);run=0;btn.textContent=frame>=72?'Replay':'Play'}
+ function tick(now){draw((now-start)*.03);if(frame>=72)stop();else run=requestAnimationFrame(tick)}
+ function play(){document.body.classList.remove('editing');if(frame>=72)draw(0);start=performance.now()-frame/.03;btn.textContent='Pause';run=requestAnimationFrame(tick)}
  function edit(){stop();document.body.classList.add('editing');draw(frame)}
  range.addEventListener('pointerdown',edit);range.oninput=()=>{const requested=Number(range.value);stop();document.body.classList.add("editing");draw(requested);stop()};btn.onclick=()=>run?stop():play();
- q('.transport').hidden=false;draw(210);stop();if(!rm.matches)play();rm.onchange=()=>{draw(210);stop();document.body.classList.remove('editing')};
+ q('.transport').hidden=false;draw(72);stop();if(!rm.matches)play();rm.onchange=()=>{draw(72);stop();document.body.classList.remove('editing')};
 })();
 (() => {
  const body=document.body, cards=[...document.querySelectorAll('.work > a')], bar=document.querySelector('.audition'), buttons=[...bar.querySelectorAll('button')];
