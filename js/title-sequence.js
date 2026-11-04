@@ -54,7 +54,7 @@
   line.append(layer);introEchoes.set(line,copies);return copies;
  }
  function updateTextBounds(i,line,u){
-  if(!document.body.classList.contains('editing'))return;
+  if(!document.body.classList.contains('editing')&&!document.body.classList.contains('ui-overlay'))return;
   const box=editBoxes[i];box.hidden=u<=.015;
   if(box.hidden)return;
   const real=line.querySelector('.word-run');
@@ -155,7 +155,7 @@
  p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
  const rails=[[],[]];for(let j=0;j<=24;j++){const d=len*(fill+(u-fill)*j/24),pt=p.getPointAtLength(d),a=p.getPointAtLength(Math.max(0,d-.3)),b=p.getPointAtLength(Math.min(len,d+.3)),dx=b.x-a.x,dy=b.y-a.y,k=w/2/(Math.hypot(dx,dy)||1);rails.forEach((r,n)=>r.push([pt.x+(n?1:-1)*dy*k,pt.y-(n?1:-1)*dx*k].join(',')))}
  outlines[i].setAttribute('d','M'+rails[0].join('L')+'L'+rails[1].reverse().join('L')+'Z');outlines[i].style.opacity=u>fill?1:0;
- if(document.body.classList.contains('editing')){
+ if(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay')){
  const [route,box,first,last,dot]=guides[i].children,points=Array.from({length:33},(_,j)=>p.getPointAtLength(len*u*j/32)),xs=points.map(v=>v.x),ys=points.map(v=>v.y),tip=points.at(-1);
  route.setAttribute('d',p.getAttribute('d'));const rect=(el,x,y,width,height)=>Object.entries({x,y,width,height}).forEach(([k,v])=>el.setAttribute(k,v));
  const minX=Math.min(...xs)-w/2,minY=Math.min(...ys)-w/2;
@@ -211,10 +211,10 @@
  // The other animation loop continues changing glyph widths during scrubbing.
  // Keep the editing boxes in sync without restarting the intro timeline.
  q('.hero').addEventListener('header:letterforms-changed',()=>{
-  if(!document.body.classList.contains('editing'))return;
+  if(!document.body.classList.contains('editing')&&!document.body.classList.contains('ui-overlay'))return;
   lines.slice(0,2).forEach((line,i)=>updateTextBounds(i,line,introProgress(i,frame)));
  });
- new MutationObserver(()=>draw(frame)).observe(document.body,{attributes:true,attributeFilter:['data-look']});
+ new MutationObserver(()=>draw(frame)).observe(document.body,{attributes:true,attributeFilter:['data-look','class']});
  q('.transport').hidden=false;draw(72);stop();if(!rm.matches)play();rm.onchange=()=>{draw(72);stop();document.body.classList.remove('editing')};
 })();
 (() => {
@@ -250,7 +250,7 @@
  let glyphPointer=null;
  const hideGlyphInspector=()=>{glyphInspector.hidden=true};
  function renderGlyphInspector(){
-  if(!glyphPointer||!document.body.classList.contains('editing')||document.hidden){
+  if(!glyphPointer||!(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay'))||document.hidden){
    hideGlyphInspector();return;
   }
   const {x,y}=glyphPointer;
@@ -303,7 +303,7 @@
   glyphPointer=null;hideGlyphInspector();
  });
  new MutationObserver(()=>{
-  if(!document.body.classList.contains('editing'))hideGlyphInspector();
+  if(!document.body.classList.contains('editing')&&!document.body.classList.contains('ui-overlay'))hideGlyphInspector();
   else renderGlyphInspector();
  }).observe(document.body,{attributes:true,attributeFilter:['class']});
  addEventListener('resize',renderGlyphInspector,{passive:true});
@@ -341,7 +341,7 @@
   }
  }
  // The width cap updates asynchronously: sync the box after normalization.
- if(document.body.classList.contains('editing'))hero.dispatchEvent(letterformsChanged);
+ if(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay'))hero.dispatchEvent(letterformsChanged);
  });
  calibrate();runs.forEach(w=>observer.observe(w.run));
  let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
@@ -453,7 +453,7 @@
  }
  // Keep the name bounding boxes and hovered-glyph labels anchored to the
  // changing letterforms while the playhead is stopped in editing mode.
- if(document.body.classList.contains('editing'))hero.dispatchEvent(letterformsChanged);
+ if(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay'))hero.dispatchEvent(letterformsChanged);
  renderGlyphInspector();
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
  power+=((point?1:0)-power)*(-Math.expm1(-dt/(point?290:490)));
