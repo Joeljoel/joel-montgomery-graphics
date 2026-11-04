@@ -2,6 +2,64 @@
  const q=s=>document.querySelector(s), strokes=[...document.querySelectorAll('#strokes path')], guides=[...document.querySelector('#vectors').children], range=q('#playhead'), btn=q('#play'), out=q('.transport output'), rm=matchMedia('(prefers-reduced-motion: reduce)');
  let frame=0,run=0,start=0;
  const lines=[...document.querySelectorAll('.type-line')];
+ // The right-hand copy gets the same composition-guide treatment as the JM.
+ // The overlay is purely presentational and appears only while scrubbing.
+ const copy=document.querySelector('.hero > div:last-child');
+ copy.classList.add('hero-copy');
+ const textEditor=document.createElement('div');
+ textEditor.className='type-editor';textEditor.setAttribute('aria-hidden','true');
+ const labels=['01 / JOEL','02 / MONTGOMERY','03 / ROLE','04 / LOCATION'];
+ const editBoxes=lines.map((_,i)=>{
+  const box=document.createElement('div');
+  box.className='type-edit-box'+(i<2?' is-heading':' is-caption');
+  const label=document.createElement('small');label.className='type-edit-label';
+  label.textContent=labels[i];box.append(label);
+  for(let corner=0;corner<4;corner++){
+   const handle=document.createElement('i');handle.className='type-edit-handle h'+corner;
+   box.append(handle);
+  }
+  const pivot=document.createElement('b');pivot.className='type-edit-pivot';
+  pivot.textContent='+';box.append(pivot);textEditor.append(box);
+  return box;
+ });
+ copy.append(textEditor);
+ const introEchoes=new Map(),introOffsets=[5,15,29,36],introSpans=[32,39,29,31];
+ const introProgress=(i,f)=>burst((f-introOffsets[i])/introSpans[i]);
+ const introX=(i,u)=>-(i<2?.34:.27)*(1-u);
+ // Wait until the variable-font module builds the real word-run. Copies of its
+ // glyphs inherit the same ink and full font styling, not a grey shadow layer.
+ function ensureIntroEchoes(line,i){
+  if(i>1)return [];
+  if(introEchoes.has(line))return introEchoes.get(line);
+  const real=line.querySelector('.word-run');
+  if(!real)return [];
+  const layer=document.createElement('span');
+  layer.className='type-intro-echoes';layer.setAttribute('aria-hidden','true');
+  const copies=Array.from({length:18},()=>{
+   const echo=document.createElement('span');echo.className='type-intro-echo';
+   echo.append(real.cloneNode(true));layer.append(echo);return echo;
+  });
+  line.append(layer);introEchoes.set(line,copies);return copies;
+ }
+ function updateTextBounds(i,line,u){
+  if(!document.body.classList.contains('editing'))return;
+  const box=editBoxes[i];box.hidden=u<=.015;
+  if(box.hidden)return;
+  const real=line.querySelector('.word-run');
+  let rect;
+  if(real)rect=real.getBoundingClientRect();
+  else{
+   const range=document.createRange();range.selectNodeContents(line);
+   rect=range.getBoundingClientRect();
+  }
+  const parent=copy.getBoundingClientRect();
+  const width=Math.max(2,rect.width*u);
+  const left=rect.left-parent.left+(i===1?rect.width*(1-u):0);
+  box.style.left=left.toFixed(2)+'px';
+  box.style.top=(rect.top-parent.top).toFixed(2)+'px';
+  box.style.width=width.toFixed(2)+'px';
+  box.style.height=Math.max(12,rect.height).toFixed(2)+'px';
+ }
  const ns='http://www.w3.org/2000/svg';
  const outlines=strokes.map(()=>{const p=document.createElementNS(ns,'path');p.setAttribute('stroke','#ffe6aa');p.setAttribute('stroke-width','1.2');q('#speed-ink').append(p);return p});
  const clamp=x=>Math.max(0,Math.min(1,x)), burst=x=>1-(1-clamp(x))**4;
@@ -62,8 +120,33 @@
  rect(box,Math.min(...xs)-w/2,Math.min(...ys)-w/2,Math.max(...xs)-Math.min(...xs)+w,Math.max(...ys)-Math.min(...ys)+w);[first,last].forEach((el,j)=>{const v=p.getPointAtLength(j*len);rect(el,v.x-2,v.y-2,4,4)});dot.setAttribute('cx',tip.x);dot.setAttribute('cy',tip.y);
  }
  });
- lines.forEach((el,i)=>{const u=burst((frame-[5,15,29,36][i])/[32,39,29,31][i]),k=1-u;
- el.style.transformOrigin=i===1?'right':'left';el.style.transform='scaleX('+(1+(i===1?.32:-.24)*k)+')';el.style.clipPath=u===1?'none':i===1?'inset(-25% -3% -35% '+100*k+'%)':'inset(-25% '+100*k+'% -35% -3%)';el.style.letterSpacing=(-.055+.09*k)+'em';el.style.opacity=clamp(u*4);el.style.textShadow=k>.01?(-12*k)+'px 0 #ff8060,'+ (8*k)+'px 0 #a5ffda':'none';
+ lines.forEach((el,i)=>{
+  const u=introProgress(i,frame),k=1-u;
+  el.style.transformOrigin=i===1?'right':'left';
+  const scale=1+(i===1?.32:-.24)*k;
+  const position=introX(i,u);
+  // Movement goes from LEFT to its resting position; the leading ink does
+  // not overshoot or travel backwards.
+  el.style.transform='translateX('+position.toFixed(4)+'em) scaleX('+scale+')';
+  el.style.clipPath=u===1?'none':i===1
+   ?'inset(-25% -3% -35% '+100*k+'%)'
+   :'inset(-25% '+100*k+'% -35% -3%)';
+  el.style.letterSpacing=(-.055+.09*k)+'em';
+  el.style.opacity=clamp(u*4);
+  el.style.textShadow=k>.01?(-12*k)+'px 0 #ff8060,'+(8*k)+'px 0 #a5ffda':'none';
+  // Eighteen solid past-position samples blend into a trailing stretch of
+  // the letterforms while the line draws on. Scrubbing is deterministic:
+  // every echo is computed from the requested composition frame.
+  for(const [j,echo] of ensureIntroEchoes(el,i).entries()){
+   const past=introProgress(i,frame-(j+1)*.6);
+   const delta=introX(i,past)-position;
+   echo.style.display=u>.025&&past>.015&&Math.abs(delta)>.003?'block':'none';
+   echo.style.transform='translateX('+delta.toFixed(4)+'em)';
+   echo.style.clipPath=i===1
+    ?'inset(-25% -3% -35% '+100*(1-past)+'%)'
+    :'inset(-25% '+100*(1-past)+'% -35% -3%)';
+  }
+  updateTextBounds(i,el,u);
  });
  document.querySelector('.tracks').style.setProperty('--time',100*frame/72+'%');range.value=Math.round(frame);out.value=String(Math.round(frame)).padStart(3,'0')+' / 72';
  }
