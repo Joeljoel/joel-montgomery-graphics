@@ -27,22 +27,23 @@
 </g>
 <!-- The arcade cabinet is set farther into the right side of the frame. -->
 <g class="jb-machine" transform="translate(95 -4) scale(.92)">
-  <!-- A single coherent black return-ramp plane, receding from the cabinet
-       to the near rail. Removing the free-floating diagonals fixes the base. -->
-  <path d="M117 163L365 192L428 260L182 260Z"
-        fill="#0b1020" stroke="#394657" stroke-width="2.5"/>
-  <path d="M127 166L362 194L407 251L191 251Z" fill="#171d2b"/>
-  <path d="M117 163L182 260L171 260L109 165Z" fill="#131b2a"/>
-  <path d="M365 192L428 260L437 259L373 191Z" fill="#0a1323"/>
-  <!-- Court markings follow the same foreshortening as the ramp. -->
-  <g fill="none" stroke="#b6c8cb" stroke-width="1.7" opacity=".44">
-    <path d="M175 186L221 249M309 203L358 249"/>
-    <path d="M221 249Q287 223 358 249"/>
+  <!-- Both ramp edges share the backboard's clockwise slope. The near edge
+       continues below the crop instead of ending in a horizontal front bar. -->
+  <path d="M100 155L366 191L422 272L156 236Z"
+        fill="#0b1020" stroke="#35465a" stroke-width="2.5"/>
+  <path d="M100 155L156 236L149 238L94 157Z"
+        fill="#1a2533" stroke="#42566a" stroke-width="1.6"/>
+  <path d="M366 191L422 272L431 266L374 186Z"
+        fill="#121b2a" stroke="#33475a" stroke-width="1.6"/>
+  <!-- Only two sparse lane markings, foreshortened with the chute. -->
+  <g fill="none" stroke="#a5b3bf" stroke-width="1.7" opacity=".4">
+    <path d="M168 167L225 246"/>
+    <path d="M300 183L357 261"/>
   </g>
-  <!-- Three physically connected tubular frame edges, no crossed base lines. -->
+  <!-- Rails follow the same skewed quadrilateral as the printed backboard. -->
   <g fill="none" stroke="url(#jb-steel)" stroke-width="4"
      stroke-linecap="round" stroke-linejoin="round">
-    <path d="M117 163L182 260H428L365 192"/>
+    <path d="M100 155L156 236L422 272L366 191"/>
   </g>
   <!-- A visible top and right-hand edge give the backboard its 3/4 cabinet perspective. -->
   <path d="M118 28L153 14L382 46L367 60Z" fill="#324454" stroke="#0a101d" stroke-width="3"/>
@@ -102,11 +103,6 @@
   </g>
   <circle cx="82" cy="201" r="39" fill="url(#jb-ball-shadow)"/>
   <circle cx="82" cy="201" r="39" fill="none" stroke="#1b1a1c" stroke-width="2.7"/>
-</g>
-<!-- Last foreground streaks remain parallel to the shot instead of radiating randomly. -->
-<g class="jb-foreground-lines" fill="none" stroke-linecap="round">
-  <path d="M-23 210L37 187M-15 227L48 203M8 245L64 224" stroke="#fff6e8" stroke-width="5"/>
-  <path d="M-30 183L29 160M-26 243L25 223" stroke="#ff91bb" stroke-width="2.5"/>
 </g>
 </svg></div><h3>Joelsketball ↗</h3><p>A two-player arcade basketball game.</p></a></div></main>
 <footer><div><small>TOOLS</small><a class="tools" href="tools/">Design Utilities ↗</a></div><div><small>EXPERIMENTS</small><a href="calculator/">Joelculator ↗</a><a href="joeldle/">Joeldle ↗</a><a href="basketball/">Joelsketball ↗</a><a href="iphone-duo/">Joelport Lab ↗</a></div></footer></body></html>
