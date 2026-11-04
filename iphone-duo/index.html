@@ -8,13 +8,24 @@ const fit = new URLSearchParams(location.search).get('fit') === 'auto' ? 'auto' 
 document.querySelector('meta[name=viewport]').content = 'width=device-width,initial-scale=1,viewport-fit='+fit;
 </script>
 <meta name="theme-color" content="#12292e">
-<link rel="stylesheet" href="lab.css">
+<link rel="stylesheet" href="lab.css?v=posture-1">
 <title>Joelport Lab · iPhone Duo</title>
 </head>
 <body>
 <div id="panorama" aria-hidden="true"></div>
 <header><small>DISPLAY LAB &nbsp; / &nbsp; 01</small><h1>Joelport Lab<span>.</span></h1><p>Where does Safari stop drawing on the iPhone Duo?</p></header>
 <main>
+<section id="posture-lab" data-band="#234448">
+<small>LIVE / POSTURE</small><h2>Fold the screen</h2>
+<p>Try flat, partly folded like a book, and partly folded like a laptop. Then try split-screen. Readings update automatically.</p>
+<p id="pose-status" role="status" aria-live="polite">Reading Safari signals…</p>
+<p id="pose-detail"></p>
+<dl id="pose-readings"></dl>
+<div id="segment-map" aria-label="Reported viewport segments"></div>
+<p class="source">Two segments suggest a fold-aware layout, but do not prove the hinge is half closed. One segment cannot distinguish a flat screen, outer screen or split-screen window. No hinge angle is exposed here.</p>
+<h3>Recent changes</h3><ol id="pose-history"></ol>
+</section>
+
 <section data-band="#673858"><small>01 &nbsp; / &nbsp; PAINT BOUNDARY</small><h2>Follow the stripes</h2>
 <p>Follow the horizontal boundary between two colours into the side strip. Scroll slowly: does the boundary move with the page, and how far towards the edge does it reach?</p></section>
 <div class="sample" data-band="#83492e"><div class="edge left">L</div><div class="edge right">R</div><b>EDGE PROBE</b></div>
@@ -33,4 +44,4 @@ document.querySelector('meta[name=viewport]').content = 'width=device-width,init
 <p class="source"><a href="https://webkit.org/blog/18486/webkit-features-for-safari-27-1/#web-content-under-the-controls">WebKit’s Safari 27.1 notes</a> describe background colour extending behind the controls while page content stays inside the viewport.</p>
 </section>
 </main><div id="edgeColumn" aria-hidden="true"></div><div id="overlay" aria-hidden="true"></div><div id="probe" aria-hidden="true"></div>
-<script src="lab.js"></script></body></html>
+<script src="lab.js?v=posture-1"></script></body></html>
