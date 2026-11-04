@@ -405,9 +405,23 @@
    }
    add([[0,1],[0,3]]);add([[width,1],[width,3]]);
   }else return [];
-  const ox=22+Math.max(0,Math.floor((cols-width)/2))*gridStep;
-  const oy=22+Math.max(0,Math.floor((rows-height)/2))*gridStep;
-  return paths.map(p=>p.map(([x,y])=>[ox+x*gridStep,oy+y*gridStep]));
+  // Desktop illustrations fill the composition rather than a small central patch.
+  // Quantize every enlarged anchor back to the existing dot lattice.
+  let sx=1,sy=1;
+  if(gw>=800){
+   if(look==='lab'){
+    const cell=Math.max(2,Math.min(Math.floor((cols*.86-4)/5),Math.floor(rows*.65)));
+    paths.length=0;width=cell*5+4;height=cell;
+    for(let i=0;i<5;i++)rect(i*(cell+1),0,cell,cell);
+   }else{
+    sx=Math.max(1,Math.floor(cols*(look==='tools'?.84:.62))/width);
+    sy=Math.max(1,Math.floor(rows*.68)/height);
+   }
+  }
+  const usedWidth=Math.round(width*sx),usedHeight=Math.round(height*sy);
+  const ox=22+Math.max(0,Math.floor((cols-usedWidth)/2))*gridStep;
+  const oy=22+Math.max(0,Math.floor((rows-usedHeight)/2))*gridStep;
+  return paths.map(p=>p.map(([x,y])=>[ox+Math.round(x*sx)*gridStep,oy+Math.round(y*sy)*gridStep]));
  }
  function paintMotif(look,progress,opacity,cx,cy,strength){
   if(!look||opacity<=0)return;
