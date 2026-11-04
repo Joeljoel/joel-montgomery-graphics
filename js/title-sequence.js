@@ -340,7 +340,7 @@
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
  const looks=['tools','lab','basketball'];
  // Subpixel-spaced, opaque previous frames overlap into a single solid silhouette.
- const duration=470,spacing=7,echoCount=40,trailTime=spacing*echoCount;
+ const enterDuration=385,exitDuration=470,spacing=7,echoCount=40,trailTime=spacing*echoCount;
  const cards=[...document.querySelectorAll('.work h3')].map((heading,i)=>{
   const label=heading.querySelector('.title-label');
   if(!label)return null;
@@ -354,7 +354,7 @@
   });
   heading.append(layer);
   return {heading,label,echoes,look:looks[i],goal:0,
-   moves:[{at:-100000,from:0,to:0}],lastChanged:-100000};
+   moves:[{at:-100000,from:0,to:0,duration:exitDuration}],lastChanged:-100000,moveDuration:exitDuration};
  }).filter(Boolean);
  if(!cards.length)return;
  let raf=0,enabled=false;
@@ -363,7 +363,7 @@
   for(let i=item.moves.length-1;i>=0;i--){
    if(time>=item.moves[i].at){move=item.moves[i];break}
   }
-  const t=Math.max(0,Math.min(1,(time-move.at)/duration));
+  const t=Math.max(0,Math.min(1,(time-move.at)/(move.duration||exitDuration)));
   // Strong, symmetric ease-in/out: nearly still at each end, fast through
   // the midpoint. It stays monotone, so Echo samples only trail the motion.
   const ease=t<.5?4*t*t*t:1-4*Math.pow(1-t,3);
@@ -377,7 +377,7 @@
    item.label.style.transform='translate3d('+head.toFixed(3)+'px,0,0)';
    const oldest=positionAt(item,now-trailTime);
    const smeared=Math.abs(head-oldest)>.12;
-   if(now-item.lastChanged<duration+trailTime+80)stillMoving=true;
+   if(now-item.lastChanged<item.moveDuration+trailTime+80)stillMoving=true;
    for(let i=0;i<item.echoes.length;i++){
     const x=positionAt(item,now-(i+1)*spacing);
     const echo=item.echoes[i];
@@ -399,8 +399,9 @@
     parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
    if(Math.abs(next-item.goal)<.1)continue;
    const from=positionAt(item,now);
-   item.moves.push({at:now,from,to:next});
-   item.goal=next;item.lastChanged=now;changed=true;
+   const duration=next>from?enterDuration:exitDuration;
+   item.moves.push({at:now,from,to:next,duration});
+   item.goal=next;item.moveDuration=duration;item.lastChanged=now;changed=true;
    // Only recent transitions are needed to reconstruct the echo window.
    item.moves=item.moves.filter((m,i)=>i===0||m.at>now-1600);
   }
@@ -414,7 +415,8 @@
    item.echoes.forEach(echo=>{echo.style.display='none';echo.style.removeProperty('transform')});
    const target=enabled&&document.body.dataset.look===item.look?
     parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
-   item.goal=target;item.moves=[{at:-100000,from:target,to:target}];
+   item.goal=target;item.moves=[{at:-100000,from:target,to:target,duration:exitDuration}];
+   item.moveDuration=exitDuration;
    item.lastChanged=-100000;
    if(enabled)item.label.style.transform='translate3d('+target.toFixed(3)+'px,0,0)';
   }
@@ -428,10 +430,11 @@
   for(const item of cards){
    const next=document.body.dataset.look===item.look?
     parseFloat(getComputedStyle(item.heading).fontSize)*.36:0;
-   item.goal=next;item.moves=[{at:-100000,from:next,to:next}];
+   item.goal=next;item.moves=[{at:-100000,from:next,to:next,duration:exitDuration}];
+   item.moveDuration=exitDuration;
    item.label.style.transform='translate3d('+next.toFixed(3)+'px,0,0)';
    item.echoes.forEach(echo=>echo.style.display='none');
-   item.lastChanged=now-duration-trailTime;
+   item.lastChanged=now-exitDuration-trailTime;
   }
  },{passive:true});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0}else wake()});
