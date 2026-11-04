@@ -70,19 +70,10 @@
  im.data.set([128+250*fall*(a-b*swirl),128+250*fall*(b+a*swirl),128,255],j)}
  ctx.putImageData(im,0,0);const map=mk('feImage',{href:canvas.toDataURL(),width:840,height:840,result:'field'});
  const warp=mk('feDisplacementMap',{in:'SourceGraphic',in2:'map',xChannelSelector:'R',yChannelSelector:'G',scale:0});
- filter.append(mk('feFlood',{'flood-color':'#808080',result:'neutral'}),map,mk('feComposite',{in:'field',in2:'neutral',operator:'over',result:'map'}),warp);// Mix delayed displacement fields before sampling the artwork once.
- const history=[], delays=[110,250,460,750,1050], gains=[.19,.16,.12,.085,.045];
- let previous='map';
- const echoes=delays.map((delay,i)=>{
-  const image=map.cloneNode(false);image.setAttribute('result','echo'+i);
-  const padded=mk('feComposite',{in:'echo'+i,in2:'neutral',operator:'over',result:'padded'+i});
-  const mix=mk('feComposite',{in:previous,in2:'padded'+i,operator:'arithmetic',k2:1,k3:0,k4:0,result:'sum'+i});
-  filter.insertBefore(image,warp);filter.insertBefore(padded,warp);filter.insertBefore(mix,warp);previous='sum'+i;
-  return {image,mix,delay,gain:gains[i]};
- });
- warp.setAttribute('in2',previous);svg.append(filter);document.body.append(svg);
- let point=null,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
- header.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||reduced.matches)return;point=[e.clientX,e.clientY];if(!ready){[x,y]=point;ready=true}});header.addEventListener('pointerleave',()=>point=null);
+ filter.append(mk('feFlood',{'flood-color':'#808080',result:'neutral'}),map,mk('feComposite',{in:'field',in2:'neutral',operator:'over',result:'map'}),warp);
+ svg.append(filter);document.body.append(svg);
+ let point=null,aimX=0,aimY=0,x=0,y=0,power=0,phase=0,last=0,raf=0,visible=true,ready=false;
+ header.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||reduced.matches)return;point=[e.clientX,e.clientY];if(!ready){[x,y]=point;[aimX,aimY]=point;ready=true}});header.addEventListener('pointerleave',()=>point=null);
  function draw(now){raf=0;if(!visible||document.hidden||reduced.matches)return;
  const dt=Math.min(50,now-last);last=now;const progress=Number(document.querySelector('#playhead').value)/72;
  const remaining=1-progress*progress*(3-2*progress);phase+=dt*(.00036+.00164*remaining);
@@ -90,22 +81,20 @@
  w.glyphs.forEach((g,j)=>{const n=Math.sin(phase+j*.88+row+.28*Math.sin(phase*.63-j*.4));const width=99+39*Math.sin(.81*phase+j*1.17+row+.5);g.style.fontVariationSettings='"wght" '+(variable?550+400*n:650)+', "wdth" '+(variable?width:100);g.style.letterSpacing=(-.035+.019*n)+'em'});
 
  }
- power+=((point?1:0)-power)*(1-Math.exp(-dt/75));
- if(power>.008 || history.some(p=>now-p.time<1200 && p.power>.008)){const rect=hero.getBoundingClientRect(),k=1-Math.exp(-dt/52);if(point){x+=(point[0]-x)*k;y+=(point[1]-y)*k}
- filter.setAttribute('width',rect.width+120);filter.setAttribute('height',rect.height+120);
- const lx=x-rect.left-420,ly=y-rect.top-420;
- history.push({time:now,x:lx,y:ly,power});while(history.length>1 && history[1].time<now-1200)history.shift();
- map.setAttribute('x',lx);map.setAttribute('y',ly);
- // Normalise each blend to keep the map neutral outside the swept area.
- let total=power*.68;
- for(const {image,mix,delay,gain} of echoes){
-  const time=now-delay,idx=history.findIndex(p=>p.time>=time),b=history[idx<0?history.length-1:idx],a=history[Math.max(0,idx-1)];
-  const f=Math.max(0,Math.min(1,(time-a.time)/(b.time-a.time||1))),w=time<history[0].time?0:gain*(a.power+(b.power-a.power)*f);
-  image.setAttribute('x',a.x+(b.x-a.x)*f);image.setAttribute('y',a.y+(b.y-a.y)*f);
-  mix.setAttribute('k2',total/(total+w||1));mix.setAttribute('k3',w/(total+w||1));total+=w;
- }
- warp.setAttribute('scale',total*112);hero.style.filter='url(#ink-pull)'}else{hero.style.filter='';ready=false;history.length=0}
+ // Two first-order low-pass stages resist rapid reversals without spring overshoot.
+ power+=((point?1:0)-power)*(-Math.expm1(-dt/(point?290:490)));
+ if(power>.002 || point){
+  const rect=hero.getBoundingClientRect();
+  if(point){
+   const a=-Math.expm1(-dt/125),b=-Math.expm1(-dt/180);
+   aimX+=(point[0]-aimX)*a;aimY+=(point[1]-aimY)*a;
+   x+=(aimX-x)*b;y+=(aimY-y)*b;
+  }
+  filter.setAttribute('width',rect.width+120);filter.setAttribute('height',rect.height+120);
+  map.setAttribute('x',x-rect.left-420);map.setAttribute('y',y-rect.top-420);
+  warp.setAttribute('scale',power*116);hero.style.filter='url(#ink-pull)';
+ }else{hero.style.filter='';ready=false}
  raf=requestAnimationFrame(draw)}
- function sync(){cancelAnimationFrame(raf);hero.style.filter='';history.length=0;point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
+ function sync(){cancelAnimationFrame(raf);hero.style.filter='';point=null;power=0;ready=false;last=performance.now();if(reduced.matches){for(const w of runs){w.run.style.transform='';w.glyphs.forEach(g=>g.removeAttribute('style'))}}else if(visible&&!document.hidden)raf=requestAnimationFrame(draw)}
  new IntersectionObserver(([e])=>{visible=e.isIntersecting;sync()}).observe(hero);reduced.addEventListener('change',sync);document.addEventListener('visibilitychange',sync);sync();
 })();
