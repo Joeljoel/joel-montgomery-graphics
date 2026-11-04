@@ -53,25 +53,21 @@ test('individual name letters explore full font axes while word widths stay fixe
   assert.equal(97.5+47.5,145);
 });
 
-test('featured headings deform their actual ink with a bounded spring', () => {
+test('featured title Echo effect samples past positions with no lead scaling', () => {
   const headings = [...home.matchAll(/<h3><span class="title-label">([^<]+)<\/span><\/h3>/g)];
   assert.equal(headings.length, 3);
-  assert.doesNotMatch(home, /class="title-smear"/);
-  for (let i=0; i<3; i++) {
-    assert.match(home, new RegExp('id="title-elastic-' + i + '"'));
-  }
-  assert.match(home, /<feMorphology in="SourceGraphic" operator="dilate"/);
-  assert.match(home, /<feOffset in="expanded"/);
-  assert.match(animations, /gap\*74-item\.v\*14\.8/);
-  assert.match(animations, /item\.stretchV\+=/);
-  assert.match(animations, /item\.skewV\+=/);
-  assert.match(animations, /item\.morph\.setAttribute\('radius'/);
+  assert.doesNotMatch(home, /id="title-elastic-|title-velocity-blur|title-smear/);
+  assert.match(animations, /const duration=470,spacing=13,echoCount=18/);
+  assert.match(animations, /positionAt\(item,now-\(i\+1\)\*spacing\)/);
+  assert.match(animations, /1-Math\.pow\(1-t,3\)/);
+  assert.match(animations, /item\.label\.style\.transform='translate3d\('/);
+  assert.match(animations, /layer\.setAttribute\('aria-hidden','true'\)/);
+  assert.match(animations, /enabled=!reduced\.matches/);
   assert.match(animations, /document\.body\.dataset\.look===item\.look/);
-  assert.match(animations, /reduced\.addEventListener\('change',configure\)/);
-  assert.doesNotMatch(animations, /smear-band|smear-trail/);
-  assert.match(styles, /\.work h3\.title-elastic\{transform:none!important/);
-  assert.doesNotMatch(styles, /\.title-smear|\.smear-band/);
-  assert.match(styles, /@media\(prefers-reduced-motion:no-preference\)/);
+  assert.doesNotMatch(animations, /scaleX\(.*item\.stretch|item\.skewV|smear-band|smear-trail/);
+  assert.match(styles, /\.work h3\.title-echo-active\{transform:none!important/);
+  assert.match(styles, /\.work h3 \.title-echoes/);
+  assert.match(styles, /@media\(prefers-reduced-motion:reduce\)\{\.work \.title-echoes\{display:none\}/);
 });
 
 test('pre-redesign homepage is archived without a link from the new page', () => {
