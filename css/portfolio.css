@@ -276,3 +276,175 @@ footer>div:last-child a+a{margin-top:4px}
  flex:none;overflow:visible;
 }
 
+/* Hover inspection of the changing individual letterforms in scrub mode.
+   The callouts use the same compact composition UI as the word guides. */
+.glyph-inspector{
+ position:absolute;inset:0;z-index:7;pointer-events:none;
+ visibility:hidden;user-select:none;
+}
+.editing .glyph-inspector:not([hidden]){visibility:visible}
+.glyph-inspector[hidden],.glyph-inspector-tag[hidden]{display:none}
+.glyph-inspector-tag{
+ position:absolute;display:block;padding:2px 5px 3px;white-space:nowrap;
+ color:#75caff;background:#222631;border-top:1px solid currentColor;
+ font:700 9px/1.25 monospace;letter-spacing:.015em;
+}
+.glyph-inspector-tag.is-hovered{
+ color:#b5f5cb;background:#202d37;
+ box-shadow:inset 0 -1px currentColor;
+}
+.glyph-inspector-pin{
+ position:absolute;top:100%;height:8px;width:1px;background:currentColor;
+}
+.glyph-inspector-pin::after{
+ content:"";position:absolute;bottom:-2px;left:-2px;
+ width:5px;height:5px;border-radius:50%;background:currentColor;
+}
+
+
+/* Orange glass UI toggle, matched to Selected Work typography.
+   Only the button fills: light while UI is OFF, dark while UI is ON. */
+.sticky-bar #ui-overlay-toggle{
+ position:relative;isolation:isolate;overflow:hidden;
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:44px;flex:none;padding:0 1.1em;
+ border:1px solid #ffe2baae;border-radius:99px;
+ color:#fff8ec;background:linear-gradient(155deg,#ffffff66,#ffd6a40e 45%,#fa93462e),#a95729b5;
+ -webkit-backdrop-filter:blur(9px) saturate(160%);
+ backdrop-filter:blur(9px) saturate(160%);
+ box-shadow:inset 0 1px 1px #ffffffd4,inset 1px 0 2px #fff2cf66,inset -1px -2px 3px #ffc17855,0 4px 12px #4f170c33;
+ font:inherit;letter-spacing:inherit;white-space:nowrap;cursor:pointer;
+}
+.sticky-bar #ui-overlay-toggle::before{
+ content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+ transform-origin:left center;transform:scaleX(var(--ui-phase-progress,0));
+ background:linear-gradient(100deg,#ffd3a979,#fff2d8b2);
+}
+.sticky-bar #ui-overlay-toggle[data-phase=dark]::before{
+ background:linear-gradient(100deg,#4c2a26b8,#221f2cdd);
+}
+.sticky-bar #ui-overlay-toggle:hover{filter:brightness(1.07)}
+.sticky-bar #ui-overlay-toggle:focus-visible{outline:3px solid currentColor;outline-offset:4px}
+#ui-overlay-toggle[aria-pressed=true]{border-color:#fff3cf;box-shadow:inset 0 1px 1px #fff8f1,0 0 13px #ffe2ac55,0 4px 12px #4f170c33}
+.ui-toggle-text{position:relative;z-index:1}
+/* Reduced-motion users retain the UI toggle without the animated fill. */
+@media(prefers-reduced-motion:reduce){
+ .sticky-bar #ui-overlay-toggle::before{display:none}
+}
+@media(max-width:620px){
+ .sticky-bar{gap:8px;padding-right:10px;padding-left:12px}
+ .sticky-bar>a[href="#work"]{font-size:12px;white-space:nowrap;padding-inline:10px}
+ .sticky-bar #ui-overlay-toggle{font-size:12px;padding-inline:10px}
+ .sticky-bar b{font-size:26px}
+}
+/* The manual scrubber independently reveals the header UI even when the
+   optional overlay mode times out and returns to the clean view. */
+.ui-overlay :is(.guides,.tracks),.ui-overlay #vectors,.ui-overlay .type-editor{visibility:visible}
+.ui-overlay .guides{border:none;background:none}
+.ui-overlay .tracks{
+ background:#222631;color:#bbc4d3;padding:5px 8px;border-radius:3px;
+ grid-template-columns:minmax(116px,max-content) minmax(0,1fr);
+}
+.ui-overlay .tracks .type-track{display:block}
+.ui-overlay .glyph-inspector:not([hidden]){visibility:visible}
+
+/* Scoped guides on the animated work cards. All boxes are measured by JS,
+   including the artwork feature and the translated title as it moves. */
+.work>a{position:relative}
+.ui-card-overlay{
+ position:absolute;inset:0;z-index:5;pointer-events:none;
+ visibility:hidden;opacity:0;user-select:none;
+ font-family:monospace;
+}
+.ui-overlay .ui-card-overlay{visibility:visible;opacity:1}
+.ui-wire{
+ position:absolute;box-sizing:border-box;
+ border:1px dashed #75caff;color:#75caff;
+ box-shadow:inset 0 0 0 1px #10182719;
+}
+.ui-wire[hidden]{display:none}
+.ui-wire-art{border-color:#b5f5cb;color:#b5f5cb}
+/* One tight transform-tracking box for each individual ribbon disc.
+   It is only rendered for the disc currently under the mouse or pen. */
+.ui-wire-disc{
+ border:1px solid #fff2a4;color:#fff2a4;z-index:4;
+ box-shadow:inset 0 0 0 1px #1727ab55,0 0 10px #fff2a433;
+}
+.ui-wire-disc .ui-wire-label{
+ top:auto;bottom:calc(100% + 2px);left:0;
+ background:#222631f2;color:#fff2a4;
+}
+
+.ui-wire-copy{border-color:#ffbd77;color:#ffbd77}
+.ui-wire-feature{
+ border-color:#ffbd77;color:#ffbd77;
+ background:linear-gradient(90deg,transparent calc(50% - .5px),#ffbd7733 50%,transparent calc(50% + .5px)),
+ linear-gradient(0deg,transparent calc(50% - .5px),#ffbd7733 50%,transparent calc(50% + .5px));
+}
+.ui-wire-label{
+ position:absolute;left:3px;top:3px;
+ background:#222631ed;color:inherit;
+ font:700 9px/1.35 monospace;letter-spacing:0;
+ padding:2px 5px;white-space:nowrap;
+}
+.ui-wire-type .ui-wire-label,.ui-wire-copy .ui-wire-label{top:-17px;left:0}
+.ui-wire-feature .ui-wire-label{top:auto;bottom:calc(100% + 3px);left:0}
+.ui-wire-handle{
+ position:absolute;display:block;width:6px;height:6px;
+ background:#222631;border:1px solid currentColor;
+}
+.ui-corner-tl{left:-3px;top:-3px}
+.ui-corner-tr{right:-3px;top:-3px}
+.ui-corner-bl{left:-3px;bottom:-3px}
+.ui-corner-br{right:-3px;bottom:-3px}
+.ui-wire-target{
+ position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+ font:700 15px/1 monospace;color:inherit;
+ text-shadow:0 1px #222631,-1px 0 #222631,1px 0 #222631;
+}
+.ui-card-active .ui-wire-art{border-style:solid}
+.ui-card-active .ui-wire-type{box-shadow:0 0 0 1px #75caff3b}
+.ui-stage{
+ position:absolute;transform:translateX(-100%);width:min(46%,165px);
+ min-width:120px;z-index:1;padding:7px 8px;
+ background:#222631e9;color:#bbc4d3;border:1px solid #ffffff42;
+ border-radius:3px;box-shadow:0 3px 13px #080c1a55;
+ font:600 9px/1.3 monospace;white-space:nowrap;
+}
+.ui-stage-title{display:block;overflow:hidden;text-overflow:ellipsis;color:#b5f5cb;font:700 9px/1.3 monospace}
+.ui-stage-state{display:block;color:#ffbd77;margin-top:3px}
+.ui-stage-position{display:block;text-align:right;font:8px/1.2 monospace;margin-top:3px;color:#aeb7cb}
+.ui-stage-timeline{
+ position:relative;display:flex;flex-direction:column;gap:3px;margin-top:6px;
+ padding:2px 0;overflow:hidden;border-block:1px solid #5b6b83;
+ background:repeating-linear-gradient(90deg,#ffffff2b 0 1px,transparent 1px 13px) top/100% 3px no-repeat;
+}
+.ui-stage-bar{display:block;height:3px;background:linear-gradient(90deg,#75caff 12%,#75caff 73%,transparent 73%);opacity:.75}
+.ui-stage-bar:nth-child(2){background:linear-gradient(90deg,transparent 12%,#b5f5cb 12% 89%,transparent 89%)}
+.ui-stage-bar:nth-child(3){background:linear-gradient(90deg,transparent 21%,#ffbd77 21% 57%,transparent 57%)}
+.ui-stage-playhead{position:absolute;top:0;bottom:0;width:1px;background:#fff;box-shadow:0 0 3px #fff;transition:left .24s ease-out}
+@media(prefers-reduced-motion:reduce){.ui-stage-playhead{transition:none}}
+
+/* The same editor framing extends into the section and footer. */
+#work .rule{position:relative}
+.ui-overlay #work .rule::after{
+ content:"SCENE 07—09 / SELECTED WORK";position:absolute;right:0;top:-13px;
+ color:#75caff;background:#222631;font:700 9px/1.35 monospace;
+ padding:2px 6px;pointer-events:none;
+}
+.ui-footer-guide{
+ position:absolute;inset:-9px -9px -12px;
+ border:1px dashed #75caff;color:#75caff;
+ display:none;pointer-events:none;
+}
+.ui-overlay .ui-footer-guide{display:block}
+.ui-footer-caption{
+ position:absolute;bottom:calc(100% + 3px);left:0;
+ padding:2px 6px;color:inherit;background:#222631;
+ white-space:nowrap;font:700 9px/1.3 monospace;
+}
+@media(max-width:620px){
+ .ui-stage{min-width:115px;padding:5px 6px}
+ .ui-wire-label,.ui-footer-caption{font-size:8px}
+ .ui-wire-feature .ui-wire-label{bottom:calc(100% + 1px)}
+}

@@ -54,12 +54,21 @@
   line.append(layer);introEchoes.set(line,copies);return copies;
  }
  function updateTextBounds(i,line,u){
-  if(!document.body.classList.contains('editing'))return;
+  if(!document.body.classList.contains('editing')&&!document.body.classList.contains('ui-overlay'))return;
   const box=editBoxes[i];box.hidden=u<=.015;
   if(box.hidden)return;
   const real=line.querySelector('.word-run');
+  // Use the transformed glyph boxes: the word-run's layout rectangle may
+  // include excess space while Joel's individual characters stretch.
+  const glyphRects=real?[...real.children].map(g=>g.getBoundingClientRect()):[];
   let rect;
-  if(real)rect=real.getBoundingClientRect();
+  if(glyphRects.length){
+   const left=Math.min(...glyphRects.map(r=>r.left));
+   const right=Math.max(...glyphRects.map(r=>r.right));
+   const top=Math.min(...glyphRects.map(r=>r.top));
+   const bottom=Math.max(...glyphRects.map(r=>r.bottom));
+   rect={left,top,width:right-left,height:bottom-top};
+  }else if(real)rect=real.getBoundingClientRect();
   else{
    const range=document.createRange();range.selectNodeContents(line);
    rect=range.getBoundingClientRect();
@@ -146,7 +155,7 @@
  p.setAttribute('stroke-dasharray',fill>=1?'none':(len*fill)+' '+(len+1));p.style.opacity=fill>0?1:0;
  const rails=[[],[]];for(let j=0;j<=24;j++){const d=len*(fill+(u-fill)*j/24),pt=p.getPointAtLength(d),a=p.getPointAtLength(Math.max(0,d-.3)),b=p.getPointAtLength(Math.min(len,d+.3)),dx=b.x-a.x,dy=b.y-a.y,k=w/2/(Math.hypot(dx,dy)||1);rails.forEach((r,n)=>r.push([pt.x+(n?1:-1)*dy*k,pt.y-(n?1:-1)*dx*k].join(',')))}
  outlines[i].setAttribute('d','M'+rails[0].join('L')+'L'+rails[1].reverse().join('L')+'Z');outlines[i].style.opacity=u>fill?1:0;
- if(document.body.classList.contains('editing')){
+ if(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay')){
  const [route,box,first,last,dot]=guides[i].children,points=Array.from({length:33},(_,j)=>p.getPointAtLength(len*u*j/32)),xs=points.map(v=>v.x),ys=points.map(v=>v.y),tip=points.at(-1);
  route.setAttribute('d',p.getAttribute('d'));const rect=(el,x,y,width,height)=>Object.entries({x,y,width,height}).forEach(([k,v])=>el.setAttribute(k,v));
  const minX=Math.min(...xs)-w/2,minY=Math.min(...ys)-w/2;
@@ -199,7 +208,13 @@
  function play(){document.body.classList.remove('editing');if(frame>=72)draw(0);start=performance.now()-frame/.045;btn.textContent='Pause';run=requestAnimationFrame(tick)}
  function edit(){stop();document.body.classList.add('editing');draw(frame)}
  range.addEventListener('pointerdown',edit);range.oninput=()=>{const requested=Number(range.value);stop();document.body.classList.add("editing");draw(requested);stop()};btn.onclick=()=>run?stop():play();
- new MutationObserver(()=>draw(frame)).observe(document.body,{attributes:true,attributeFilter:['data-look']});
+ // The other animation loop continues changing glyph widths during scrubbing.
+ // Keep the editing boxes in sync without restarting the intro timeline.
+ q('.hero').addEventListener('header:letterforms-changed',()=>{
+  if(!document.body.classList.contains('editing')&&!document.body.classList.contains('ui-overlay'))return;
+  lines.slice(0,2).forEach((line,i)=>updateTextBounds(i,line,introProgress(i,frame)));
+ });
+ new MutationObserver(()=>draw(frame)).observe(document.body,{attributes:true,attributeFilter:['data-look','class']});
  q('.transport').hidden=false;draw(72);stop();if(!rm.matches)play();rm.onchange=()=>{draw(72);stop();document.body.classList.remove('editing')};
 })();
 (() => {
@@ -217,6 +232,81 @@
   const text=line.textContent,run=document.createElement('span');run.className='word-run';line.setAttribute('aria-hidden','true');run.setAttribute('aria-hidden','true');
   const glyphs=[...text].map(c=>{const el=document.createElement('span');el.textContent=c;return el});run.append(...glyphs);line.replaceChildren(run);return {line,run,glyphs,ratio:0}
  });
+ // Contextual typography labels are visible only in scrub/edit mode.
+ // Their x positions are measured from transformed live glyphs each frame,
+ // including individual width/weight changes and whole-word normalization.
+ const nameHeading=hero.querySelector('h1'),nameContainer=hero.querySelector('.hero-copy');
+ const glyphInspector=document.createElement('div');
+ glyphInspector.className='glyph-inspector';
+ glyphInspector.setAttribute('aria-hidden','true');
+ glyphInspector.hidden=true;
+ const glyphTags=Array.from({length:3},()=>{
+  const tag=document.createElement('span'),label=document.createElement('span'),pin=document.createElement('i');
+  tag.className='glyph-inspector-tag';label.className='glyph-inspector-name';
+  pin.className='glyph-inspector-pin';tag.append(label,pin);glyphInspector.append(tag);
+  return {tag,label,pin};
+ });
+ nameContainer.append(glyphInspector);
+ let glyphPointer=null;
+ const hideGlyphInspector=()=>{glyphInspector.hidden=true};
+ function renderGlyphInspector(){
+  if(!glyphPointer||!(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay'))||document.hidden){
+   hideGlyphInspector();return;
+  }
+  const {x,y}=glyphPointer;
+  let selected=null;
+  for(const [row,w] of runs.entries()){
+   const bounds=w.line.getBoundingClientRect();
+   if(parseFloat(w.line.style.opacity||'1')<.15||y<bounds.top-4||y>bounds.bottom+4)continue;
+   const rects=w.glyphs.map(g=>g.getBoundingClientRect());
+   const left=Math.min(...rects.map(r=>r.left)),right=Math.max(...rects.map(r=>r.right));
+   if(x<left-7||x>right+7)continue;
+   let nearest=0,distance=Infinity;
+   rects.forEach((r,i)=>{
+    const gap=x<r.left?r.left-x:x>r.right?x-r.right:0;
+    const score=gap*3+Math.abs(x-(r.left+r.right)/2);
+    if(score<distance){distance=score;nearest=i}
+   });
+   selected={row,w,nearest,rects};break;
+  }
+  if(!selected){hideGlyphInspector();return}
+  const {row,w,nearest,rects}=selected;
+  const indices=[nearest-1,nearest,nearest+1].filter(i=>i>=0&&i<w.glyphs.length);
+  const container=nameContainer.getBoundingClientRect();
+  const positions=indices.map((index,i)=>{
+   const rect=rects[index],entry=glyphTags[i];
+   entry.label.textContent=String(row+3).padStart(2,'0')+'.'+String(index+1).padStart(2,'0')+' / '+w.glyphs[index].textContent.toUpperCase();
+   entry.tag.classList.toggle('is-hovered',index===nearest);
+   entry.tag.hidden=false;
+   return {entry,center:(rect.left+rect.right)/2-container.left,top:rect.top-container.top};
+  });
+  glyphTags.forEach((item,i)=>{item.tag.hidden=i>=positions.length});
+  glyphInspector.hidden=false;
+  const gap=4,widths=positions.map(p=>p.entry.tag.offsetWidth),available=container.width;
+  const lefts=positions.map((p,i)=>p.center-widths[i]/2);
+  for(let i=1;i<lefts.length;i++)lefts[i]=Math.max(lefts[i],lefts[i-1]+widths[i-1]+gap);
+  const right=lefts.at(-1)+widths.at(-1);
+  if(right>available)for(let i=0;i<lefts.length;i++)lefts[i]-=right-available;
+  if(lefts[0]<0)for(let i=0;i<lefts.length;i++)lefts[i]-=lefts[0];
+  const top=Math.min(...positions.map(p=>p.top))-27;
+  positions.forEach((p,i)=>{
+   p.entry.tag.style.left=lefts[i].toFixed(2)+'px';
+   p.entry.tag.style.top=top.toFixed(2)+'px';
+   p.entry.pin.style.left=(p.center-lefts[i]).toFixed(2)+'px';
+  });
+ }
+ nameHeading.addEventListener('pointermove',e=>{
+  if(e.pointerType!=='mouse'&&e.pointerType!=='pen')return;
+  glyphPointer={x:e.clientX,y:e.clientY};renderGlyphInspector();
+ },{passive:true});
+ nameHeading.addEventListener('pointerleave',()=>{
+  glyphPointer=null;hideGlyphInspector();
+ });
+ new MutationObserver(()=>{
+  if(!document.body.classList.contains('editing')&&!document.body.classList.contains('ui-overlay'))hideGlyphInspector();
+  else renderGlyphInspector();
+ }).observe(document.body,{attributes:true,attributeFilter:['class']});
+ addEventListener('resize',renderGlyphInspector,{passive:true});
  // Capture the resting advance in em; subsequent weight changes flow through the whole word.
  function calibrate(){for(const w of runs){w.glyphs.forEach((g,j)=>{
   g.style.fontVariationSettings='"wght" 650';g.style.marginRight='';g.style.transform='';
@@ -230,23 +320,39 @@
  });
  const widths=w.glyphs.map(g=>g.offsetWidth),total=widths.reduce((a,b)=>a+b,0)||1;let pos=0;
  w.centres=widths.map(v=>{pos+=v;return (pos-v/2)/total});w.ratio=w.run.offsetWidth/parseFloat(getComputedStyle(w.line).fontSize)}}
- // ResizeObserver reports untransformed fractional advances without a synchronous layout read per frame.
+ // Montgomery stays at its calibrated word width. Joel is free to change
+ // width with its individual glyphs and only shrinks if it would extend beyond
+ // Montgomery. Never enlarge Joel just to match its own initial width.
+ function scaleForWord(w,currentWidth){
+  const montgomery=runs[1];
+  const maxWidth=montgomery.ratio*parseFloat(getComputedStyle(montgomery.line).fontSize);
+  return w===runs[0]?Math.min(1,maxWidth/currentWidth):
+   w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/currentWidth;
+ }
+ // ResizeObserver supplies current untransformed advances as the letters vary.
+ const letterformsChanged=new Event('header:letterforms-changed');
  const observer=new ResizeObserver(entries=>{for(const e of entries){
   const w=runs.find(item=>item.run===e.target);
   if(w&&e.contentRect.width){
-   const normalization='scaleX('+w.ratio*parseFloat(getComputedStyle(w.line).fontSize)/e.contentRect.width+')';
+   const normalization='scaleX('+scaleForWord(w,e.contentRect.width)+')';
    w.run.style.transform=normalization;
-   // The Echo layer needs the identical whole-word width correction, too.
+   // Echo copies use exactly the same width correction as the live lettering.
    w.line.style.setProperty('--intro-run-transform',normalization);
   }
- }});
+ }
+ // The width cap updates asynchronously: sync the box after normalization.
+ if(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay'))hero.dispatchEvent(letterformsChanged);
+ });
  calibrate();runs.forEach(w=>observer.observe(w.run));
  let variable=false;document.fonts.load('650 32px "Roboto Flex"','Joel Montgomery').then(f=>{variable=f.length>0;calibrate()}).catch(()=>{});
+ // Moderated twisting for the header's cursor warp and dot field.
+ // Font width/weight and interaction speed stay unchanged.
+ const WARP_SWIRL=.9,WARP_STRENGTH=88,GRID_SWIRL=.5;
  const ns='http://www.w3.org/2000/svg',mk=(name,attrs)=>{const el=document.createElementNS(ns,name);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);return el};
  const svg=mk('svg',{width:0,height:0,'aria-hidden':'true'});svg.style.position='absolute';const filter=mk('filter',{id:'ink-pull',filterUnits:'userSpaceOnUse',primitiveUnits:'userSpaceOnUse',x:-60,y:-60,'color-interpolation-filters':'sRGB'});
  // RGB encodes inverse sampling direction: outward sampling pulls visible ink inward.
  const canvas=document.createElement('canvas');canvas.width=canvas.height=160;const ctx=canvas.getContext('2d'),im=ctx.createImageData(160,160);
- for(let y=0;y<160;y++)for(let x=0;x<160;x++){const a=(x-79.5)/80,b=(y-79.5)/80,r=Math.hypot(a,b),fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2,swirl=1.8*fall,j=(160*y+x)*4;
+ for(let y=0;y<160;y++)for(let x=0;x<160;x++){const a=(x-79.5)/80,b=(y-79.5)/80,r=Math.hypot(a,b),fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2,swirl=WARP_SWIRL*fall,j=(160*y+x)*4;
  im.data.set([128+250*fall*(a-b*swirl),128+250*fall*(b+a*swirl),128,255],j)}
  ctx.putImageData(im,0,0);const map=mk('feImage',{href:canvas.toDataURL(),width:840,height:840,result:'field'});
  const warp=mk('feDisplacementMap',{in:'SourceGraphic',in2:'map',xChannelSelector:'R',yChannelSelector:'G',scale:0});
@@ -279,7 +385,7 @@
    const t=reduced.matches?1:Math.min(1,(now-d.start)/180),mix=1-(1-t)**3;
    const dx=cx-d.x,dy=cy-d.y,r=Math.hypot(dx,dy)/420;
    const fall=.76*Math.max(0,1-r)**2+.24*Math.max(0,1-r*r)**2;
-   const xx=d.x+strength*fall*(dx-dy*fall)*.28,yy=d.y+strength*fall*(dy+dx*fall)*.28;
+   const xx=d.x+strength*fall*(dx-dy*fall*GRID_SWIRL)*.28,yy=d.y+strength*fall*(dy+dx*fall*GRID_SWIRL)*.28;
    if(mix<1)glyph(d.from,xx,yy,1-mix);glyph(reduced.matches?0:d.to,xx,yy,mix);
   }
  }
@@ -328,8 +434,8 @@
    w.line.style.setProperty('--intro-glyph-'+j+'-spacing',spacing);
   });
   // Keep ink distortion proportional to the individual glyph advance.
-  // The ResizeObserver normalises the whole word to its original width,
-  // even when the individual letters reach the font axis extremes.
+  // Montgomery keeps its calibrated width. Joel can grow naturally,
+  // with its final word transform capped by Montgomery's width.
   const advances=w.glyphs.map(g=>g.offsetWidth);
   w.glyphs.forEach((g,j)=>{
    const bias=w.influence[j];
@@ -345,6 +451,10 @@
   });
 
  }
+ // Keep the name bounding boxes and hovered-glyph labels anchored to the
+ // changing letterforms while the playhead is stopped in editing mode.
+ if(document.body.classList.contains('editing')||document.body.classList.contains('ui-overlay'))hero.dispatchEvent(letterformsChanged);
+ renderGlyphInspector();
  // Two first-order low-pass stages resist rapid reversals without spring overshoot.
  power+=((point?1:0)-power)*(-Math.expm1(-dt/(point?290:490)));
  if(power>.002 || point){
@@ -356,7 +466,7 @@
   }
   filter.setAttribute('width',rect.width+120);filter.setAttribute('height',rect.height+120);
   map.setAttribute('x',x-rect.left-420);map.setAttribute('y',y-rect.top-420);
-  warp.setAttribute('scale',power*116);hero.style.filter='url(#ink-pull)';
+  warp.setAttribute('scale',power*WARP_STRENGTH);hero.style.filter='url(#ink-pull)';
  }else{hero.style.filter='';ready=false}
  paintGrid(now,x,y,power);
  raf=requestAnimationFrame(draw)}

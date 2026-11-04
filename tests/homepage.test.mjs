@@ -35,7 +35,7 @@ test('animation keeps reduced-motion and touch support', () => {
   assert.match(styles, /@media\(prefers-reduced-motion:reduce\)/);
 });
 
-test('individual name letters explore full font axes while word widths stay fixed', () => {
+test('name letters explore full axes while Joel varies up to Montgomery width', () => {
   assert.match(home, /Roboto\+Flex:wdth,wght@50\.\.145,100\.\.1000/);
   assert.match(animations, /const activity=1-\.36\*w\.mix/);
   assert.match(animations, /550\+450\*n\*activity/);
@@ -44,13 +44,78 @@ test('individual name letters explore full font axes while word widths stay fixe
   assert.match(animations, /Math\.max\(50,Math\.min\(145,/);
   assert.match(animations, /Math\.max\(\.28,Math\.min\(3\.15,/);
   assert.match(animations, /w\.run\.style\.transform=normalization/);
-  assert.match(animations, /w\.ratio\*parseFloat\(getComputedStyle\(w\.line\)\.fontSize\)\/e\.contentRect\.width/);
+  assert.match(animations, /function scaleForWord\(w,currentWidth\)/);
+  assert.match(animations, /w===runs\[0\]\?Math\.min\(1,maxWidth\/currentWidth\)/);
+  assert.match(animations, /w\.ratio\*parseFloat\(getComputedStyle\(w\.line\)\.fontSize\)\/currentWidth/);
+  assert.match(animations, /scaleForWord\(w,e\.contentRect\.width\)/);
   assert.match(animations, /observer\.observe\(w\.run\)/);
   // At rest each glyph can reach the actual native axis endpoints.
   assert.equal(550-450,100);
   assert.equal(550+450,1000);
   assert.equal(97.5-47.5,50);
   assert.equal(97.5+47.5,145);
+});
+
+
+test('Joel width stays natural until capped to the actual Montgomery limit', () => {
+  // Run the same helper used by ResizeObserver with two mock word runs;
+  // Montgomery's calibrated 8em width is the maximum, not Joel's old 4em.
+  const start=animations.indexOf(' function scaleForWord(w,currentWidth){');
+  const end=animations.indexOf(' // ResizeObserver supplies',start);
+  assert.ok(start>0 && end>start);
+  const runs=[
+    {ratio:4,line:{fontSize:'20px'}},
+    {ratio:8,line:{fontSize:'20px'}}
+  ];
+  const getComputedStyle=line=>({fontSize:line.fontSize});
+  const scaleForWord=new Function('runs','getComputedStyle',
+    animations.slice(start,end)+';return scaleForWord;')(runs,getComputedStyle);
+  assert.equal(scaleForWord(runs[0],65),1);     // narrower Joel stays narrow
+  assert.equal(scaleForWord(runs[0],120),1);    // now wider than initial 80px
+  assert.equal(scaleForWord(runs[0],160),1);    // exactly matches Montgomery
+  assert.equal(scaleForWord(runs[0],200),.8);  // cannot exceed Montgomery
+  assert.equal(scaleForWord(runs[1],200),.8);  // Montgomery still fixed at 160px
+  assert.equal(scaleForWord(runs[1],100),1.6);
+  runs[1].line.fontSize='15px';                // responsive cap recomputes
+  assert.equal(scaleForWord(runs[0],160),.75);
+  assert.equal(scaleForWord(runs[1],160),.75);
+  assert.match(animations, /w\.line\.style\.setProperty\('--intro-run-transform',normalization\)/);
+});
+
+test('editing guide tracks Joel rendered glyph width as its letters stretch', () => {
+  const begin=animations.indexOf(' function updateTextBounds(i,line,u){');
+  const end=animations.indexOf(" const ns='http://www.w3.org/2000/svg';",begin);
+  assert.ok(begin>=0 && end>begin);
+  const glyphs=[
+    {left:120,right:148,top:40,bottom:96},
+    {left:148,right:180,top:40,bottom:96}
+  ];
+  const real={
+    children:glyphs.map((rect)=>({getBoundingClientRect:()=>rect})),
+    getBoundingClientRect:()=>({left:100,top:40,width:300,height:56})
+  };
+  const line={querySelector:()=>real};
+  const box={hidden:false,style:{}};
+  const document={body:{classList:{contains:name=>name==='editing'}}};
+  const copy={getBoundingClientRect:()=>({left:100,top:10})};
+  const update=new Function('document','editBoxes','copy',
+    animations.slice(begin,end)+'return updateTextBounds;')(document,[box],copy);
+  update(0,line,1);
+  assert.equal(box.style.left,'20.00px');
+  assert.equal(box.style.width,'60.00px');
+  assert.equal(box.style.height,'56.00px');
+  // The glyph outline grows while the old word-run layout box stays static.
+  glyphs[1].right=230;
+  update(0,line,1);
+  assert.equal(box.style.width,'110.00px');
+  // Preserve the intro reveal progression when scrubbing an early frame.
+  update(0,line,.5);
+  assert.equal(box.style.width,'55.00px');
+  // The font animation and its asynchronous width normalizer both refresh it.
+  assert.match(animations, /lines\.slice\(0,2\)\.forEach\(\(line,i\)=>updateTextBounds\(i,line,introProgress\(i,frame\)\)\)/);
+  assert.equal((animations.match(/hero\.dispatchEvent\(letterformsChanged\)/g)||[]).length,2);
+  assert.match(animations, /if\(document\.body\.classList\.contains\('editing'\)\|\|document\.body\.classList\.contains\('ui-overlay'\)\)hero\.dispatchEvent\(letterformsChanged\)/);
+  assert.match(animations, /w===runs\[0\]\?Math\.min\(1,maxWidth\/currentWidth\)/);
 });
 
 test('featured title Echo effect samples past positions with no lead scaling', () => {
@@ -63,7 +128,7 @@ test('featured title Echo effect samples past positions with no lead scaling', (
   assert.equal(385<470,true);
   assert.match(animations, /echo\.style\.display=smeared\?'block':'none'/);
   assert.doesNotMatch(animations, /echo\.style\.opacity/);
-  const echoStyle = styles.slice(styles.lastIndexOf('/* Solid-ink Echo trail'));
+  const echoStyle = styles.slice(styles.lastIndexOf('/* Solid-ink Echo trail'),styles.indexOf('/* Solid, same-ink temporal echoes'));
   assert.doesNotMatch(echoStyle, /blur\(|opacity:/);
   assert.match(echoStyle, /color:var\(--blue\);display:none;/);
   assert.match(animations, /positionAt\(item,now-\(i\+1\)\*spacing\)/);
@@ -200,3 +265,38 @@ test('homepage favicon uses the JM squircle while legacy and tools retain theirs
   assert.ok(exists('tools/assets/favicon.ico'));
 });
 
+test('header cursor warp is gentler without changing type or footer interactions', () => {
+  const footerStart = animations.indexOf("/* Echo the header's changing glyph field behind the footer links.");
+  assert.ok(footerStart > 0);
+  const headerAnimation = animations.slice(0, footerStart);
+  const footerAnimation = animations.slice(footerStart);
+  assert.match(headerAnimation, /const WARP_SWIRL=\.9,WARP_STRENGTH=88,GRID_SWIRL=\.5/);
+  assert.match(headerAnimation, /swirl=WARP_SWIRL\*fall/);
+  assert.match(headerAnimation, /warp\.setAttribute\('scale',power\*WARP_STRENGTH\)/);
+  assert.match(headerAnimation, /\(dx-dy\*fall\*GRID_SWIRL\)\*\.28/);
+  assert.match(headerAnimation, /\(dy\+dx\*fall\*GRID_SWIRL\)\*\.28/);
+  assert.doesNotMatch(headerAnimation, /swirl=1\.8\*fall|power\*116/);
+  assert.match(footerAnimation, /\(dx-dy\*fall\)\*\.28/);
+  assert.match(headerAnimation, /550\+450\*n\*activity/);
+  assert.match(headerAnimation, /97\.5\+47\.5\*wave\*activity/);
+  assert.match(headerAnimation, /header\.addEventListener\('touchmove'/);
+});
+
+test('scrub-mode letter inspector follows live glyph geometry and neighbours', () => {
+  assert.match(animations, /const glyphInspector=document\.createElement\('div'\)/);
+  assert.match(animations, /glyphInspector\.setAttribute\('aria-hidden','true'\)/);
+  assert.match(animations, /glyphInspector\.hidden=true/);
+  assert.match(animations, /const glyphTags=Array\.from\(\{length:3\}/);
+  assert.match(animations, /document\.body\.classList\.contains\('editing'\)/);
+  assert.match(animations, /w\.glyphs\.map\(g=>g\.getBoundingClientRect\(\)\)/);
+  assert.match(animations, /\[nearest-1,nearest,nearest\+1\]\.filter/);
+  assert.match(animations, /String\(row\+3\)\.padStart\(2,'0'\)/);
+  assert.match(animations, /renderGlyphInspector\(\);\n \/\/ Two first-order/);
+  assert.match(animations, /nameHeading\.addEventListener\('pointermove'/);
+  assert.match(animations, /nameHeading\.addEventListener\('pointerleave'/);
+  assert.match(animations, /entry\.pin\.style\.left=\(p\.center-lefts\[i\]\)/);
+  assert.match(styles, /\.editing \.glyph-inspector:not\(\[hidden\]\)\{visibility:visible\}/);
+  assert.match(styles, /\.glyph-inspector\[hidden\],\.glyph-inspector-tag\[hidden\]\{display:none\}/);
+  assert.match(styles, /\.glyph-inspector-pin\{/);
+  assert.match(animations, /const WARP_SWIRL=\.9,WARP_STRENGTH=88,GRID_SWIRL=\.5/);
+});
