@@ -58,6 +58,7 @@
     root.querySelector('[data-currently-text]').textContent = 'Currently: ' + status.text;
     const image = root.querySelector('img');
     image.hidden = !status.logo;
+    root.querySelector('.currently-logo').hidden = !status.logo;
     if (status.logo) {
       image.src = status.logo;
       image.alt = status.name;
