@@ -1,36 +1,58 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<script>
-const fit = new URLSearchParams(location.search).get('fit') === 'auto' ? 'auto' : 'cover';
-document.querySelector('meta[name=viewport]').content = 'width=device-width,initial-scale=1,viewport-fit='+fit;
-</script>
-<meta name="theme-color" content="#12292e">
-<link rel="stylesheet" href="lab.css">
-<title>Joelport Lab · iPhone Duo</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#09131d">
+  <title>iPhone Duo · Window Test</title>
+  <link rel="stylesheet" href="lab.css?v=2">
+  <script src="lab.js?v=2" defer></script>
 </head>
 <body>
-<div id="panorama" aria-hidden="true"></div>
-<header><small>DISPLAY LAB &nbsp; / &nbsp; 01</small><h1>Joelport Lab<span>.</span></h1><p>Where does Safari stop drawing on the iPhone Duo?</p></header>
-<main>
-<section data-band="#673858"><small>01 &nbsp; / &nbsp; PAINT BOUNDARY</small><h2>Follow the stripes</h2>
-<p>Follow the horizontal boundary between two colours into the side strip. Scroll slowly: does the boundary move with the page, and how far towards the edge does it reach?</p></section>
-<div class="sample" data-band="#83492e"><div class="edge left">L</div><div class="edge right">R</div><b>EDGE PROBE</b></div>
-<section data-band="#345453">
-<label for="paint">Probe layer</label><select id="paint"><option value="panorama" selected>Panoramic background</option><option value="edge">Extended document</option><option value="bands">Section colours</option><option value="header">Full-width header</option><option value="flow">Page content</option><option value="fixed">Fixed overlay · extends 96px past both edges</option><option value="root">Document background</option></select>
-<p id="paintNote"></p>
-<div class="fields"><label>Page background<input type="color" id="bg" value="#164b51"></label><label>Browser theme hint<input type="color" id="theme" value="#12292e"></label></div>
-</section>
-<section data-band="#155968"><small>02 &nbsp; / &nbsp; CONTROL PLACEMENT</small><h2>Test the safe area</h2><p>Compare Safari’s default viewport with edge-to-edge mode. Then tap the targets to check which parts of the page receive input.</p>
-<nav aria-label="Viewport mode"><a href="?fit=auto">Default viewport</a><a href="?fit=cover">Cover viewport</a></nav>
-<label><input type="checkbox" id="safe" checked> Inset targets by Safari’s safe area</label>
-</section>
-<div id="targets" data-band="#234448"><button>Left target</button><output id="hits" aria-live="polite">No taps</output><button>Right target</button></div>
-<section data-band="#3b4068"><small>03 &nbsp; / &nbsp; INSTRUMENTS</small><h2>Viewport readings</h2><p>Rotate, unfold, or scroll to collapse Safari’s bars. Compare the readings with what you actually see. A zero inset alone doesn’t prove the strip is drawable.</p>
-<dl id="meters"></dl>
-<p class="source"><a href="https://webkit.org/blog/18486/webkit-features-for-safari-27-1/#web-content-under-the-controls">WebKit’s Safari 27.1 notes</a> describe background colour extending behind the controls while page content stays inside the viewport.</p>
-</section>
-</main><div id="edgeColumn" aria-hidden="true"></div><div id="overlay" aria-hidden="true"></div><div id="probe" aria-hidden="true"></div>
-<script src="lab.js"></script></body></html>
+  <header class="site-header">
+    <div class="brand"><span class="mark" aria-hidden="true">◧</span><span>DUO <strong>WINDOW TEST</strong></span></div>
+    <span class="live"><span aria-hidden="true"></span> Live</span>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="heading">
+      <p class="eyebrow" id="heading">Detected window format</p>
+      <h1 id="display">Measuring…</h1>
+      <p class="description" id="displayDetail">Checking the available browser signals.</p>
+      <div class="chips"><span class="chip" id="orientation">Orientation…</span><span class="chip muted" id="confidence">Estimating…</span></div>
+    </section>
+
+    <section class="panel side-panel" aria-labelledby="side-heading">
+      <div class="section-head"><h2 id="side-heading">Split View side</h2><span class="small-tag">AUTO TEST</span></div>
+      <p class="side-value" id="side">Checking…</p>
+      <p class="explain" id="sideReason">Looking for a difference between the two window positions.</p>
+
+      <div class="divider"></div>
+      <p class="field-label">Which side is this window actually on?</p>
+      <div class="choices" role="group" aria-label="Confirm Split View side">
+        <button type="button" id="markLeft" aria-pressed="false">Left</button>
+        <button type="button" id="markRight" aria-pressed="false">Right</button>
+        <button type="button" id="markNone" class="clear" aria-label="Clear selection">Clear</button>
+      </div>
+      <p class="feedback" id="feedback">Mark the actual side to compare it with automatic detection.</p>
+    </section>
+
+    <section class="panel readings" aria-labelledby="signals-heading">
+      <div class="section-head"><h2 id="signals-heading">Browser signals</h2><span class="small-tag">CSS PIXELS</span></div>
+      <div class="key-readings">
+        <div><span>Viewport</span><strong id="quickSize">—</strong></div>
+        <div><span>Window X</span><strong id="quickX">—</strong></div>
+        <div><span>Safe area L / R</span><strong id="quickSafe">—</strong></div>
+      </div>
+      <details>
+        <summary>All measurements <span aria-hidden="true">⌄</span></summary>
+        <dl id="measurements"></dl>
+      </details>
+      <button type="button" id="copy" class="copy">Copy diagnostic report</button>
+      <p class="copy-status" id="copyStatus" role="status"></p>
+    </section>
+
+    <p class="footnote">The Duo's outer portrait window and a half-width inner window can appear almost identical to a website. When Safari exposes no reliable distinction, this page says <strong>uncertain</strong> rather than inventing a result.</p>
+  </main>
+  <div id="safeProbe" aria-hidden="true"></div>
+</body>
+</html>
