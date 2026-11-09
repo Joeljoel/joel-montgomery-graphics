@@ -60,3 +60,34 @@ dt{color:var(--dim)}dd{margin:0;text-align:right;font-family:ui-monospace,SFMono
 padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px);
 padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px)}
 @media(max-width:370px){.hero,.panel{padding-inline:16px}.key-readings{gap:5px}.key-readings>div{padding:10px 7px}.key-readings strong{font-size:.85rem}.choices button{padding-inline:12px}}
+
+/* Split View v3: example rail follows the detected outer edge. */
+.sensor-update{font-size:.72rem;margin:11px 0 0;color:#81b8b9;font-variant-numeric:tabular-nums}
+.demo-rail{
+  position:fixed;z-index:20;display:flex;flex-direction:column;align-items:center;gap:10px;
+  bottom:max(88px,calc(env(safe-area-inset-bottom,0px) + 70px));
+  padding:4px;pointer-events:auto
+}
+.demo-rail[hidden]{display:none!important}
+.demo-rail[data-side=left]{left:max(9px,env(safe-area-inset-left,0px));right:auto}
+.demo-rail[data-side=right]{right:calc(max(9px,env(safe-area-inset-right,0px)) + 5px);left:auto}
+.demo-rail-tag{
+  position:absolute;bottom:100%;white-space:nowrap;margin-bottom:10px;
+  padding:5px 8px;border-radius:8px;background:#173e35;color:#bde9d7;
+  border:1px solid #467d69;font-size:.67rem;font-weight:750;
+  box-shadow:0 3px 13px #0006
+}
+.demo-rail[data-side=left] .demo-rail-tag{left:0}
+.demo-rail[data-side=right] .demo-rail-tag{right:0}
+.demo-control{
+  width:47px;height:47px;min-height:47px;padding:0;display:grid;place-items:center;
+  border:1px solid #8195a4;border-radius:50%;background:#2d4155;color:#f4fbff;
+  box-shadow:0 5px 19px #0007,inset 0 1px 0 #ffffff26;
+  font-size:30px;font-weight:400;line-height:1
+}
+.demo-control:active{background:#4e6a76;transform:scale(.95)}
+.demo-rail[data-side=right] .demo-control{border-color:#a0b0bd}
+#safeProbe{
+  width:calc(1px + env(safe-area-inset-right,0px));
+  height:calc(1px + env(safe-area-inset-left,0px));
+}

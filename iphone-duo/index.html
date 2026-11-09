@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#09131d">
   <title>iPhone Duo · Window Test</title>
-  <link rel="stylesheet" href="lab.css?v=2">
-  <script src="lab.js?v=2" defer></script>
+  <link rel="stylesheet" href="lab.css?v=3">
+  <script src="lab.js?v=3" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -25,6 +25,7 @@
       <div class="section-head"><h2 id="side-heading">Split View side</h2><span class="small-tag">AUTO TEST</span></div>
       <p class="side-value" id="side">Checking…</p>
       <p class="explain" id="sideReason">Looking for a difference between the two window positions.</p>
+      <p class="sensor-update" id="sensorUpdate">Rechecking every 400 ms…</p>
 
       <div class="divider"></div>
       <p class="field-label">Which side is this window actually on?</p>
@@ -51,8 +52,14 @@
       <p class="copy-status" id="copyStatus" role="status"></p>
     </section>
 
-    <p class="footnote">The Duo's outer portrait window and a half-width inner window can appear almost identical to a website. When Safari exposes no reliable distinction, this page says <strong>uncertain</strong> rather than inventing a result.</p>
+    <p class="footnote">This test combines the device’s reported orientation with the horizontal safe-area insets: <strong>0 / 0 → left</strong> and <strong>0 / ~84 → right</strong> when inner Split View is detected. These are device observations, not a guaranteed browser API.</p>
   </main>
+  <aside class="demo-rail" id="demoRail" hidden aria-label="Example floating controls">
+    <span class="demo-rail-tag" id="railTag">Preview controls</span>
+    <button type="button" class="demo-control" data-demo="Add" aria-label="Example Add button"><span aria-hidden="true">+</span></button>
+    <button type="button" class="demo-control" data-demo="Refresh" aria-label="Example Refresh button"><span aria-hidden="true">↻</span></button>
+    <button type="button" class="demo-control" data-demo="Search" aria-label="Example Search button"><span aria-hidden="true">⌕</span></button>
+  </aside>
   <div id="safeProbe" aria-hidden="true"></div>
 </body>
 </html>

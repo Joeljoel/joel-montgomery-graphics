@@ -4,6 +4,7 @@
   const $ = id => document.getElementById(id);
   let actualSide = null;
   let last = null;
+  let probeTick = false;
 
   const rounded = value => Number.isFinite(value) ? String(Math.round(value * 10) / 10) : "Unavailable";
   const dimension = (w, h) => rounded(w) + " × " + rounded(h);
@@ -13,58 +14,49 @@
   // gives outer portrait ~382px and half-inner Split View ~385px of width.
   // Width by itself cannot distinguish them.
   function classify(m) {
-    const w = m.width, h = m.height;
-    const portrait = h >= w;
-    const windowShape = portrait ? "Portrait window" : "Landscape window";
-    if (!m.iphone) {
-      return {label:"Other browser", detail:"Outside the iPhone Duo size estimates.", confidence:"Not identified", shape:windowShape, half:false};
-    }
-    if (!portrait && w >= 800) {
-      return {label:"Inner · full screen", detail:"Unfolded, landscape", confidence:"Likely", shape:windowShape, half:false};
-    }
-    if (portrait && w >= 580) {
-      return {label:"Inner · full screen", detail:"Unfolded, portrait", confidence:"Likely", shape:windowShape, half:false};
-    }
-    if (!portrait && w >= 480 && w < 800) {
-      return {label:"Outer screen", detail:"Folded, landscape", confidence:"Likely", shape:windowShape, half:false};
-    }
-    if (portrait && w < 460) {
-      if (m.legacyAngle !== null && Math.abs(m.legacyAngle) === 90) {
-        return {label:"Inner · one half", detail:"Possible Split View: narrow portrait window, reported device angle is landscape.", confidence:"Estimated", shape:windowShape, half:true};
-      }
-      return {label:"Outer / inner half", detail:"Could be folded portrait or half of the inner screen in Split View.", confidence:"Uncertain", shape:windowShape, half:true};
-    }
-    if (portrait && w >= 460 && w < 580) {
-      return {label:"Narrow portrait display", detail:"Possibly the outer PWA or an inner window; dimensions alone cannot confirm.", confidence:"Uncertain", shape:windowShape, half:false};
-    }
-    return {label:"Unclassified window", detail:"Measurements do not match a known Duo layout closely enough.", confidence:"Uncertain", shape:windowShape, half:false};
+    const w=m.width,h=m.height,portrait=h>=w,shape=portrait?"Portrait window":"Landscape window";
+    const landscapeReported=/^landscape/i.test(m.screenOrientation||"")
+      || (m.legacyAngle!==null && Math.abs(m.legacyAngle)===90);
+    const portraitReported=/^portrait/i.test(m.screenOrientation||"")
+      || (m.legacyAngle!==null && Math.abs(m.legacyAngle)===0);
+    if(!m.iphone)return {label:"Other browser",detail:"Not identified as an iPhone Duo window.",confidence:"Not identified",shape,half:false};
+    if(!portrait && w>=800)return {label:"Inner · full screen",detail:"Unfolded, landscape",confidence:"Likely",shape,half:false};
+    if(portrait && w>=580)return {label:"Inner · full screen",detail:"Unfolded, portrait",confidence:"Likely",shape,half:false};
+    // In the recorded Duo, each ~469 x 669 Split View half is
+    // portrait-shaped but the physical DEVICE remains landscape.
+    if(portrait && w>=350 && w<=540 && landscapeReported)
+      return {label:"Inner · Split View",detail:"One half of the unfolded inner screen; device orientation is landscape.",confidence:"Likely",shape,half:true};
+    if(!portrait && w>=480 && w<800)
+      return {label:"Outer screen",detail:"Folded, landscape",confidence:"Likely",shape,half:false};
+    if(portrait && w>=350 && w<=540 && portraitReported)
+      return {label:"Outer screen",detail:"Likely folded portrait; device orientation is portrait.",confidence:"Estimated",shape,half:false};
+    if(portrait && w<=540)
+      return {label:"Outer / inner half",detail:"Device orientation cannot distinguish folded from Split View.",confidence:"Uncertain",shape,half:false};
+    return {label:"Unclassified window",detail:"Measurements do not match a known Duo layout closely enough.",confidence:"Uncertain",shape,half:false};
   }
 
   function inferSide(m,format) {
-    if (!format.half) {
-      return {label:"Not applicable", reason:"A left/right Split View position is only relevant for a half-width inner window.", side:null};
-    }
-    // screenX alone is not evidence of being on the LEFT: on iOS both
-    // windows may report zero. Only trust it as a hint when screen.width
-    // actually spans at least two window-widths.
-    const coversBoth = m.screenWidth >= (2 * m.width - 45);
-    if (m.screenX !== null && m.screenX >= m.width * .65) {
-      return {label:"Possibly right", reason:"The browser reports a substantial positive screenX offset, consistent with a right-hand window. Verify on the device.", side:"right"};
-    }
-    if (coversBoth && m.screenX !== null && m.screenX >= 0 && m.screenX < m.width * .15) {
-      return {label:"Possibly left", reason:"screenX is near the left edge of a screen wide enough for two windows. Verify on the device.", side:"left"};
-    }
-    const difference = m.safeLeft - m.safeRight;
-    if (Math.abs(difference) >= 12) {
-      const side = difference > 0 ? "left" : "right";
-      return {label:"Possibly " + side, reason:"The " + side + " safe-area inset is larger. This is an experimental hint, not confirmed Split View position.", side};
-    }
-    return {label:"Unknown", reason:"Safari has not exposed a reliable left/right placement signal. Compare the measurements in both halves.", side:null};
+    if(!format.half)return {label:"Not applicable",reason:"Left/right detection applies only to unfolded inner Split View.",side:null};
+    // Observed: left 0/0, right 0/84. screenX is 0 on BOTH sides.
+    if(m.safeLeft<=10 && m.safeRight>=35)
+      return {label:"Right side",reason:"Right safe area: "+rounded(m.safeRight)+"px. Matches the observed right-half pattern.",side:"right"};
+    if(m.safeLeft<=10 && m.safeRight<=10)
+      return {label:"Left side",reason:"Both horizontal safe areas are nearly zero. Matches the observed left-half pattern.",side:"left"};
+    return {label:"Unknown",reason:"Safe areas differ from the observed Split View patterns.",side:null};
   }
 
   function collect() {
     const vv = window.visualViewport;
-    const probe = getComputedStyle($("safeProbe"));
+    // iOS can change Split View sides without emitting resize events.
+    // Toggle equivalent env() declarations to request fresh style evaluation.
+    const probeNode=$("safeProbe");
+    probeTick=!probeTick;
+    const insetStyle=edge=>probeTick
+      ? "env(safe-area-inset-"+edge+",0px)"
+      : "calc(env(safe-area-inset-"+edge+",0px) + 0px)";
+    probeNode.style.paddingLeft=insetStyle("left");
+    probeNode.style.paddingRight=insetStyle("right");
+    const probe=getComputedStyle(probeNode);
     const inset = edge => parseFloat(probe.getPropertyValue("padding-" + edge)) || 0;
     const segments = window.viewport && window.viewport.segments;
     const posture = navigator.devicePosture;
@@ -116,9 +108,9 @@
   function updateFeedback(side) {
     ["Left","Right"].forEach(name => $("mark"+name).setAttribute("aria-pressed", actualSide === name.toLowerCase() ? "true" : "false"));
     if (!actualSide) {
-      $("feedback").textContent = "Mark the actual side to compare it with automatic detection.";
+      $("feedback").textContent = "Move this window between halves. The example buttons should switch to the outside edge.";
     } else if (!side.side) {
-      $("feedback").textContent = "Marked " + actualSide.toUpperCase() + " · Automatic placement is still unknown.";
+      $("feedback").textContent = "Marked " + actualSide.toUpperCase() + " · Detection uncertain; buttons show a manual preview.";
     } else {
       $("feedback").textContent = "Marked " + actualSide.toUpperCase() + " · Automatic hint " + (side.side===actualSide?"agrees.":"disagrees. Please compare the raw signals.");
     }
@@ -129,6 +121,15 @@
     const format = classify(m);
     const side = inferSide(m,format);
     last = {time:new Date().toISOString(),format:format.label,confidence:format.confidence,sideHint:side.label,actualSide,measurements:m};
+    const rail=$("demoRail");
+    // Manual selection previews a side only if auto-detection is unknown.
+    const railSide=side.side||(format.half?actualSide:null);
+    rail.hidden=!railSide;
+    if(railSide){
+      rail.dataset.side=railSide;
+      $("railTag").textContent=(side.side?"Auto":"Manual preview")+" · "+railSide.toUpperCase();
+    }
+    $("sensorUpdate").textContent="Live scan · every 400 ms · "+rounded(m.safeLeft)+" / "+rounded(m.safeRight)+"px";
     $("display").textContent = format.label;
     $("displayDetail").textContent = format.detail;
     $("orientation").textContent = format.shape;
@@ -176,5 +177,14 @@
   screen.orientation?.addEventListener?.("change",schedule);
   navigator.devicePosture?.addEventListener?.("change",schedule);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)schedule();});
+  window.addEventListener("focus",schedule,{passive:true});
+  document.addEventListener("pointerdown",schedule,{capture:true,passive:true});
+  if(typeof ResizeObserver!=="undefined")new ResizeObserver(schedule).observe($("safeProbe"));
+  // Split View can keep the same viewport dimensions when moving sides.
+  setInterval(()=>{if(!document.hidden)schedule();},400);
+  $("demoRail").addEventListener("click",event=>{
+    const btn=event.target.closest("[data-demo]");
+    if(btn)$("copyStatus").textContent=btn.dataset.demo+" is a visual preview only.";
+  });
   update();
 })();
