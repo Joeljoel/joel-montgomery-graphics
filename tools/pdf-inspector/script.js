@@ -34,39 +34,62 @@ function byteLabel(bytes) {
   return formatMm(bytes / (1024 * 1024)) + ' MB';
 }
 
-function metric(label, value, note) {
-  const container = element('div', 'metric');
-  append(container, element('div', 'metric-label', label), element('p', 'metric-value', value),
-    element('div', 'metric-sub', note));
-  return container;
+const EDGES = ['top', 'right', 'bottom', 'left'];
+
+function uniformBleed(bleed) {
+  return bleed && EDGES.every(key => Math.abs(bleed[key] - bleed.top) < 0.05);
+}
+
+function measurement(value, unit = 'mm') {
+  const node = element('p', 'metric-value');
+  append(node, element('span', '', value), element('span', 'metric-unit', unit));
+  return node;
+}
+
+function trimMetric(page) {
+  const section = element('section', 'metric trim-metric');
+  section.append(element('h4', 'metric-label', 'Trim size'));
+  if (page.explicit.trim) {
+    const size = page.sizes.trim;
+    section.append(measurement(formatMm(size.width) + ' × ' + formatMm(size.height)));
+    section.append(element('p', 'metric-sub', 'Finished width × height · TrimBox'));
+  } else {
+    section.append(element('p', 'metric-value metric-undefined', 'Not defined'));
+    section.append(element('p', 'metric-sub', 'CropBox fallback: ' + sizeLabel(page.sizes.trim)));
+    section.append(element('p', 'metric-note', 'The finished size cannot be confirmed.'));
+  }
+  return section;
 }
 
 function edgeSummary(bleed) {
-  if (!bleed) return 'Bleed not defined';
-  const edges = ['top', 'right', 'bottom', 'left'];
-  if (edges.every(key => Math.abs(bleed[key] - bleed.top) < 0.05)) {
-    return formatMm(bleed.top) + ' mm on all sides';
-  }
-  return edges.map(key => key[0].toUpperCase() + ': ' + formatMm(bleed[key])).join(' · ') + ' mm';
+  if (!bleed) return 'Not confirmed';
+  if (uniformBleed(bleed)) return formatMm(bleed.top) + ' mm on all sides';
+  return EDGES.map(key => key[0].toUpperCase() + ': ' + formatMm(bleed[key])).join(' · ') + ' mm';
 }
 
-function edgeSection(page, mixed) {
-  const section = element('section', 'bleed-section');
-  const title = element('div', 'bleed-title');
-  title.append(element('strong', '', 'Bleed beyond trim'));
-  title.append(makePill(page.bleed ? 'Defined boxes' : 'Not confirmed', page.bleed ? 'good' : 'warn'));
-  section.append(title);
-  if (page.bleed) {
-    const grid = element('div', 'edge-grid');
-    for (const edge of ['top', 'right', 'bottom', 'left']) {
-      append(grid, append(element('div', 'edge-item'), element('span', '', edge[0].toUpperCase() + edge.slice(1)),
-        element('b', '', formatMm(page.bleed[edge]) + ' mm')));
-    }
-    section.append(grid);
+function bleedMetric(page) {
+  const section = element('section', 'metric bleed-metric');
+  section.append(element('h4', 'metric-label', 'Bleed'));
+  if (!page.bleed) {
+    section.append(element('p', 'metric-value metric-undefined', 'Not confirmed'));
+    section.append(element('p', 'metric-sub', 'Explicit TrimBox and BleedBox required'));
+  } else if (uniformBleed(page.bleed)) {
+    section.append(measurement(formatMm(page.bleed.top)));
+    section.append(element('p', 'metric-sub', 'On all sides · beyond trim'));
   } else {
-    section.append(element('p', 'file-meta', 'Both an explicit TrimBox and BleedBox are needed to calculate reliable bleed.'));
+    const grid = element('dl', 'edge-grid');
+    for (const edge of EDGES) {
+      const item = element('div', 'edge-item');
+      append(item, element('dt', '', edge[0].toUpperCase() + edge.slice(1)),
+        append(element('dd'), element('span', '', formatMm(page.bleed[edge])), element('span', 'metric-unit', 'mm')));
+      grid.append(item);
+    }
+    section.append(grid, element('p', 'metric-sub', 'Uneven bleed · beyond trim'));
   }
-  if (mixed) section.append(element('p', 'file-meta', 'These are page 1 values. Other pages differ; expand them below.'));
+  if (page.bleed && Object.values(page.bleed).some(value => value < 0.05)) {
+    section.append(element('p', 'metric-note', Object.values(page.bleed).some(value => value < -0.05)
+      ? 'Bleed falls inside trim. Check page notes.' : 'One or more edges have no bleed.'));
+  }
   return section;
 }
 
@@ -154,8 +177,10 @@ function renderPageRow(page, index) {
   const details = element('details', 'page-row');
   const summary = element('summary');
   append(summary, element('span', 'page-number', 'Page ' + (index + 1)),
-    element('span', 'page-size', sizeLabel(page.sizes.trim)),
-    element('span', 'page-bleed', edgeSummary(page.bleed)));
+    append(element('span', 'page-size'), element('span', 'row-label', 'Trim size'),
+      element('span', '', page.explicit.trim ? sizeLabel(page.sizes.trim) : 'Not defined')),
+    append(element('span', 'page-bleed'), element('span', 'row-label', 'Bleed'),
+      element('span', '', edgeSummary(page.bleed))));
   if (page.warnings.length) summary.append(makePill(page.warnings.length + ' note' +
     (page.warnings.length > 1 ? 's' : ''), 'warn'));
   details.append(summary);
@@ -163,7 +188,9 @@ function renderPageRow(page, index) {
   details.addEventListener('toggle', () => {
     if (!details.open || details.querySelector('.page-content')) return;
     const content = element('div', 'page-content');
-    append(content, diagram(page), pageTable(page));
+    const measurements = element('div', 'overview page-measurements');
+    append(measurements, trimMetric(page), bleedMetric(page));
+    append(content, measurements, diagram(page), pageTable(page));
     details.append(content);
   });
   return details;
@@ -186,27 +213,28 @@ function renderReport(report) {
   const first = report.pages[0];
   if (report.summary.mixedSizes) pills.append(makePill('Mixed page sizes', 'warn'));
   if (report.summary.mixedBleed) pills.append(makePill('Mixed bleed', 'warn'));
-  if (report.summary.warningPages) pills.append(makePill(report.summary.warningPages + ' page(s) with notes', 'warn'));
-  if (!pills.children.length) pills.append(makePill('Boxes defined', 'good'));
+  if (!pills.children.length && report.summary.warningPages) pills.append(makePill('Review page notes', 'warn'));
+  if (!pills.children.length) pills.append(makePill('Trim & bleed defined', 'good'));
   append(head, identity, pills);
   card.append(head);
+  const scope = element('div', 'overview-scope');
+  const mixed = report.summary.mixedSizes || report.summary.mixedBleed;
+  // Only claim a document-wide measurement when definitions also agree.
+  const sameTrimSource = report.pages.every(page => page.explicit.trim === first.explicit.trim);
+  scope.append(element('span', '', report.pages.length === 1 ? 'Page 1' :
+    mixed || !sameTrimSource ? 'Page 1 of ' + report.pages.length : 'All ' + report.pages.length + ' pages'));
+  if (mixed || !sameTrimSource) scope.append(element('span', 'scope-note', 'Values vary · compare pages below'));
+  card.append(scope);
   const overview = element('div', 'overview');
-  append(overview, metric('Finished size · TrimBox', sizeLabel(first.sizes.trim),
-      first.explicit.trim ? 'Explicitly defined · page 1' : 'CropBox fallback · page 1'),
-    metric('Visible size · CropBox', sizeLabel(first.sizes.crop),
-      first.explicit.crop ? 'Explicitly defined · page 1' : 'MediaBox fallback · page 1'),
-    metric('With bleed · BleedBox', first.explicit.bleed ? sizeLabel(first.sizes.bleed) : 'Not defined',
-      first.explicit.bleed ? 'Explicitly defined · page 1' : 'Bleed cannot be confirmed'),
-    metric('Full page · MediaBox', sizeLabel(first.sizes.media), 'Page 1 · may include printer marks'));
+  append(overview, trimMetric(first), bleedMetric(first));
   card.append(overview);
-  card.append(edgeSection(first, report.summary.mixedBleed));
-  const notices = [];
-  if (report.summary.mixedSizes) notices.push('Page dimensions vary across this PDF.');
-  if (report.summary.mixedBleed) notices.push('Bleed values or bleed-box definitions vary across pages.');
-  if (report.summary.warningPages) notices.push(report.summary.warningPages +
-    ' page(s) have notes. Expand individual pages to see exactly what is missing or unusual.');
-  if (notices.length) card.append(warningsList(notices));
-  const pagesLabel = element('div', 'pages-heading', 'Page-by-page details');
+  if (report.summary.warningPages) card.append(warningsList([
+    report.summary.warningPages + ' of ' + report.pages.length + ' page' +
+    (report.pages.length === 1 ? '' : 's') + ' with notes. Open a page below to review.'
+  ]));
+  const pagesLabel = element('div', 'pages-heading');
+  append(pagesLabel, element('span', '', 'Page details'),
+    element('span', '', 'All boxes, diagram & notes'));
   const pages = element('div', 'page-rows');
   report.pages.forEach((page, index) => pages.append(renderPageRow(page, index)));
   append(card, pagesLabel, pages);
@@ -215,6 +243,7 @@ function renderReport(report) {
 
 function render() {
   resultSection.hidden = reports.length === 0;
+  dropZone.classList.toggle('has-results', reports.length > 0);
   fileCount.textContent = '(' + reports.length + ')';
   exportButton.disabled = !reports.some(report => report.pages);
   resultList.replaceChildren(...reports.map(renderReport));

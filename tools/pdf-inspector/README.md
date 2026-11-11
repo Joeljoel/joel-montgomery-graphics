@@ -17,6 +17,11 @@ the library requires a network connection on first use.
   declared finished size or genuine zero bleed.
 - Per-page inconsistencies, negative margins, asymmetric margins and boxes
   outside the MediaBox are called out.
+- Trim size and bleed lead the file summary with large measurements. Uniform
+  bleed uses one value; uneven bleed shows all four edges. Missing TrimBox
+  is shown as undefined, with CropBox fallback dimensions labelled separately.
+- Mixed documents label the headline values as page 1. Expand a page for its
+  measurements, full box table, diagram and notes.
 - Multi-file inspection and a per-page CSV export.
 
 ## Limits

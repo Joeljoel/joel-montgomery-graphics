@@ -17,7 +17,7 @@
   <main class="container">
     <section class="card" aria-labelledby="title">
       <header class="heading"><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1 id="title">PDF Inspector</h1></header>
-      <p class="intro">Check finished page size, cropped size and bleed on every page of a PDF.</p>
+      <p class="intro">Check trim size and bleed at a glance, then explore the page boxes.</p>
       <div id="drop-zone" class="drop-zone">
         <input id="files" type="file" accept=".pdf,application/pdf" multiple hidden>
         <strong>Click or drop PDF files here</strong>
@@ -32,6 +32,7 @@
         </div>
         <div id="file-results" class="file-results"></div>
       </section>
+      <p class="measurement-note">Measurements describe PDF page boxes; they don’t verify that artwork reaches the bleed edge.</p>
       <details class="help">
         <summary>What do the PDF page boxes mean?</summary>
         <dl>
