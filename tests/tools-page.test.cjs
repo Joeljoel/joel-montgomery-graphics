@@ -5,13 +5,17 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  try{
   const page=await browser.newPage({viewport:{width:1100,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.clock.install({time:new Date('2026-01-01T00:00:00Z')});await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));await page.goto('http://localhost:8765/tools/');
-  const cards=page.locator('nav > a');assert.equal(await cards.count(),5);
+  const cards=page.locator('nav > a');assert.equal(await cards.count(),9);
   const expected=[
    ['Shape Mask Converter','Create image masks from vector shapes'],
    ['Stretch & Repeat Converter','Repeat a centre section with fixed endcaps'],
    ['Repeating Shape Converter','Turn artwork into a horizontal repeat'],
    ['Stretchable Shape Converter','Stretch artwork horizontally, vertically or both'],
-   ['Trim SVG Contents','Trim empty space from SVG files in bulk']
+   ['Trim SVG Contents','Trim empty space from SVG files in bulk'],
+   ['Barcode Data Merge','Prepare barcode data for InDesign'],
+   ['Bulk QR Code Generator','Create QR codes from lists and spreadsheets'],
+   ['Image Reference Grid','Arrange images for screenshots'],
+   ['PDF Inspector','Check finished size, crop and bleed']
   ];
   for(let i=0;i<expected.length;i++){
    const card=cards.nth(i);
@@ -38,7 +42,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   assert.equal(box.x,b.x);assert.equal(box.y,last.y);
   assert.ok(Math.abs(box.width-last.width)<1);assert.ok(Math.abs(box.height-last.height)<1);
   await page.locator('nav img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode())));
-  assert.equal(await page.locator('nav img').count(),6);
+  assert.equal(await page.locator('nav img').count(),10);
   assert.equal(await page.locator('nav img').evaluateAll(imgs=>imgs.every(img=>img.naturalWidth>0)),true);
   await page.screenshot({path:'/tmp/tools-after.png',fullPage:true});
   await cards.first().focus();assert.equal(await cards.first().evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
