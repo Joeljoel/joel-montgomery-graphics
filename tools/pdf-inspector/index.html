@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2184fc">
+  <title>PDF Inspector — Design Utilities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <main class="container">
+    <section class="card" aria-labelledby="title">
+      <header class="heading"><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1 id="title">PDF Inspector</h1></header>
+      <p class="intro">Check trim size and bleed at a glance, then explore the page boxes.</p>
+      <div id="drop-zone" class="drop-zone">
+        <input id="files" type="file" accept=".pdf,application/pdf" multiple hidden>
+        <strong>Click or drop PDF files here</strong>
+        <span>or <button id="choose" class="text-button" type="button">browse your files</button></span>
+        <small>Multiple PDFs supported · Processed locally in your browser</small>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <section id="results" class="results" hidden aria-label="Inspection results">
+        <div class="results-title">
+          <h2>Inspected PDFs <span id="file-count"></span></h2>
+          <div class="actions"><button id="export" type="button" class="button-secondary">Export CSV</button><button id="clear" type="button" class="button-secondary">Clear results</button></div>
+        </div>
+        <div id="file-results" class="file-results"></div>
+      </section>
+      <p class="measurement-note">Measurements describe PDF page boxes; they don’t verify that artwork reaches the bleed edge.</p>
+      <details class="help">
+        <summary>What do the PDF page boxes mean?</summary>
+        <dl>
+          <div><dt>TrimBox</dt><dd>The intended finished size after trimming.</dd></div>
+          <div><dt>CropBox</dt><dd>The region visible in a PDF viewer, which may differ from the finished size.</dd></div>
+          <div><dt>BleedBox</dt><dd>The print-output region used to measure bleed relative to the TrimBox.</dd></div>
+          <div><dt>MediaBox</dt><dd>The full PDF page area, which can include printer marks.</dd></div>
+          <div><dt>ArtBox</dt><dd>An optional boundary around meaningful page artwork.</dd></div>
+        </dl>
+        <p>If the TrimBox or BleedBox isn't explicitly defined, the inspector marks bleed as unconfirmed. Page-box metadata does not guarantee the artwork actually reaches the bleed edge.</p>
+      </details>
+    </section>
+    <p class="info">Inspect PDF dimensions and bleed without uploading your files. Check individual pages, spot inconsistencies and export a CSV report.</p>
+    <nav class="back" aria-label="Design utilities"><a href="../">All utilities</a></nav>
+  </main>
+</body>
+</html>
