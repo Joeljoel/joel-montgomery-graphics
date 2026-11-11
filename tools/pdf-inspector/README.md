@@ -27,6 +27,16 @@ ink/image extension into the bleed area. Password-protected PDFs are not
 supported. The box diagram reflects geometry, not page artwork. Dimensions
 are displayed to two decimal places.
 
+## Sample PDF
+
+A downloadable three-page fixture is included at
+[`fixtures/pdf-inspector-test-suite.pdf`](fixtures/pdf-inspector-test-suite.pdf).
+
+1. A4 TrimBox 210 × 297 mm with a 216 × 303 mm BleedBox: 3 mm on all edges.
+2. TrimBox 148 × 210 mm with asymmetric bleed (top 6, right 5,
+   bottom 4, left 5 mm), plus a larger CropBox.
+3. A4 with no explicit TrimBox or BleedBox, to check fallback messaging.
+
 ## Tests
 
 From the repository root:
