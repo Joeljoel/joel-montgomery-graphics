@@ -33,6 +33,8 @@ From the repository root:
 
 ```sh
 node --test tests/pdf-inspector.test.mjs
+# with a local server on port 8765, Playwright and internet access:
+node tests/pdf-inspector.browser.test.cjs
 ```
 
 To smoke-test the site, serve the repo root with a static HTTP server and open
