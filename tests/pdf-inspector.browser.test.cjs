@@ -53,6 +53,7 @@ function pdfWithBoxes(hasBoxes) {
     await cards.nth(1).locator('.page-row summary').click();
     assert.match(await cards.nth(1).innerText(), /BleedBox is not defined/);
     await cards.first().locator('.page-row summary').click();
+    await cards.first().locator('.box-table').waitFor();
     assert.equal(await cards.first().locator('.box-table tr').count(), 6);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.setViewportSize({ width: 375, height: 850 });
