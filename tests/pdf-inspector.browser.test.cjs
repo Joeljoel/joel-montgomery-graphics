@@ -49,8 +49,9 @@ function pdfWithBoxes(hasBoxes) {
     assert.equal(await cards.count(), 2);
     assert.match(await cards.nth(0).innerText(), /210 × 297 mm/);
     assert.match(await cards.nth(0).innerText(), /3 mm on all sides/);
-    assert.match(await cards.nth(1).innerText(), /BleedBox is not defined/);
     assert.match(await cards.nth(1).innerText(), /Not defined/);
+    await cards.nth(1).locator('.page-row summary').click();
+    assert.match(await cards.nth(1).innerText(), /BleedBox is not defined/);
     await cards.first().locator('.page-row summary').click();
     assert.equal(await cards.first().locator('.box-table tr').count(), 6);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
