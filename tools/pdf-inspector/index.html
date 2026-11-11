@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#2184fc">
+  <title>PDF Inspector — Design Utilities</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <section class="card">
+      <header class="heading">
+        <img src="../assets/easilLogo.png" width="36" height="36" alt="">
+        <div><p class="eyebrow">Design Utilities</p><h1>PDF Inspector</h1></div>
+      </header>
+      <p class="intro">Check a PDF's finished size, cropped size and bleed — right down to each edge. Multi-page PDFs are checked for inconsistencies.</p>
+      <div id="drop-zone" class="drop-zone">
+        <input id="files" type="file" accept=".pdf,application/pdf" multiple hidden>
+        <svg viewBox="0 0 48 48" width="48" height="48" fill="none" aria-hidden="true"><rect x="12" y="4" width="25" height="34" rx="3" stroke="currentColor" stroke-width="2"/><path d="M18 13h13M18 19h9M12 28H6v14h30v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="m18 33 6-6 6 6m-6-6v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <strong>Drop PDF files here</strong>
+        <span>or <button id="choose" class="text-button" type="button">browse your files</button></span>
+        <small>Multiple PDFs supported · Files stay on your device</small>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <section id="results" class="results" hidden aria-label="Inspection results">
+        <div class="results-title">
+          <div><p class="eyebrow">Results</p><h2>Inspected PDFs <span id="file-count"></span></h2></div>
+          <div class="actions"><button id="export" type="button" class="button-secondary">Export CSV</button><button id="clear" type="button" class="button-secondary">Clear</button></div>
+        </div>
+        <div id="file-results" class="file-results"></div>
+      </section>
+      <aside class="explain">
+        <h2>What do the measurements mean?</h2>
+        <dl>
+          <div><dt>TrimBox</dt><dd>The intended finished size after cutting.</dd></div>
+          <div><dt>CropBox</dt><dd>The region visible in a PDF viewer. It can differ from the finished size.</dd></div>
+          <div><dt>BleedBox</dt><dd>The region defined for bleed and production output. The extra margin is measured against TrimBox.</dd></div>
+          <div><dt>MediaBox</dt><dd>The full page area, potentially including printer's marks.</dd></div>
+        </dl>
+        <p>Some PDFs don't define trim or bleed boxes. In that case, the inspector shows the PDF's fallback dimensions and marks bleed as unconfirmed. A defined BleedBox does not prove that artwork actually reaches the edge.</p>
+      </aside>
+    </section>
+    <nav class="back"><a href="../">← All utilities</a></nav>
+  </main>
+</body>
+</html>
