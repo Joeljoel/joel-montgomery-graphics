@@ -196,7 +196,8 @@ function renderReport(report) {
     metric('Visible size · CropBox', sizeLabel(first.sizes.crop),
       first.explicit.crop ? 'Explicitly defined · page 1' : 'MediaBox fallback · page 1'),
     metric('With bleed · BleedBox', first.explicit.bleed ? sizeLabel(first.sizes.bleed) : 'Not defined',
-      first.explicit.bleed ? 'Explicitly defined · page 1' : 'Bleed cannot be confirmed'));
+      first.explicit.bleed ? 'Explicitly defined · page 1' : 'Bleed cannot be confirmed'),
+    metric('Full page · MediaBox', sizeLabel(first.sizes.media), 'Page 1 · may include printer marks'));
   card.append(overview);
   card.append(edgeSection(first, report.summary.mixedBleed));
   const notices = [];
