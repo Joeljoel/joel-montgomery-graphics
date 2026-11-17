@@ -355,18 +355,24 @@ html.utilities-embedded body.utilities-shell > main > .info {
   body.utilities-shell main > .utilities-frame-slot { width: 100%; }
 }
 
-/* Native cross-document tool-to-tool navigation: capture the entire
-   sidebar as one steady image, instead of fading nine separate icon snapshots.
-   Overview navigation retains each independently named tile for the morph. */
-html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar {
-  view-transition-name: utilities-stable-sidebar;
-}
-html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar > .utilities-surface,
-html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar > .utilities-home,
-html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar .utilities-menu > a {
+/* Tool-to-tool navigation is a same-document change: keep the sidebar
+   mounted and visible as real DOM. Its tiles and white background must
+   NEVER become View Transition snapshots, otherwise Chromium hides them
+   and briefly redraws their text/icons during each navigation. Only the
+   selected blue indicator gets a snapshot so it slides to the new row. */
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-surface,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-home,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-menu > a {
   view-transition-name: none;
 }
-/* The active indicator stays independently named so it slides between rows. */
+
+/* When going BACK to /tools/, the selected row travels with its tile:
+   its blue background is included in the outgoing tile snapshot and
+   crossfades away as the tile moves into the two-column overview. */
+html.utilities-returning-overview body.utilities-shell .utilities-active-indicator {
+  view-transition-name: none;
+}
 
 /* Avoid the previous outgoing-then-delayed-incoming blank frames. */
 @keyframes utilities-content-out {
@@ -391,18 +397,6 @@ html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar 
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  /* A stable sidebar snapshot on utility switches prevents icon flicker. */
-  ::view-transition-group(utilities-stable-sidebar) {
-    animation-duration: 300ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
-  }
-  ::view-transition-old(utilities-stable-sidebar),
-  ::view-transition-new(utilities-stable-sidebar) {
-    animation: none;
-    opacity: 1;
-    mix-blend-mode: normal;
-  }
-
   ::view-transition-group(utilities-surface),
   ::view-transition-group(utilities-brand),
   ::view-transition-group(utilities-tile-shape-mask),
@@ -450,8 +444,11 @@ html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar 
   ::view-transition-new(utilities-active):only-child {
     animation: 160ms 580ms ease-out both utilities-highlight-in;
   }
+  /* Returning to /tools/ removes the indicator's independent name before
+     capture, so the blue highlight crossfades WITH its moving tile. The
+     only-child case is a fallback for a transition with no matched tile. */
   ::view-transition-old(utilities-active):only-child {
-    animation: 110ms ease-in both utilities-highlight-out;
+    animation: 170ms 425ms ease-in both utilities-highlight-out;
   }
   ::view-transition-old(utilities-secret) {
     animation: 180ms ease-out both utilities-content-out;

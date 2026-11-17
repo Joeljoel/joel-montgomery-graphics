@@ -2,8 +2,8 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Data Merge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css?v=2"><script type="module" src="script.js?v=2"></script>  <link rel="stylesheet" href="../shared/utilities-shell.css?v=6">
-  <script src="../shared/utilities-shell.js?v=5" defer></script>
+<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css?v=2"><script type="module" src="script.js?v=2"></script>  <link rel="stylesheet" href="../shared/utilities-shell.css?v=7">
+  <script src="../shared/utilities-shell.js?v=6" defer></script>
   <link rel="expect" href="#utilities-ready" blocking="render">
   <script>
     // Set responsive layout and fallback entry state before first render.
@@ -22,32 +22,20 @@
       }
     } catch {}
 
-    // Before old/new document snapshots: protect the sidebar on a
-    // utility-to-utility navigation, without affecting /tools/ grid morphs.
-    // pagereveal must be registered synchronously in <head>, before paint.
-    {
-      const isUtilityPath = path =>
-        /^\/tools\/(?:shape-mask|stretch-repeat|repeat|stretchable|trim|barcode|qr|image-grid|pdf-inspector)\/?$/.test(path);
-      const setStable = transition => {
-        if (!transition) return;
-        const root = document.documentElement;
-        root.classList.add('utilities-stable-navigation');
-        const cleanup = () => root.classList.remove('utilities-stable-navigation');
-        transition.finished.then(cleanup, cleanup);
-      };
-      window.addEventListener('pageswap', event => {
-        const next = event.activation?.entry?.url;
-        if (next && isUtilityPath(new URL(next).pathname)) {
-          setStable(event.viewTransition);
-        }
-      });
-      window.addEventListener('pagereveal', event => {
-        const previous = window.navigation?.activation?.from?.url;
-        if (previous && isUtilityPath(new URL(previous).pathname)) {
-          setStable(event.viewTransition);
-        }
-      });
-    }
+    // Returning to /tools/: include the blue selection with its tile
+    // snapshot, so it moves and crossfades with the grid morph instead
+    // of vanishing before that animation has begun.
+    window.addEventListener('pageswap', event => {
+      const next = event.activation?.entry?.url;
+      if (event.viewTransition && next &&
+          new URL(next).pathname === '/tools/') {
+        document.documentElement.classList.add('utilities-returning-overview');
+      }
+    });
+    // A document restored from bfcache must not inherit the outgoing class.
+    window.addEventListener('pagereveal', () => {
+      document.documentElement.classList.remove('utilities-returning-overview');
+    });
   </script>
 </head>
 <body class="utilities-shell"><main>

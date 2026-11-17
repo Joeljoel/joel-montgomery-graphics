@@ -14,7 +14,13 @@ const { chromium } = require('playwright');
     const css = readFileSync(join(__dirname, '../tools/shared/utilities-shell.css'), 'utf8');
     assert.match(css,
       /::view-transition-new\(utilities-active\):only-child\s*\{\s*animation:\s*160ms 580ms/,
-      'The blue active highlight must fade in after the 600ms overview morph begins settling');
+      'Blue highlight should appear only after the overview morph settles');
+    assert.match(css,
+      /html\.utilities-returning-overview[^}]+\.utilities-active-indicator\s*\{\s*view-transition-name:\s*none/s,
+      'On return, blue highlight must be part of the moving tile snapshot');
+    assert.match(css,
+      /html\.utilities-inplace-navigation[^}]+\.utilities-menu > a\s*\{\s*view-transition-name:\s*none/s,
+      'Sidebar icons and labels must stay live while the right panel changes');
 
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = [];
@@ -24,7 +30,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=5', async route => {
+    await slow.route('**/utilities-shell.js?v=6', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
@@ -44,23 +50,8 @@ const { chromium } = require('playwright');
 
     await page.addInitScript(() => {
       window.__documentTransitionSeen = false;
-      window.__incomingStableSnapshot = null;
       addEventListener('pagereveal', event => {
-        if (!event.viewTransition) return;
-        window.__documentTransitionSeen = true;
-        // This runs after the page's own pagereveal handler has applied the
-        // stable snapshot class, while the transition is still in progress.
-        setTimeout(() => {
-          const sidebar = document.querySelector('.utilities-sidebar');
-          if (!sidebar) return;
-          window.__incomingStableSnapshot = {
-            active: document.documentElement.classList.contains('utilities-stable-navigation'),
-            sidebar: getComputedStyle(sidebar).viewTransitionName,
-            tile: getComputedStyle(sidebar.querySelector('.utilities-menu > a')).viewTransitionName,
-            surface: getComputedStyle(sidebar.querySelector('.utilities-surface')).viewTransitionName,
-            selection: getComputedStyle(sidebar.querySelector('.utilities-active-indicator')).viewTransitionName
-          };
-        }, 0);
+        if (event.viewTransition) window.__documentTransitionSeen = true;
       });
     });
     await page.goto('http://localhost:8765/tools/shape-mask/');
@@ -80,22 +71,25 @@ const { chromium } = require('playwright');
       element => getComputedStyle(element).viewTransitionName
     ), 'utilities-content');
 
+    // Arc/Chromium now uses the same persistent host as Firefox for tab
+    // changes: the left sidebar never unmounts and never gets snapshotted.
+    await page.evaluate(() => {
+      window.__sidebarIdentity = document.querySelector('.utilities-sidebar');
+      window.__mainIdentity = document.querySelector('main');
+    });
     await page.locator('.utilities-menu a[href="../qr/"]').click();
     await page.waitForURL('**/tools/qr/');
+    await page.locator('main > .utilities-frame-slot > iframe').waitFor({ state: 'visible' });
+    assert.equal(await page.evaluate(() =>
+      document.querySelector('.utilities-sidebar') === window.__sidebarIdentity &&
+      document.querySelector('main') === window.__mainIdentity
+    ), true, 'The sidebar and its icons must stay mounted');
     assert.equal(await page.locator('.utilities-menu a[aria-current="page"] .utilities-name').innerText(), 'Bulk QR Code Generator');
-    assert.equal(await page.locator('#paste').count(), 1);
-    // Chromium supports cross-document View Transitions: assert that an
-    // actual transition was created, beyond just checking the CSS name.
-    if (await page.evaluate(() => typeof document.startViewTransition === 'function')) {
-      await page.waitForFunction(() => window.__documentTransitionSeen === true);
-      await page.waitForFunction(() => window.__incomingStableSnapshot !== null);
-      const capture = await page.evaluate(() => window.__incomingStableSnapshot);
-      assert.equal(capture.active, true, 'Utility-to-utility should capture a steady sidebar');
-      assert.equal(capture.sidebar, 'utilities-stable-sidebar');
-      assert.equal(capture.tile, 'none', 'Nested tiles must not fade independently');
-      assert.equal(capture.surface, 'none', 'White background should be part of sidebar snapshot');
-      assert.equal(capture.selection, 'utilities-active');
-    }
+    assert.equal(await page.frameLocator('main > .utilities-frame-slot > iframe').locator('#paste').count(), 1);
+    assert.equal(await page.evaluate(() =>
+      getComputedStyle(document.querySelector('.utilities-sidebar')).viewTransitionName
+    ), 'none');
+    assert.equal(await page.locator('.utilities-menu img').count(), 9);
 
     await page.setViewportSize({ width: 375, height: 812 });
     const toggle = page.locator('.utilities-toggle');
@@ -111,7 +105,10 @@ const { chromium } = require('playwright');
     await toggle.click();
     await page.locator('.utilities-menu a[href="../trim/"]').click();
     await page.waitForURL('**/tools/trim/');
-    assert.equal(await page.locator('main > .card #drop-area').count(), 1);
+    assert.equal(await page.frameLocator('main > .utilities-frame-slot > iframe').locator('#drop-area').count(), 1);
+    assert.equal(await page.evaluate(() =>
+      document.querySelector('.utilities-sidebar') === window.__sidebarIdentity
+    ), true);
     assert.equal(await page.locator('.utilities-menu a[aria-current="page"] .utilities-name').innerText(), 'Trim SVG Contents');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
     await page.locator('.utilities-overview').click();
@@ -147,7 +144,7 @@ const { chromium } = require('playwright');
     assert.equal(new Set(sidebarNames).size, 9);
     assert.ok(sidebarNames.every(name => name.startsWith('utilities-tile-')));
     assert.equal(await page.locator('.utilities-frame-slot').count(), 0,
-      'Chromium should use native multi-page navigation, not the Firefox iframe');
+      'Overview navigation should still enter a standalone tool page and morph the grid');
     await page.locator('.utilities-overview').click();
     await page.waitForURL('**/tools/');
     const overviewNames = await page.locator('main.card > nav[aria-label="Design utilities"] > a')
@@ -170,7 +167,7 @@ const { chromium } = require('playwright');
       }
     ), true);
     assert.deepEqual(errors, []);
-    console.log('PASS: actual overview/sidebar morph pairing, cross-document transition, icons, responsive navigation and reduced motion');
+    console.log('PASS: persistent icon sidebar, in-place tool transitions, overview grid morph and reduced motion');
   } finally {
     await browser.close();
   }

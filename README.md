@@ -76,3 +76,19 @@ as a single shared image while keeping the selected-item indicator separately
 named so it can slide between rows. The nine named overview tiles remain
 unchanged for overview-to-sidebar transitions. The active blue highlight
 waits until the 600ms overview morph has completed before fading in.
+
+### Persistent utility sidebar and return highlight (follow-up)
+
+The full grid-to-sidebar morph still uses native cross-document View
+Transitions for `/tools/` -> utility and the reverse navigation. Once
+inside a utility, **every browser with same-document View Transitions** now
+keeps the actual sidebar DOM mounted and replaces only the right-hand tool in
+an isolated same-origin iframe. During the swap, the sidebar and nine links
+are never snapshot: the unchanged text and artwork remain continuously
+visible. Only the active blue row indicator moves as a named snapshot.
+
+Returning to `/tools/` opts the indicator into the outgoing utility tile's
+snapshot instead. It travels with its button and fades as the button returns
+to the two-column overview, rather than disappearing before the morph.
+
+Older browsers without same-document transitions use ordinary navigation.

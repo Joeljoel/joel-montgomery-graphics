@@ -1,7 +1,8 @@
 // Shared utility navigation. Each tool remains a standalone HTML document.
-// In browsers without cross-document transitions (currently Firefox), keep the
-// existing navigation DOM mounted and load the next tool in an isolated frame.
-// This preserves the sidebar and each tool's independent script lifecycle.
+// Keep the live navigation DOM mounted when switching between utilities in
+// all browsers with same-document transitions. Only the right-hand tool is
+// replaced in an isolated frame; /tools/ still uses native cross-document
+// transitions in Chromium/Safari. Each tool retains its own JS lifecycle.
 (() => {
   'use strict';
 
@@ -26,15 +27,12 @@
     });
   }
 
-  // Chromium, Arc and Safari use ordinary same-origin links so the browser
-  // can perform ONE cross-document transition, rather than racing it against
-  // a second JavaScript navigation and an additional CSS entrance fade.
-  // Firefox still uses the persistent tool panel (same-document transition).
+  // The overview has no sidebar, so Arc/Chromium/Safari continue to use
+  // native grid-to-sidebar cross-document transitions there. Once inside a
+  // utility, keep the real sidebar alive and transition its content in-place.
+  // Firefox also uses the in-place path because MPA transitions are absent.
   const isFirefox = /Firefox\/\d+/i.test(navigator.userAgent);
-  if (!isFirefox) {
-    document.documentElement.classList.remove('utilities-fallback-enter');
-    return;
-  }
+  if (!isFirefox) document.documentElement.classList.remove('utilities-fallback-enter');
 
   const main = document.querySelector('body.utilities-shell > main');
   const initialCard = main?.querySelector(':scope > .card');
@@ -44,8 +42,11 @@
   const toolPaths = new Set([...sidebar?.querySelectorAll('.utilities-menu > a') || []]
     .map(link => new URL(link.href).pathname));
 
-  // The overview and very old browsers retain the ordinary fade-out fallback.
+  // Older browsers without same-document View Transitions use normal links.
+  // Firefox's overview still has the small fade fallback; Arc/Chromium/Safari
+  // always keep the native overview morph rather than intercepting it.
   if (!sidebar || !main || !initialCard || !document.startViewTransition) {
+    if (!isFirefox) return;
     let leaving = false;
     document.addEventListener('click', event => {
       if (leaving || event.defaultPrevented || event.button !== 0 ||
@@ -71,6 +72,7 @@
   const original = { card: initialCard, info: initialInfo };
   let cleanupFrame = null;
   let requestId = 0;
+  let transitionId = 0;
 
   const visiblePanel = () =>
     main.querySelector(':scope > .card, :scope > .utilities-frame-slot');
@@ -125,15 +127,23 @@
       if (push) history.pushState({ utilitiesPanel: true }, '', path);
     };
 
+    // Suppress ALL sidebar snapshots except the active indicator. Because the
+    // root is also un-named, the actual icon/text DOM remains visible and
+    // unchanged throughout the right-hand content transition.
+    const id = ++transitionId;
+    const root = document.documentElement;
+    root.classList.add('utilities-inplace-navigation');
+    const cleanup = () => {
+      if (id === transitionId) root.classList.remove('utilities-inplace-navigation');
+    };
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
       doSwap();
+      cleanup();
       return;
     }
 
-    // Each sidebar link and the white surface have their own stable snapshot
-    // identity. Keep them captured while the right-hand panel changes.
     const transition = document.startViewTransition(doSwap);
-    transition.finished.catch(() => {});
+    transition.finished.then(cleanup, cleanup);
   }
 
   function activateFrame(frame, slot, path, push) {

@@ -1,4 +1,4 @@
-// Firefox-style fallback regression: the sidebar stays in the same document.
+// Persistent tool-panel regression: sidebar remains in the same document.
 // Serve repo root at localhost:8765 and run with Playwright.
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
@@ -10,21 +10,14 @@ const { chromium } = require('playwright');
   });
   try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-    // Chromium can exercise Firefox's same-document fallback by hiding the
-    // cross-document-specific CSS interface while retaining startViewTransition.
-    await context.addInitScript(() => {
-      try {
-        Object.defineProperty(window, 'CSSViewTransitionRule',
-          { configurable: true, value: undefined });
-      } catch {}
-    });
+    // Chromium uses this path by default for tool-to-tool navigation, while
+    // retaining native cross-document morphs when entering from /tools/.
     const page = await context.newPage();
     const failures = [];
     page.on('pageerror', error => failures.push(error.message));
     await page.goto('http://localhost:8765/tools/shape-mask/');
     const canTest = await page.evaluate(() =>
-      typeof document.startViewTransition === 'function' &&
-      typeof CSSViewTransitionRule === 'undefined'
+      typeof document.startViewTransition === 'function'
     );
     assert.ok(canTest, 'Test browser must support same-document View Transitions');
 
@@ -72,7 +65,7 @@ const { chromium } = require('playwright');
       document.documentElement.scrollWidth <= window.innerWidth
     ), true, 'The embedded panel must not create horizontal overflow');
     assert.deepEqual(failures, []);
-    console.log('PASS: Firefox fallback retains sidebar, isolates tools, handles history and mobile');
+    console.log('PASS: persistent sidebar in Chromium, isolated tool panels, history and mobile');
     await context.close();
   } finally {
     await browser.close();
