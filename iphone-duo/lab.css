@@ -44,6 +44,7 @@ button{font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .key-readings span,.key-readings strong{display:block}
 .key-readings span{color:var(--dim);font-size:.69rem;line-height:1.25}
 .key-readings strong{font-size:.95rem;letter-spacing:-.02em;margin-top:7px;overflow-wrap:anywhere}
+.posture-readings{grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:0}
 details{border-top:1px solid var(--line)}
 summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:47px;cursor:pointer;color:#d3e7e9;font-weight:700;font-size:.86rem}
 summary::-webkit-details-marker{display:none}

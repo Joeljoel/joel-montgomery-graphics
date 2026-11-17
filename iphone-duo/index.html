@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#09131d">
   <title>iPhone Duo · Window Test</title>
-  <link rel="stylesheet" href="lab.css?v=3">
-  <script src="lab.js?v=3" defer></script>
+  <link rel="stylesheet" href="lab.css?v=4">
+  <script src="lab.js?v=4" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -19,6 +19,16 @@
       <h1 id="display">Measuring…</h1>
       <p class="description" id="displayDetail">Checking the available browser signals.</p>
       <div class="chips"><span class="chip" id="orientation">Orientation…</span><span class="chip muted" id="confidence">Estimating…</span></div>
+    </section>
+
+    <section class="panel posture-panel" aria-labelledby="posture-heading">
+      <div class="section-head"><h2 id="posture-heading">Device posture</h2><span class="small-tag" id="postureSource">CHECKING</span></div>
+      <p class="side-value" id="postureValue" role="status">Checking…</p>
+      <p class="explain" id="postureDetail">Reading the Device Posture API and CSS media query.</p>
+      <div class="key-readings posture-readings">
+        <div><span>JavaScript API</span><strong id="postureJS">—</strong></div>
+        <div><span>CSS media query</span><strong id="postureCSS">—</strong></div>
+      </div>
     </section>
 
     <section class="panel side-panel" aria-labelledby="side-heading">

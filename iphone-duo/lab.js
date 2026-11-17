@@ -5,6 +5,8 @@
   let actualSide = null;
   let last = null;
   let probeTick = false;
+  const foldedPostureQuery = window.matchMedia("(device-posture: folded)");
+  const continuousPostureQuery = window.matchMedia("(device-posture: continuous)");
 
   const rounded = value => Number.isFinite(value) ? String(Math.round(value * 10) / 10) : "Unavailable";
   const dimension = (w, h) => rounded(w) + " × " + rounded(h);
@@ -35,6 +37,26 @@
     return {label:"Unclassified window",detail:"Measurements do not match a known Duo layout closely enough.",confidence:"Uncertain",shape,half:false};
   }
 
+  // Keep physical posture separate from window-format detection. "Continuous"
+  // includes both fully open and closed displays, so it cannot identify
+  // which screen is currently showing the PWA.
+  function describePosture(m) {
+    const js = m.posture === "folded" || m.posture === "continuous" ? m.posture : null;
+    const css = m.cssPosture === "folded" || m.cssPosture === "continuous" ? m.cssPosture : null;
+    const type = js || css;
+    const label = type === "folded" ? "Partially folded" : type === "continuous" ? "Continuous" : "Unavailable";
+    const source = js ? "JAVASCRIPT API" : css ? "CSS FALLBACK" : "UNAVAILABLE";
+    const description = type === "folded"
+      ? "Safari reports a partially folded book or laptop posture."
+      : type === "continuous"
+        ? "Safari reports a flat layout. This includes both fully open and closed displays; see the window-format test to distinguish them."
+        : "Neither signal is reporting posture. Check Safari’s Device Posture API feature flag.";
+    const mismatch = js && css && js !== css
+      ? " JavaScript and CSS disagree; compare the readings below."
+      : "";
+    return {label,source,detail:description+mismatch};
+  }
+
   function inferSide(m,format) {
     if(!format.half)return {label:"Not applicable",reason:"Left/right detection applies only to unfolded inner Split View.",side:null};
     // Observed: left 0/0, right 0/84. screenX is 0 on BOTH sides.
@@ -60,6 +82,7 @@
     const inset = edge => parseFloat(probe.getPropertyValue("padding-" + edge)) || 0;
     const segments = window.viewport && window.viewport.segments;
     const posture = navigator.devicePosture;
+    const cssPosture = foldedPostureQuery.matches ? "folded" : continuousPostureQuery.matches ? "continuous" : "Unavailable";
     return {
       width:window.innerWidth, height:window.innerHeight,
       documentWidth:document.documentElement.clientWidth,
@@ -79,6 +102,7 @@
       screenOrientation:screen.orientation ? screen.orientation.type : "Unavailable",
       legacyAngle:readNumber(window.orientation),
       posture:posture ? posture.type : "Unavailable",
+      cssPosture,
       segments:segments ? Array.from(segments).map(s=>dimension(s.width,s.height)+" @ "+rounded(s.left)+","+rounded(s.top)) : null,
       iphone:/iPhone/i.test(navigator.userAgent),
       standalone:window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true
@@ -101,6 +125,7 @@
     ["Screen orientation API",m=>m.screenOrientation],
     ["Legacy window angle",m=>m.legacyAngle === null ? "Unavailable" : rounded(m.legacyAngle)+"°"],
     ["Device posture API",m=>m.posture],
+    ["Device posture CSS",m=>m.cssPosture],
     ["Viewport segments",m=>m.segments ? m.segments.join("; ") || "None" : "Unavailable"],
     ["Installed web app",m=>m.standalone ? "Yes" : "No"]
   ];
@@ -120,7 +145,8 @@
     const m = collect();
     const format = classify(m);
     const side = inferSide(m,format);
-    last = {time:new Date().toISOString(),format:format.label,confidence:format.confidence,sideHint:side.label,actualSide,measurements:m};
+    const posture = describePosture(m);
+    last = {time:new Date().toISOString(),format:format.label,confidence:format.confidence,sideHint:side.label,actualSide,detectedPosture:posture.label,postureSource:posture.source,measurements:m};
     const rail=$("demoRail");
     // Manual selection previews a side only if auto-detection is unknown.
     const railSide=side.side||(format.half?actualSide:null);
@@ -130,6 +156,11 @@
       $("railTag").textContent=(side.side?"Auto":"Manual preview")+" · "+railSide.toUpperCase();
     }
     $("sensorUpdate").textContent="Live scan · every 400 ms · "+rounded(m.safeLeft)+" / "+rounded(m.safeRight)+"px";
+    $("postureSource").textContent = posture.source;
+    if ($("postureValue").textContent !== posture.label) $("postureValue").textContent = posture.label;
+    $("postureDetail").textContent = posture.detail;
+    $("postureJS").textContent = m.posture;
+    $("postureCSS").textContent = m.cssPosture;
     $("display").textContent = format.label;
     $("displayDetail").textContent = format.detail;
     $("orientation").textContent = format.shape;
@@ -176,6 +207,10 @@
   window.visualViewport?.addEventListener("resize",schedule,{passive:true});
   screen.orientation?.addEventListener?.("change",schedule);
   navigator.devicePosture?.addEventListener?.("change",schedule);
+  for (const query of [foldedPostureQuery, continuousPostureQuery]) {
+    if (query.addEventListener) query.addEventListener("change",schedule);
+    else query.addListener?.(schedule);
+  }
   document.addEventListener("visibilitychange",()=>{if(!document.hidden)schedule();});
   window.addEventListener("focus",schedule,{passive:true});
   document.addEventListener("pointerdown",schedule,{capture:true,passive:true});
