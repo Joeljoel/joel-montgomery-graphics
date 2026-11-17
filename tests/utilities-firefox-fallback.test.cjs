@@ -49,9 +49,8 @@ const { chromium } = require('playwright');
     assert.equal(await iframe.evaluate(frame =>
       getComputedStyle(frame.contentDocument.querySelector('.utilities-sidebar')).display
     ), 'none');
-    assert.equal(await iframe.contentFrame().then(frame =>
-      frame.locator('.card h1').innerText()
-    ), 'Bulk QR Code Generator');
+    assert.equal(await page.frameLocator('main > .utilities-frame-slot > iframe')
+      .locator('.card h1').innerText(), 'Bulk QR Code Generator');
 
     // Go back to the original utility without a page reload.
     await page.goBack();
