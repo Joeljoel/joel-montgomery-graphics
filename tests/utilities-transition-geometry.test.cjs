@@ -31,7 +31,7 @@ const { chromium } = require('playwright');
       const samples = await page.evaluate(small => {
         const animations = document.getAnimations();
         animations.forEach(animation => animation.pause());
-        return [0, 50, 100, 200, 300, 399, 450, 499].map(time => {
+        return [0, 50, 75, 100, 200, 300, 399, 450, 499].map(time => {
           animations.forEach(animation => { animation.currentTime = time; });
           const root = document.documentElement;
           const group = getComputedStyle(root, '::view-transition-group(utilities-surface)');
@@ -39,9 +39,11 @@ const { chromium } = require('playwright');
           const image = getComputedStyle(root, '::view-transition-new(utilities-surface)');
           const link = getComputedStyle(root, small
             ? '::view-transition-new(utilities-back-link)' : '::view-transition-old(utilities-back-link)');
+          const linkGroup = getComputedStyle(root, '::view-transition-group(utilities-back-link)');
           return { time, width: parseFloat(group.width), height: parseFloat(group.height),
             background: pair.backgroundColor, opacity: image.opacity,
-            radius: parseFloat(pair.borderTopLeftRadius), linkOpacity: parseFloat(link.opacity) };
+            radius: parseFloat(pair.borderTopLeftRadius),
+            linkOpacity: parseFloat(link.opacity) * parseFloat(linkGroup.opacity) };
         });
       }, small);
       for (const sample of samples) {
@@ -52,7 +54,9 @@ const { chromium } = require('playwright');
         assert.ok(sample.radius >= 11.99 && sample.radius <= 18.01);
         if (small && sample.time < 400) assert.equal(sample.linkOpacity, 0);
         if (small && sample.time >= 450) assert.ok(sample.linkOpacity > 0);
-        if (!small && sample.time >= 100) assert.equal(sample.linkOpacity, 0);
+        if (!small && sample.time === 0) assert.ok(sample.linkOpacity > .99);
+        if (!small && sample.time === 50) assert.ok(sample.linkOpacity > 0 && sample.linkOpacity < .5);
+        if (!small && sample.time >= 75) assert.equal(sample.linkOpacity, 0);
       }
       assert.ok(Math.abs(samples[0].radius - (small ? 18 : 12)) < .1);
       assert.ok(Math.abs(samples.at(-1).radius - (small ? 12 : 18)) < .1);

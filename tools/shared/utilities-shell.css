@@ -585,9 +585,24 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   ::view-transition-new(utilities-mobile-toggle):only-child {
     animation: 100ms var(--utilities-morph-duration) ease-out both utilities-content-in;
   }
-  ::view-transition-old(utilities-back-link):only-child,
+  /* Fade the outgoing return-link GROUP (not just its image). It has no
+     matching destination on /tools/, so its entire layer can disappear
+     immediately without affecting any of the moving tiles. */
+  :root:not(:has(body.utilities-shell))::view-transition-group(utilities-back-link) {
+    animation: 75ms linear both utilities-content-out;
+  }
+  ::view-transition-old(utilities-back-link) {
+    animation: none;
+    opacity: 1;
+  }
   ::view-transition-old(utilities-mobile-toggle):only-child {
     animation: 100ms ease-in both utilities-content-out;
+  }
+  /* Start the live link's fade on click, even while the next page loads.
+     No artificial navigation delay is introduced. */
+  html.utilities-leaving-overview .utilities-sidebar .utilities-overview {
+    opacity: 0;
+    transition: opacity 75ms linear;
   }
   ::view-transition-old(utilities-secret) {
     animation: 120ms ease-out both utilities-content-out;

@@ -130,7 +130,10 @@
   }
   window.addEventListener('pageswap', prepareForNavigationAway);
   window.addEventListener('pagehide', prepareForNavigationAway);
-  window.addEventListener('pageshow', prepareForNavigationAway);
+  window.addEventListener('pageshow', () => {
+    prepareForNavigationAway();
+    document.documentElement.classList.remove('utilities-leaving-overview');
+  });
 
   const visiblePanel = () =>
     main.querySelector(':scope > .card, :scope > .utilities-frame-slot');
@@ -393,7 +396,10 @@
     if (!link || link.hasAttribute('download') ||
         (link.target && link.target !== '_self')) return;
     if (!link.closest('.utilities-menu')) {
-      if (link.matches('.utilities-home, .utilities-overview')) prepareForNavigationAway();
+      if (link.matches('.utilities-home, .utilities-overview')) {
+        prepareForNavigationAway();
+        document.documentElement.classList.add('utilities-leaving-overview');
+      }
       return;
     }
     const url = new URL(link.href);
