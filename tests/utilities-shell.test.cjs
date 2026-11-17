@@ -37,8 +37,20 @@ const { chromium } = require('playwright');
 
     await page.addInitScript(() => {
       window.__documentTransitionSeen = false;
+      window.__incomingStableSnapshot = null;
       addEventListener('pagereveal', event => {
         if (event.viewTransition) window.__documentTransitionSeen = true;
+        queueMicrotask(() => {
+          const sidebar = document.querySelector('.utilities-sidebar');
+          if (!sidebar) return;
+          window.__incomingStableSnapshot = {
+            active: document.documentElement.classList.contains('utilities-stable-navigation'),
+            sidebar: getComputedStyle(sidebar).viewTransitionName,
+            tile: getComputedStyle(sidebar.querySelector('.utilities-menu > a')).viewTransitionName,
+            surface: getComputedStyle(sidebar.querySelector('.utilities-surface')).viewTransitionName,
+            selection: getComputedStyle(sidebar.querySelector('.utilities-active-indicator')).viewTransitionName
+          };
+        });
       });
     });
     await page.goto('http://localhost:8765/tools/shape-mask/');
@@ -66,6 +78,13 @@ const { chromium } = require('playwright');
     // actual transition was created, beyond just checking the CSS name.
     if (await page.evaluate(() => typeof document.startViewTransition === 'function')) {
       await page.waitForFunction(() => window.__documentTransitionSeen === true);
+      await page.waitForFunction(() => window.__incomingStableSnapshot !== null);
+      const capture = await page.evaluate(() => window.__incomingStableSnapshot);
+      assert.equal(capture.active, true, 'Utility-to-utility should capture a steady sidebar');
+      assert.equal(capture.sidebar, 'utilities-stable-sidebar');
+      assert.equal(capture.tile, 'none', 'Nested tiles must not fade independently');
+      assert.equal(capture.surface, 'none', 'White background should be part of sidebar snapshot');
+      assert.equal(capture.selection, 'utilities-active');
     }
 
     await page.setViewportSize({ width: 375, height: 812 });

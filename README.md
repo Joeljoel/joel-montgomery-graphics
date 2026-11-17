@@ -67,3 +67,12 @@ replaced by overlapping crossfades without a blank interval.
 Arc/Chromium navigation uses the browser's native multi-page transition
 without additional JavaScript interception or page-entry animations. Firefox
 continues to use the persistent iframe shell for tool-to-tool navigation.
+
+### Stable Chromium utility navigation and delayed selection
+
+The tool-page bootstrap registers `pageswap` and `pagereveal` before the
+first frame. On tool-to-tool navigation only, it captures the entire sidebar
+as a single shared image while keeping the selected-item indicator separately
+named so it can slide between rows. The nine named overview tiles remain
+unchanged for overview-to-sidebar transitions. The active blue highlight
+waits until the 600ms overview morph has completed before fading in.

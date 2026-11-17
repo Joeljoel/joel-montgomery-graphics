@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon.png">
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="script.js"></script>
-  <link rel="stylesheet" href="../shared/utilities-shell.css?v=5">
+  <link rel="stylesheet" href="../shared/utilities-shell.css?v=6">
   <script src="../shared/utilities-shell.js?v=5" defer></script>
   <link rel="expect" href="#utilities-ready" blocking="render">
   <script>
@@ -29,6 +29,33 @@
         document.documentElement.classList.add('utilities-fallback-enter');
       }
     } catch {}
+
+    // Before old/new document snapshots: protect the sidebar on a
+    // utility-to-utility navigation, without affecting /tools/ grid morphs.
+    // pagereveal must be registered synchronously in <head>, before paint.
+    {
+      const isUtilityPath = path =>
+        /^\/tools\/(?:shape-mask|stretch-repeat|repeat|stretchable|trim|barcode|qr|image-grid|pdf-inspector)\/?$/.test(path);
+      const setStable = transition => {
+        if (!transition) return;
+        const root = document.documentElement;
+        root.classList.add('utilities-stable-navigation');
+        const cleanup = () => root.classList.remove('utilities-stable-navigation');
+        transition.finished.then(cleanup, cleanup);
+      };
+      window.addEventListener('pageswap', event => {
+        const next = event.activation?.entry?.url;
+        if (next && isUtilityPath(new URL(next).pathname)) {
+          setStable(event.viewTransition);
+        }
+      });
+      window.addEventListener('pagereveal', event => {
+        const previous = window.navigation?.activation?.from?.url;
+        if (previous && isUtilityPath(new URL(previous).pathname)) {
+          setStable(event.viewTransition);
+        }
+      });
+    }
   </script>
 </head>
 <body class="utilities-shell">

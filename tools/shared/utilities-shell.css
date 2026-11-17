@@ -355,6 +355,19 @@ html.utilities-embedded body.utilities-shell > main > .info {
   body.utilities-shell main > .utilities-frame-slot { width: 100%; }
 }
 
+/* Native cross-document tool-to-tool navigation: capture the entire
+   sidebar as one steady image, instead of fading nine separate icon snapshots.
+   Overview navigation retains each independently named tile for the morph. */
+html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar {
+  view-transition-name: utilities-stable-sidebar;
+}
+html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar > .utilities-surface,
+html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar > .utilities-home,
+html.utilities-stable-navigation body.utilities-shell main > .utilities-sidebar .utilities-menu > a {
+  view-transition-name: none;
+}
+/* The active indicator stays independently named so it slides between rows. */
+
 /* Avoid the previous outgoing-then-delayed-incoming blank frames. */
 @keyframes utilities-content-out {
   to { opacity: 0; }
@@ -368,7 +381,28 @@ html.utilities-embedded body.utilities-shell > main > .info {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes utilities-highlight-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes utilities-highlight-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @media (prefers-reduced-motion: no-preference) {
+  /* A stable sidebar snapshot on utility switches prevents icon flicker. */
+  ::view-transition-group(utilities-stable-sidebar) {
+    animation-duration: 300ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+  ::view-transition-old(utilities-stable-sidebar),
+  ::view-transition-new(utilities-stable-sidebar) {
+    animation: none;
+    opacity: 1;
+    mix-blend-mode: normal;
+  }
+
   ::view-transition-group(utilities-surface),
   ::view-transition-group(utilities-brand),
   ::view-transition-group(utilities-tile-shape-mask),
@@ -410,6 +444,14 @@ html.utilities-embedded body.utilities-shell > main > .info {
   ::view-transition-group(utilities-active) {
     animation-duration: 360ms;
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+  /* The highlight only appears on overview -> utility. Delay it until the
+     600ms grid-to-sidebar morph has settled, instead of flashing early. */
+  ::view-transition-new(utilities-active):only-child {
+    animation: 160ms 580ms ease-out both utilities-highlight-in;
+  }
+  ::view-transition-old(utilities-active):only-child {
+    animation: 110ms ease-in both utilities-highlight-out;
   }
   ::view-transition-old(utilities-secret) {
     animation: 180ms ease-out both utilities-content-out;
