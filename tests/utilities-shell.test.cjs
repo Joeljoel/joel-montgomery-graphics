@@ -1,6 +1,8 @@
 // Serve the repository at localhost:8765 and run with Playwright.
 // Validates the shared sidebar without changing the individual tool logic.
 const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
 const { chromium } = require('playwright');
 
 (async () => {
@@ -9,6 +11,11 @@ const { chromium } = require('playwright');
     args: ['--no-sandbox']
   });
   try {
+    const css = readFileSync(join(__dirname, '../tools/shared/utilities-shell.css'), 'utf8');
+    assert.match(css,
+      /::view-transition-new\(utilities-active\):only-child\s*\{\s*animation:\s*160ms 580ms/,
+      'The blue active highlight must fade in after the 600ms overview morph begins settling');
+
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -39,8 +46,11 @@ const { chromium } = require('playwright');
       window.__documentTransitionSeen = false;
       window.__incomingStableSnapshot = null;
       addEventListener('pagereveal', event => {
-        if (event.viewTransition) window.__documentTransitionSeen = true;
-        queueMicrotask(() => {
+        if (!event.viewTransition) return;
+        window.__documentTransitionSeen = true;
+        // This runs after the page's own pagereveal handler has applied the
+        // stable snapshot class, while the transition is still in progress.
+        setTimeout(() => {
           const sidebar = document.querySelector('.utilities-sidebar');
           if (!sidebar) return;
           window.__incomingStableSnapshot = {
@@ -50,7 +60,7 @@ const { chromium } = require('playwright');
             surface: getComputedStyle(sidebar.querySelector('.utilities-surface')).viewTransitionName,
             selection: getComputedStyle(sidebar.querySelector('.utilities-active-indicator')).viewTransitionName
           };
-        });
+        }, 0);
       });
     });
     await page.goto('http://localhost:8765/tools/shape-mask/');
