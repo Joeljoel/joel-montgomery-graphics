@@ -34,14 +34,20 @@ mounted and replaces only the right-hand content using a same-origin iframe.
 The blue active indicator is a live animated layer beneath the menu rows,
 rather than a view-transition overlay. The selected row retains its artwork
 and text throughout the animation. The frame is preserved after loading to
-avoid a second navigation.
+avoid a second navigation. Hover or keyboard focus prepares at most one next
+utility in an off-screen frame, which the click reuses. Normal overview and
+return links prefetch their destination on intent. Reduced-data preferences
+skip the speculative loading.
 
 On Chromium and Safari, overview-to-utility navigation and its reverse use
 native cross-document View Transitions. The white background is rendered as a
 solid rectangle whose dimensions and position interpolate between the actual
 overview and sidebar border boxes; it does not stretch either snapshot's
-intrinsic aspect ratio. All nine tiles move independently and the highlight
-is included in its tile, behind its icon and text, in both directions.
+intrinsic aspect ratio. The corner radius interpolates over the same 400ms
+movement, and the return link is independently captured, fading in after the
+sidebar settles. All nine tiles move independently and the highlight is
+included in its tile, behind its icon and text, in both directions. In-place
+content and selection transitions take about 220ms.
 
 Firefox uses a short overview fade fallback. Older browsers without
 same-document View Transitions use ordinary navigation. Reduced-motion

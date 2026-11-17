@@ -21,7 +21,7 @@ const { chromium } = require('playwright');
       /html\.utilities-inplace-navigation[^}]+\.utilities-menu > a\s*\{\s*view-transition-name:\s*none/s,
       'Sidebar icons and labels must stay live while the right panel changes');
     assert.match(css,
-      /::view-transition-group\(utilities-surface\)\s*\{[^}]*background:\s*#fff[^}]*overflow:\s*clip/s,
+      /::view-transition-image-pair\(utilities-surface\)\s*\{[^}]*background:\s*#fff[^}]*overflow:\s*clip/s,
       'The surface must paint the interpolated rectangle instead of stretching an image');
     assert.match(css,
       /::view-transition-new\(utilities-surface\)\s*\{[^}]*opacity:\s*0/s,
@@ -35,7 +35,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=7', async route => {
+    await slow.route('**/utilities-shell.js?v=8', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
@@ -82,8 +82,23 @@ const { chromium } = require('playwright');
       window.__sidebarIdentity = document.querySelector('.utilities-sidebar');
       window.__mainIdentity = document.querySelector('main');
     });
+    // Moving the pointer onto a tool warms one isolated candidate without
+    // replacing the current panel. The click must reuse the same frame.
+    await page.locator('.utilities-menu a[href="../qr/"]').hover();
+    await page.waitForFunction(() => {
+      const frame = document.querySelector('main > .utilities-frame-slot > iframe');
+      return frame?.contentDocument?.documentElement.classList.contains('utilities-embedded') &&
+        frame.contentDocument.readyState === 'complete';
+    });
+    await page.evaluate(() => {
+      window.__warmFrame = document.querySelector('main > .utilities-frame-slot > iframe');
+    });
+    assert.ok(page.url().endsWith('/tools/shape-mask/'));
     await page.locator('.utilities-menu a[href="../qr/"]').click();
     await page.waitForURL('**/tools/qr/');
+    assert.equal(await page.evaluate(() =>
+      document.querySelector('main > .utilities-frame-slot > iframe') === window.__warmFrame
+    ), true, 'The prepared frame should be reused on click');
     await page.locator('main > .utilities-frame-slot > iframe').waitFor({ state: 'visible' });
     assert.equal(await page.evaluate(() =>
       document.querySelector('.utilities-sidebar') === window.__sidebarIdentity &&

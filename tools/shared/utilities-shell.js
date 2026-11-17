@@ -42,6 +42,33 @@
   const toolPaths = new Set([...sidebar?.querySelectorAll('.utilities-menu > a') || []]
     .map(link => new URL(link.href).pathname));
 
+  // Warm normal document navigation on intent, not all nine heavyweight tools.
+  // The actual native transition still runs on an ordinary link click.
+  const prefetched = new Set();
+  function prefetchDocument(link) {
+    if (!link || navigator.connection?.saveData) return;
+    const url = new URL(link.href, location.href);
+    if (url.origin !== location.origin || !url.pathname.startsWith('/tools/') ||
+        url.pathname === location.pathname || prefetched.has(url.href)) return;
+    prefetched.add(url.href);
+    const hint = document.createElement('link');
+    hint.rel = 'prefetch';
+    hint.as = 'document';
+    hint.href = url.href;
+    document.head.append(hint);
+  }
+  function prefetchNavigation(event) {
+    const link = event.target.closest?.('a[href]');
+    if ((!sidebar && link?.closest('main.card > nav[aria-label="Design utilities"]')) ||
+        link?.matches('.utilities-home, .utilities-overview')) {
+      prefetchDocument(link);
+    }
+  }
+  document.addEventListener('pointerover', event => {
+    if (event.pointerType !== 'touch') prefetchNavigation(event);
+  });
+  document.addEventListener('focusin', prefetchNavigation);
+
   // Older browsers without same-document View Transitions use normal links.
   // Firefox's overview still has the small fade fallback; Arc/Chromium/Safari
   // always keep the native overview morph rather than intercepting it.
@@ -64,7 +91,7 @@
       leaving = true;
       try { sessionStorage.setItem('jm-utilities-next-page', url.pathname); } catch {}
       document.documentElement.classList.add('utilities-fallback-exiting');
-      window.setTimeout(() => location.assign(url.href), 155);
+      window.setTimeout(() => location.assign(url.href), 90);
     });
     return;
   }
@@ -74,6 +101,9 @@
   let requestId = 0;
   let transitionId = 0;
   let selectionMotion = null;
+  let candidate = null;
+  let warmTimer = null;
+  let pendingPath = null;
 
   // The highlight must be a real element BELOW every icon and label.
   // A View Transition snapshot is drawn in a topmost overlay and cannot
@@ -93,6 +123,10 @@
     // The overview transition needs all nine tile names restored before
     // the outgoing capture, even if the user navigates mid-panel-swap.
     document.documentElement.classList.remove('utilities-inplace-navigation');
+    cancelWarmTimer();
+    discardCandidate();
+    clearPending();
+    ++requestId;
   }
   window.addEventListener('pageswap', prepareForNavigationAway);
   window.addEventListener('pagehide', prepareForNavigationAway);
@@ -141,7 +175,7 @@
         { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' +
             (from.width / to.width) + ',' + (from.height / to.height) + ')' },
         { transform: 'translate(0,0) scale(1,1)' }
-      ], { duration: 340, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'both' });
+      ], { duration: 220, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'both' });
       selectionMotion = animation;
       animation.onfinish = () => {
         if (selectionMotion !== animation) return;
@@ -162,7 +196,9 @@
   }
 
   function swapPanel(target, path, title, push) {
+    const request = requestId;
     const doSwap = () => {
+      if (request !== requestId) return;
       main.querySelector(':scope > .card')?.remove();
       main.querySelector(':scope > .info')?.remove();
       main.querySelectorAll(':scope > .utilities-frame-slot').forEach(slot => {
@@ -184,6 +220,7 @@
         // Grid placement puts the slot in the correct column without a move.
       }
       updateSelection(path);
+      clearPending();
       document.title = title;
       if (push) history.pushState({ utilitiesPanel: true }, '', path);
     };
@@ -244,21 +281,38 @@
     resize();
   }
 
-  function navigate(path, push) {
-    if (!toolPaths.has(path)) return false;
-    const id = ++requestId;
-    // Cancel stale preloads when the user changes their selection quickly.
-    main.querySelectorAll(':scope > .utilities-frame-slot[style*="position: absolute"]').forEach(
-      slot => slot.remove()
-    );
-    if (path === initialPath) {
-      if (cleanupFrame) { cleanupFrame(); cleanupFrame = null; }
-      swapPanel('original', path, initialTitle, push);
-      return true;
-    }
+  function cancelWarmTimer() {
+    clearTimeout(warmTimer);
+    warmTimer = null;
+  }
 
+  function clearPending() {
+    pendingPath = null;
+    menu.querySelectorAll('[data-utilities-pending]').forEach(link =>
+      link.removeAttribute('data-utilities-pending'));
+  }
+
+  function showPending(path) {
+    clearPending();
+    pendingPath = path;
+    [...menu.querySelectorAll('a[href]')].find(link =>
+      new URL(link.href).pathname === path)?.setAttribute('data-utilities-pending', '');
+  }
+
+  function discardCandidate() {
+    if (!candidate) return;
+    candidate.slot.remove();
+    candidate = null;
+  }
+
+  // Keep at most one off-screen, ready-to-use tool. A brief hover or keyboard
+  // focus predicts intent; a normal click can reuse the exact loaded frame.
+  // This does not navigate the host or change the selected tool until clicked.
+  function createCandidate(path) {
     const slot = document.createElement('div');
     slot.className = 'utilities-frame-slot';
+    slot.setAttribute('aria-hidden', 'true');
+    slot.inert = true;
     // Load at the exact panel width without shifting the current page.
     const panelWidth = visiblePanel()?.getBoundingClientRect().width || 800;
     slot.style.cssText = 'position:absolute;left:-10000px;top:0;visibility:hidden;' +
@@ -270,16 +324,65 @@
     frame.setAttribute('loading', 'eager');
     const url = new URL(path, location.origin);
     url.searchParams.set('utilitiesFrame', '1');
-    frame.addEventListener('load', () => {
-      if (id !== requestId) { slot.remove(); return; }
-      activateFrame(frame, slot, path, push);
-    }, { once: true });
-    frame.addEventListener('error', () => {
-      if (id === requestId) location.assign(path);
-    }, { once: true });
+    const ready = new Promise(resolve => {
+      frame.addEventListener('load', () => resolve(true), { once: true });
+      frame.addEventListener('error', () => resolve(false), { once: true });
+    });
     frame.src = url.href;
     slot.append(frame);
     main.append(slot);
+    return { path, slot, frame, ready };
+  }
+
+  function warmTool(event) {
+    if (event.pointerType === 'touch' || navigator.connection?.saveData) return;
+    const link = event.target.closest?.('.utilities-menu > a[href]');
+    if (!link || pendingPath || (event.type === 'pointerover' && link.contains(event.relatedTarget))) return;
+    const path = new URL(link.href).pathname;
+    cancelWarmTimer();
+    if (!toolPaths.has(path) || path === location.pathname || path === initialPath ||
+        candidate?.path === path) return;
+    warmTimer = setTimeout(() => {
+      if (pendingPath || path === location.pathname) return;
+      discardCandidate();
+      candidate = createCandidate(path);
+    }, 100);
+  }
+  sidebar.addEventListener('pointerover', warmTool);
+  sidebar.addEventListener('pointerleave', cancelWarmTimer);
+  sidebar.addEventListener('focusin', warmTool);
+  sidebar.addEventListener('focusout', cancelWarmTimer);
+
+  function navigate(path, push) {
+    if (!toolPaths.has(path)) return false;
+    const id = ++requestId;
+    cancelWarmTimer();
+    showPending(path);
+    if (path === initialPath) {
+      discardCandidate();
+      if (cleanupFrame) { cleanupFrame(); cleanupFrame = null; }
+      swapPanel('original', path, initialTitle, push);
+      return true;
+    }
+
+    if (candidate?.path !== path) {
+      discardCandidate();
+      candidate = createCandidate(path);
+    }
+    const next = candidate;
+    next.ready.then(loaded => {
+      if (id !== requestId || candidate !== next) return;
+      if (!loaded) {
+        discardCandidate();
+        clearPending();
+        location.assign(path);
+        return;
+      }
+      candidate = null;
+      next.slot.removeAttribute('aria-hidden');
+      next.slot.inert = false;
+      activateFrame(next.frame, next.slot, path, push);
+    });
     return true;
   }
 
@@ -297,10 +400,11 @@
     if (url.origin !== location.origin || !toolPaths.has(url.pathname)) return;
     event.preventDefault();
     if (url.pathname === location.pathname) {
+      if (pendingPath && !candidate) return;
       ++requestId;
-      main.querySelectorAll(':scope > .utilities-frame-slot[style*="position: absolute"]').forEach(
-        slot => slot.remove()
-      );
+      cancelWarmTimer();
+      discardCandidate();
+      clearPending();
       return;
     }
     navigate(url.pathname, true);

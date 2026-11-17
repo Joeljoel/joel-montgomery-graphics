@@ -6,7 +6,24 @@
    The original parent snapshots caused the entire sidebar to disappear. */
 /* Keep a complete, stable backdrop for cross-document capture. In-place
    tool switching explicitly disables the root capture below. */
-:root { view-transition-name: root; background: #2184fc; }
+:root {
+  view-transition-name: root;
+  background: #2184fc;
+  --utilities-morph-duration: 400ms;
+  --utilities-morph-easing: cubic-bezier(.22, 1, .36, 1);
+  --utilities-overview-radius: 18px;
+  --utilities-sidebar-radius: 12px;
+  /* The destination document determines which way the radius travels. */
+  --utilities-radius-from: var(--utilities-sidebar-radius);
+  --utilities-radius-to: var(--utilities-overview-radius);
+}
+:root:has(body.utilities-shell) {
+  --utilities-radius-from: var(--utilities-overview-radius);
+  --utilities-radius-to: var(--utilities-sidebar-radius);
+}
+@media (max-width: 620px) {
+  :root { --utilities-overview-radius: 14px; }
+}
 html.utilities-inplace-navigation { view-transition-name: none; }
 
 body > main.card,
@@ -178,6 +195,23 @@ body.utilities-shell main > nav {
   font-weight: 500;
 }
 .utilities-sidebar .utilities-overview:hover { color: #176ac8; text-decoration: underline; }
+/* This link has no counterpart in the overview. Capture it separately, so
+   it never leaks into the root snapshot underneath the moving white panel. */
+.utilities-sidebar .utilities-overview {
+  view-transition-name: utilities-back-link;
+}
+.utilities-sidebar .utilities-toggle {
+  view-transition-name: utilities-mobile-toggle;
+}
+.utilities-sidebar .utilities-menu a[data-utilities-pending] {
+  background: #f0f6ff;
+  color: #176ac8;
+  cursor: progress;
+}
+.utilities-sidebar .utilities-menu a:active,
+body > main.card > nav > a:active {
+  background: #e5efff;
+}
 .utilities-sidebar a:focus-visible,
 .utilities-sidebar button:focus-visible {
   outline: 3px solid #083f81;
@@ -381,6 +415,8 @@ html.utilities-embedded body.utilities-shell > main > .info {
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar,
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-surface,
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-home,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-overview,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-toggle,
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-menu > a {
   view-transition-name: none;
 }
@@ -398,8 +434,12 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   to { opacity: 1; }
 }
 @keyframes utilities-content-first-in {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes utilities-surface-radius {
+  from { border-radius: var(--utilities-radius-from); }
+  to { border-radius: var(--utilities-radius-to); }
 }
 
 /* The browser interpolates the group's width, height and position; fill
@@ -418,8 +458,8 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   ::view-transition-group(utilities-tile-qr),
   ::view-transition-group(utilities-tile-image-grid),
   ::view-transition-group(utilities-tile-pdf-inspector) {
-    animation-duration: 600ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+    animation-duration: var(--utilities-morph-duration);
+    animation-timing-function: var(--utilities-morph-easing);
   }
 
   /* Do not let the incoming snapshot's intrinsic aspect ratio determine
@@ -427,26 +467,30 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
      border box to the EXACT new border box. Paint that rectangle itself. */
   ::view-transition-group(root) {
     z-index: 0;
-    animation-duration: 600ms;
+    animation-duration: var(--utilities-morph-duration);
     background: #2184fc;
   }
+  /* All visible UI has a named capture. Keeping only the solid blue root
+     backdrop avoids a one-frame composite of the destination's unnamed UI. */
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
-    opacity: 1;
+    opacity: 0;
     mix-blend-mode: normal;
   }
   ::view-transition-group(utilities-surface) {
     z-index: 1;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px #15151633;
-    overflow: clip;
+    /* The UA handles geometry; the image pair below paints the surface. */
+    overflow: visible;
   }
   ::view-transition-image-pair(utilities-surface) {
     width: 100%;
     height: 100%;
+    background: #fff;
+    border-radius: var(--utilities-radius-to);
+    box-shadow: 0 2px 4px #15151633;
     overflow: clip;
+    animation: utilities-surface-radius var(--utilities-morph-duration) var(--utilities-morph-easing) both;
   }
   ::view-transition-old(utilities-surface),
   ::view-transition-new(utilities-surface) {
@@ -460,6 +504,8 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   ::view-transition-group(utilities-description) { z-index: 2; }
   ::view-transition-group(utilities-brand),
   ::view-transition-group(utilities-secret),
+  ::view-transition-group(utilities-back-link),
+  ::view-transition-group(utilities-mobile-toggle),
   ::view-transition-group(utilities-tile-shape-mask),
   ::view-transition-group(utilities-tile-stretch-repeat),
   ::view-transition-group(utilities-tile-repeat),
@@ -514,37 +560,53 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
 
   /* Both content snapshots overlap throughout the utility-to-utility swap. */
   ::view-transition-group(utilities-content) {
-    animation-duration: 340ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+    animation-duration: 220ms;
+    animation-timing-function: var(--utilities-morph-easing);
   }
   ::view-transition-old(utilities-content) {
-    animation: 320ms ease-in-out both utilities-content-out;
+    animation: 210ms ease-in-out both utilities-content-out;
   }
   ::view-transition-new(utilities-content) {
-    animation: 320ms ease-in-out both utilities-content-in;
+    animation: 210ms ease-in-out both utilities-content-in;
   }
-  /* This only applies when arriving from /tools/: no old content exists. */
+  /* Start the new tool as the navigation panel is moving, rather than
+     holding it invisible for an additional tenth of a second. */
   ::view-transition-new(utilities-content):only-child {
-    animation: 350ms 110ms cubic-bezier(.22, 1, .36, 1) both utilities-content-first-in;
+    animation: 240ms 35ms var(--utilities-morph-easing) both utilities-content-first-in;
   }
 
+  /* The return link appears only when the sidebar is in its final position.
+     On the way back, it leaves quickly with the departing sidebar. */
+  ::view-transition-group(utilities-back-link),
+  ::view-transition-group(utilities-mobile-toggle) {
+    animation-duration: var(--utilities-morph-duration);
+  }
+  ::view-transition-new(utilities-back-link):only-child,
+  ::view-transition-new(utilities-mobile-toggle):only-child {
+    animation: 100ms var(--utilities-morph-duration) ease-out both utilities-content-in;
+  }
+  ::view-transition-old(utilities-back-link):only-child,
+  ::view-transition-old(utilities-mobile-toggle):only-child {
+    animation: 100ms ease-in both utilities-content-out;
+  }
   ::view-transition-old(utilities-secret) {
-    animation: 180ms ease-out both utilities-content-out;
+    animation: 120ms ease-out both utilities-content-out;
   }
 
   /* Only Firefox's overview fallback should use CSS page-entry fades. */
   html.utilities-fallback-exiting body > main.card,
   html.utilities-fallback-exiting body.utilities-shell main > .card {
-    animation: 155ms ease-out both utilities-content-out;
+    animation: 90ms ease-out both utilities-content-out;
   }
   html.utilities-fallback-enter body > main.card,
   html.utilities-fallback-enter body.utilities-shell main > .card {
-    animation: 250ms ease-in both utilities-content-in;
+    animation: 160ms ease-out both utilities-content-in;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
   ::view-transition-group(*),
+  ::view-transition-image-pair(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
     animation-duration: 0.01ms !important;
