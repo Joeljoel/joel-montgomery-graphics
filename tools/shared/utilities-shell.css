@@ -1,0 +1,249 @@
+/* The overview and individual utilities remain distinct HTML documents.
+   Cross-document view transitions enhance ordinary same-origin links when supported. */
+@view-transition { navigation: auto; }
+
+body > main.card,
+body.utilities-shell main > .card {
+  view-transition-name: utilities-panel;
+}
+
+body.utilities-shell main {
+  width: min(1290px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 20px;
+  align-content: center;
+  align-items: start;
+}
+
+body.utilities-shell main > .utilities-sidebar {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: start;
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+body.utilities-shell main > .card {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  width: 100%;
+  border-radius: 12px;
+}
+body.utilities-shell main > .info {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  view-transition-name: utilities-description;
+}
+body.utilities-shell main > nav {
+  display: none;
+}
+
+.utilities-sidebar {
+  padding: 18px 12px 14px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px #15151633;
+  font: 14px/1.35 Roboto, Arial, sans-serif;
+  color: #2c2e2f;
+  view-transition-name: utilities-sidebar;
+}
+.utilities-sidebar *, .utilities-sidebar *::before, .utilities-sidebar *::after {
+  box-sizing: border-box;
+}
+.utilities-sidebar .utilities-home {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0 7px 15px;
+  color: #2c2e2f;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+  line-height: 1.2;
+}
+.utilities-sidebar .utilities-home img { width: 30px; height: 30px; flex: none; }
+.utilities-sidebar .utilities-home:hover { color: #216dce; }
+.utilities-sidebar .utilities-menu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font-size: inherit;
+}
+.utilities-sidebar .utilities-menu a {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 5px 8px;
+  border-radius: 9px;
+  background: transparent;
+  color: #343a40;
+  text-decoration: none;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.utilities-sidebar .utilities-menu a:hover {
+  background: #f3f6fb;
+  color: #176ac8;
+}
+.utilities-sidebar .utilities-menu a[aria-current="page"] {
+  color: #145eb2;
+  font-weight: 600;
+}
+.utilities-sidebar .utilities-menu img {
+  display: block;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+.utilities-sidebar .utilities-active-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 9px;
+  background: #eaf3ff;
+  box-shadow: inset 0 0 0 1px #d6e7ff;
+  view-transition-name: utilities-active;
+}
+.utilities-sidebar .utilities-name { flex: 1; min-width: 0; }
+.utilities-sidebar .utilities-overview {
+  display: inline-block;
+  margin: 14px 8px 2px;
+  color: #416a9a;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+.utilities-sidebar .utilities-overview:hover { color: #176ac8; text-decoration: underline; }
+.utilities-sidebar a:focus-visible,
+.utilities-sidebar button:focus-visible {
+  outline: 3px solid #083f81;
+  outline-offset: 2px;
+}
+.utilities-sidebar .utilities-toggle { display: none; }
+
+@media (max-width: 960px) {
+  body.utilities-shell main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: min(900px, 100%);
+    padding: 24px 16px;
+    gap: 0;
+  }
+  body.utilities-shell main > .utilities-sidebar {
+    position: static;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  body.utilities-shell main > .card,
+  body.utilities-shell main > .info {
+    width: 100%;
+  }
+  .utilities-sidebar { padding: 12px; }
+  .utilities-sidebar .utilities-home { margin: 2px 4px 12px; font-size: 16px; }
+  .utilities-sidebar .utilities-home img { width: 26px; height: 26px; }
+  .utilities-sidebar .utilities-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 66px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border: 1px solid #e3e8ef;
+    border-radius: 9px;
+    background: #f5f7fa;
+    color: #2c2e2f;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+  }
+  .utilities-sidebar .utilities-toggle:hover { background: #edf4ff; }
+  .utilities-sidebar .utilities-toggle img {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    object-fit: contain;
+  }
+  .utilities-sidebar .utilities-toggle-copy { flex: 1; min-width: 0; }
+  .utilities-sidebar .utilities-toggle-copy small {
+    display: block;
+    color: #6b7280;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .utilities-sidebar .utilities-toggle-copy strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .utilities-sidebar .utilities-toggle-chevron {
+    flex: 0 0 9px;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid #5d6a79;
+    border-bottom: 2px solid #5d6a79;
+    transform: rotate(45deg);
+    transition: transform 180ms ease;
+    margin: -4px 5px 0;
+  }
+  .utilities-sidebar.is-open .utilities-toggle-chevron { transform: rotate(225deg); margin-top: 4px; }
+  .utilities-sidebar .utilities-menu { display: none; }
+  .utilities-sidebar.is-open .utilities-menu {
+    display: grid;
+    max-height: min(58vh, 470px);
+    overflow-y: auto;
+    padding-top: 10px;
+  }
+  .utilities-sidebar .utilities-overview { margin: 10px 7px 2px; }
+}
+
+@media (max-width: 620px) {
+  body.utilities-shell main { padding: 20px 12px; }
+  body.utilities-shell main > .card { border-radius: 10px; }
+}
+
+/* The cards, sidebar, and selected row can transition independently.
+   Unsupported browsers still navigate between standard HTML documents. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(utilities-panel) {
+    animation-duration: 320ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+  ::view-transition-old(utilities-panel) { animation-duration: 170ms; }
+  ::view-transition-new(utilities-panel) { animation-duration: 260ms; }
+  ::view-transition-group(utilities-sidebar) { animation-duration: 280ms; }
+  ::view-transition-group(utilities-active) {
+    animation-duration: 290ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+  ::view-transition-new(utilities-description) { animation-duration: 220ms; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root),
+  ::view-transition-group(utilities-panel),
+  ::view-transition-group(utilities-sidebar),
+  ::view-transition-group(utilities-active),
+  ::view-transition-group(utilities-description) {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+  .utilities-sidebar .utilities-toggle-chevron { transition: none; }
+}
