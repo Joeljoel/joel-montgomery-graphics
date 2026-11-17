@@ -19,6 +19,18 @@ The [Design Utilities page](https://joelmontgomery.graphics/tools/) brings toget
 
 Each tool includes its own usage instructions.
 
+### Utility navigation
+
+The nine utility pages share a progressively enhanced sidebar defined in
+`tools/shared/utilities-shell.js` and `utilities-shell.css`. The sidebar reuses
+the existing /tools card artwork, highlights the active utility and collapses
+into a mobile selector. The basketball Easter egg stays on the /tools overview
+and is deliberately omitted from the sidebar.
+
+Each utility remains a standalone HTML document with its original script and
+URL. Same-origin document navigation uses CSS View Transitions where available,
+with standard page loads and reduced-motion fallbacks elsewhere.
+
 ## Other projects
 
 The site also includes [Joeldle](https://joelmontgomery.graphics/joeldle/), [Joelculator](https://joelmontgomery.graphics/calculator/) and a few hidden extras.
