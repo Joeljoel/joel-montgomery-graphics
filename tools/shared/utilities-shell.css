@@ -1,5 +1,5 @@
-/* The overview and individual utilities remain distinct HTML documents.
-   Cross-document view transitions enhance ordinary same-origin links when supported. */
+/* The sidebar is present in HTML before the first paint. Native document
+   transitions are an enhancement over normal same-origin navigation. */
 @view-transition { navigation: auto; }
 
 body > main.card,
@@ -160,7 +160,7 @@ body.utilities-shell main > nav {
   .utilities-sidebar { padding: 12px; }
   .utilities-sidebar .utilities-home { margin: 2px 4px 12px; font-size: 16px; }
   .utilities-sidebar .utilities-home img { width: 26px; height: 26px; }
-  .utilities-sidebar .utilities-toggle {
+  html.utilities-has-js .utilities-sidebar .utilities-toggle {
     display: flex;
     width: 100%;
     min-height: 66px;
@@ -205,8 +205,14 @@ body.utilities-shell main > nav {
     margin: -4px 5px 0;
   }
   .utilities-sidebar.is-open .utilities-toggle-chevron { transform: rotate(225deg); margin-top: 4px; }
-  .utilities-sidebar .utilities-menu { display: none; }
-  .utilities-sidebar.is-open .utilities-menu {
+  /* The full menu remains accessible if JavaScript is disabled. */
+  .utilities-sidebar .utilities-menu {
+    display: grid;
+    max-height: min(58vh, 470px);
+    overflow-y: auto;
+  }
+  html.utilities-has-js .utilities-sidebar .utilities-menu { display: none; }
+  html.utilities-has-js .utilities-sidebar.is-open .utilities-menu {
     display: grid;
     max-height: min(58vh, 470px);
     overflow-y: auto;
@@ -222,19 +228,50 @@ body.utilities-shell main > nav {
 
 /* The cards, sidebar, and selected row can transition independently.
    Unsupported browsers still navigate between standard HTML documents. */
+@keyframes utilities-panel-exit {
+  to { opacity: 0; transform: translateY(-9px) scale(.99); }
+}
+@keyframes utilities-panel-enter {
+  from { opacity: 0; transform: translateY(11px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes utilities-sidebar-enter {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-group(utilities-panel) {
-    animation-duration: 320ms;
+    animation-duration: 330ms;
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
   }
-  ::view-transition-old(utilities-panel) { animation-duration: 170ms; }
-  ::view-transition-new(utilities-panel) { animation-duration: 260ms; }
-  ::view-transition-group(utilities-sidebar) { animation-duration: 280ms; }
+  ::view-transition-old(utilities-panel) {
+    animation: 160ms ease-in both utilities-panel-exit;
+  }
+  ::view-transition-new(utilities-panel) {
+    animation: 300ms cubic-bezier(.22, 1, .36, 1) both utilities-panel-enter;
+  }
+  ::view-transition-group(utilities-sidebar) { animation-duration: 0ms; }
+  ::view-transition-old(utilities-sidebar),
+  ::view-transition-new(utilities-sidebar) { animation: none; }
+  /* Animate its appearance from /tools/, but not between utilities. */
+  ::view-transition-new(utilities-sidebar):only-child {
+    animation: 270ms cubic-bezier(.22, 1, .36, 1) both utilities-sidebar-enter;
+  }
   ::view-transition-group(utilities-active) {
-    animation-duration: 290ms;
+    animation-duration: 330ms;
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
   }
   ::view-transition-new(utilities-description) { animation-duration: 220ms; }
+
+  /* Older browsers still get a gentle panel exit / entrance on navigation. */
+  html.utilities-fallback-exiting body > main.card,
+  html.utilities-fallback-exiting body.utilities-shell main > .card {
+    animation: 150ms ease-in both utilities-panel-exit;
+  }
+  html.utilities-fallback-enter body > main.card,
+  html.utilities-fallback-enter body.utilities-shell main > .card {
+    animation: 280ms cubic-bezier(.22, 1, .36, 1) both utilities-panel-enter;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root),

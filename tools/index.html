@@ -9,7 +9,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="50x50" href="assets/utilities-favicon-group-11.png">
   <link rel="stylesheet" href="styles.css?v=paper-icons-1">
-  <link rel="stylesheet" href="shared/utilities-shell.css?v=1">
+  <link rel="stylesheet" href="shared/utilities-shell.css?v=2">
+  <script src="shared/utilities-shell.js?v=2" defer></script>
+  <link rel="expect" href="#utilities-ready" blocking="render">
+  <script>
+    // Set responsive layout and fallback entry state before first render.
+    document.documentElement.classList.add('utilities-has-js');
+    try {
+      const key = 'jm-utilities-next-page';
+      const target = sessionStorage.getItem(key);
+      if (target) sessionStorage.removeItem(key);
+      if (target === location.pathname && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('utilities-fallback-enter');
+      }
+    } catch {}
+  </script>
 </head>
 <body>
   <main class="card">
@@ -25,6 +39,7 @@
       <a href="image-grid/"><img class="tool-icon" src="assets/icons/image-grid-paper.png" alt="" width="72" height="72"><span class="tool-copy"><span class="tool-name">Image Reference<br>Grid</span><span class="tool-subtitle">Arrange images for screenshots</span></span><span class="chevron" aria-hidden="true"></span></a>
       <a href="pdf-inspector/"><img class="tool-icon" src="assets/icons/pdf-inspector-paper.png" alt="" width="72" height="72"><span class="tool-copy"><span class="tool-name">PDF<br>Inspector</span><span class="tool-subtitle">Check finished size, crop and bleed</span></span><span class="chevron" aria-hidden="true"></span></a>
     </nav>
+    <span id="utilities-ready" hidden></span>
   </main>
   <script>
     window.setTimeout(() => {

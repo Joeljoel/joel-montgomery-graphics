@@ -2,10 +2,44 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bulk QR Code Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css"><script type="module" src="script.js"></script>  <link rel="stylesheet" href="../shared/utilities-shell.css?v=1">
-  <script src="../shared/utilities-shell.js?v=1" defer></script>
+<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css"><script type="module" src="script.js"></script>  <link rel="stylesheet" href="../shared/utilities-shell.css?v=2">
+  <script src="../shared/utilities-shell.js?v=2" defer></script>
+  <link rel="expect" href="#utilities-ready" blocking="render">
+  <script>
+    // Set responsive layout and fallback entry state before first render.
+    document.documentElement.classList.add('utilities-has-js');
+    try {
+      const key = 'jm-utilities-next-page';
+      const target = sessionStorage.getItem(key);
+      if (target) sessionStorage.removeItem(key);
+      if (target === location.pathname && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('utilities-fallback-enter');
+      }
+    } catch {}
+  </script>
 </head>
-<body><main><section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Bulk QR Code Generator</h1></header>
+<body class="utilities-shell"><main>
+    <aside class="utilities-sidebar" aria-label="Design utilities">
+      <a class="utilities-home" href="../" aria-label="All design utilities"><img src="../assets/easilLogo.png" alt="" width="30" height="30"><span>Design Utilities</span></a>
+      <button class="utilities-toggle" type="button" aria-controls="utilities-navigation" aria-expanded="false" aria-label="Browse utilities. Current: Bulk QR Code Generator">
+        <img src="../assets/icons/qr-paper.png" alt="" width="42" height="42">
+        <span class="utilities-toggle-copy"><small>Current utility</small><strong>Bulk QR Code Generator</strong></span>
+        <span class="utilities-toggle-chevron" aria-hidden="true"></span>
+      </button>
+      <nav id="utilities-navigation" class="utilities-menu" aria-label="Choose a design utility">
+        <a href="../shape-mask/"><img src="../assets/icons/shape-mask-paper.png" alt="" width="42" height="42"><span class="utilities-name">Shape Mask Converter</span></a>
+        <a href="../stretch-repeat/"><img src="../assets/icons/stretch-repeat-paper-v2.png" alt="" width="42" height="42"><span class="utilities-name">Stretch &amp; Repeat Converter</span></a>
+        <a href="../repeat/"><img src="../assets/icons/repeat-paper-v2.png" alt="" width="42" height="42"><span class="utilities-name">Repeating Shape Converter</span></a>
+        <a href="../stretchable/"><img src="../assets/icons/stretchable-paper.png" alt="" width="42" height="42"><span class="utilities-name">Stretchable Shape Converter</span></a>
+        <a href="../trim/"><img src="../assets/icons/trim-plastic.png" alt="" width="42" height="42"><span class="utilities-name">Trim SVG Contents</span></a>
+        <a href="../barcode/"><img src="../assets/icons/barcode-paper.png" alt="" width="42" height="42"><span class="utilities-name">Barcode Data Merge</span></a>
+        <a href="../qr/" aria-current="page"><span class="utilities-active-indicator" aria-hidden="true"></span><img src="../assets/icons/qr-paper.png" alt="" width="42" height="42"><span class="utilities-name">Bulk QR Code Generator</span></a>
+        <a href="../image-grid/"><img src="../assets/icons/image-grid-paper.png" alt="" width="42" height="42"><span class="utilities-name">Image Reference Grid</span></a>
+        <a href="../pdf-inspector/"><img src="../assets/icons/pdf-inspector-paper.png" alt="" width="42" height="42"><span class="utilities-name">PDF Inspector</span></a>
+      </nav>
+      <a class="utilities-overview" href="../">← All utilities</a>
+    </aside>
+<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Bulk QR Code Generator</h1></header>
 <fieldset id="inputs">
 <button type="button" id="drop">Click or drop a CSV, TSV or TXT file here</button><input id="file" type="file" accept=".csv,.tsv,.txt,text/plain,text/csv,text/tab-separated-values" hidden>
 <label for="paste">Or paste links, text or spreadsheet cells</label><textarea id="paste" rows="5" placeholder="One link per line, or paste columns from a spreadsheet" spellcheck="false"></textarea>
@@ -15,4 +49,5 @@
 <p id="count"></p><p id="warning" class="hint"></p><div id="preview" aria-label="QR previews"></div>
 </section></fieldset>
 <p id="status" role="status" aria-live="polite"></p><div class="actions"><button id="download" disabled>Download ZIP</button><button id="cancel" hidden>Cancel</button></div>
-</section><p class="info">Create a batch of QR codes from a list or spreadsheet. Choose the content and filenames, then download PNG or SVG files together in a ZIP.</p><nav><a href="../">All utilities</a></nav></main></body></html>
+</section><p class="info">Create a batch of QR codes from a list or spreadsheet. Choose the content and filenames, then download PNG or SVG files together in a ZIP.</p><nav><a href="../">All utilities</a></nav>  <span id="utilities-ready" hidden></span>
+  </main></body></html>
