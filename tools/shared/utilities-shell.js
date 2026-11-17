@@ -19,11 +19,14 @@
   }
 
   // Let the browser animate cross-document navigations where supported.
-  // Older browsers receive an exit + entrance animation around a normal link.
+  // Browsers without cross-document support get a brief exit + entrance effect.
+  // Firefox supports same-document startViewTransition() but still not
+  // cross-document @view-transition navigation. Check the MPA events and
+  // at-rule interface instead of the unrelated same-document API.
   const nativeTransitions =
-    typeof document.startViewTransition === 'function' &&
-    typeof CSS !== 'undefined' &&
-    CSS.supports('view-transition-name', 'utilities-panel');
+    'onpageswap' in window &&
+    'onpagereveal' in window &&
+    typeof CSSViewTransitionRule !== 'undefined';
   if (nativeTransitions) return;
 
   let leaving = false;

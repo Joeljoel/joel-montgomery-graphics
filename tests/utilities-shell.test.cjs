@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=2', async route => {
+    await slow.route('**/utilities-shell.js?v=3', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
@@ -90,7 +90,7 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('nav[aria-label="Design utilities"] > a').count(), 9);
     assert.equal(await page.locator('main.card').evaluate(
       element => getComputedStyle(element).viewTransitionName
-    ), 'utilities-panel');
+    ), 'utilities-sidebar');
 
     // The overview retains its illustrated cards and transitions into the shell.
     const overviewIcons = await page.locator('nav[aria-label="Design utilities"] > a .tool-icon')
@@ -101,13 +101,32 @@ const { chromium } = require('playwright');
       .evaluateAll(images => images.map(image => image.getAttribute('src').split('/').pop()));
     assert.deepEqual(sidebarIcons, overviewIcons);
     assert.equal(await page.locator('.utilities-sidebar').isVisible(), true);
+    // Both the overview card and this utility sidebar must share the name;
+    // the right content card must use a different name, so it can enter.
+    assert.equal(await page.locator('.utilities-sidebar').evaluate(
+      element => getComputedStyle(element).viewTransitionName
+    ), 'utilities-sidebar');
+    assert.equal(await page.locator('main > .card').evaluate(
+      element => getComputedStyle(element).viewTransitionName
+    ), 'utilities-panel');
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('http://localhost:8765/tools/pdf-inspector/');
     assert.equal(await page.locator('.utilities-sidebar').isVisible(), true);
     assert.equal(await page.locator('#drop-zone').count(), 1);
+    assert.equal(await page.evaluate(() =>
+      [...document.styleSheets].some(sheet => {
+        try {
+          return [...sheet.cssRules].some(rule =>
+            rule.constructor?.name === 'CSSMediaRule' &&
+            rule.conditionText === '(prefers-reduced-motion: reduce)' &&
+            [...rule.cssRules].some(nested => nested.cssText.includes('@view-transition'))
+          );
+        } catch { return false; }
+      }
+    ), true);
     assert.deepEqual(errors, []);
-    console.log('PASS: static sidebar before JS, cross-document transition, icons, responsive navigation and reduced motion');
+    console.log('PASS: actual overview/sidebar morph pairing, cross-document transition, icons, responsive navigation and reduced motion');
   } finally {
     await browser.close();
   }

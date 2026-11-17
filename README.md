@@ -29,8 +29,10 @@ collapses into a mobile selector. The basketball Easter egg stays on the /tools 
 and is deliberately omitted from the sidebar.
 
 Each utility remains a standalone HTML document with its original script and
-URL. Same-origin document navigation uses CSS View Transitions where available,
-with a short exit/entrance animation on older browsers and reduced-motion support.
+URL. Same-origin document navigation uses CSS View Transitions where available.
+The main /tools/ overview panel morphs into the left sidebar; the right utility
+panel enters independently. Older browsers use a short exit/entrance fallback;
+reduced-motion preferences disable the navigation animation.
 
 ## Other projects
 

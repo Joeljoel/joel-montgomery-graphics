@@ -2,10 +2,12 @@
    transitions are an enhancement over normal same-origin navigation. */
 @view-transition { navigation: auto; }
 
-body > main.card,
-body.utilities-shell main > .card {
-  view-transition-name: utilities-panel;
-}
+/* The illustrated /tools/ overview morphs directly into the LEFT sidebar.
+   The right-hand tool panel enters separately. Do not capture the whole
+   viewport as root, since its crossfade would obscure the shared element. */
+:root { view-transition-name: none; background: #2184fc; }
+body > main.card { view-transition-name: utilities-sidebar; }
+body.utilities-shell main > .card { view-transition-name: utilities-panel; }
 
 body.utilities-shell main {
   width: min(1290px, 100%);
@@ -232,8 +234,15 @@ body.utilities-shell main > nav {
   to { opacity: 0; transform: translateY(-9px) scale(.99); }
 }
 @keyframes utilities-panel-enter {
-  from { opacity: 0; transform: translateY(11px) scale(.99); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translate(25px, 7px) scale(.985); }
+  to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+@keyframes utilities-snapshot-out {
+  to { opacity: 0; }
+}
+@keyframes utilities-snapshot-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes utilities-sidebar-enter {
   from { opacity: 0; transform: translateX(-12px); }
@@ -248,14 +257,23 @@ body.utilities-shell main > nav {
     animation: 160ms ease-in both utilities-panel-exit;
   }
   ::view-transition-new(utilities-panel) {
-    animation: 300ms cubic-bezier(.22, 1, .36, 1) both utilities-panel-enter;
+    animation: 360ms 115ms cubic-bezier(.22, 1, .36, 1) both utilities-panel-enter;
   }
-  ::view-transition-group(utilities-sidebar) { animation-duration: 0ms; }
-  ::view-transition-old(utilities-sidebar),
-  ::view-transition-new(utilities-sidebar) { animation: none; }
-  /* Animate its appearance from /tools/, but not between utilities. */
-  ::view-transition-new(utilities-sidebar):only-child {
-    animation: 270ms cubic-bezier(.22, 1, .36, 1) both utilities-sidebar-enter;
+  /* The white surface physically changes position and dimensions:
+     overview card <-> sidebar. The snapshots fade inside that surface. */
+  ::view-transition-group(utilities-sidebar) {
+    animation-duration: 520ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px #15151633;
+    overflow: clip;
+  }
+  ::view-transition-old(utilities-sidebar) {
+    animation: 165ms ease-in both utilities-snapshot-out;
+  }
+  ::view-transition-new(utilities-sidebar) {
+    animation: 230ms 160ms ease-out both utilities-snapshot-in;
   }
   ::view-transition-group(utilities-active) {
     animation-duration: 330ms;
@@ -274,6 +292,7 @@ body.utilities-shell main > nav {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
   ::view-transition-old(root), ::view-transition-new(root),
   ::view-transition-group(utilities-panel),
   ::view-transition-group(utilities-sidebar),
