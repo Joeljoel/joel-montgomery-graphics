@@ -73,6 +73,30 @@
   let cleanupFrame = null;
   let requestId = 0;
   let transitionId = 0;
+  let selectionMotion = null;
+
+  // The highlight must be a real element BELOW every icon and label.
+  // A View Transition snapshot is drawn in a topmost overlay and cannot
+  // sit behind live sidebar contents, regardless of its CSS z-index.
+  const menu = sidebar.querySelector('.utilities-menu');
+  function settleSelection() {
+    const indicator = menu.querySelector('.utilities-active-indicator');
+    selectionMotion?.cancel();
+    selectionMotion = null;
+    if (!indicator) return;
+    indicator.removeAttribute('style');
+    const selected = menu.querySelector('a[aria-current="page"]');
+    if (selected && indicator.parentElement !== selected) selected.prepend(indicator);
+  }
+  function prepareForNavigationAway() {
+    settleSelection();
+    // The overview transition needs all nine tile names restored before
+    // the outgoing capture, even if the user navigates mid-panel-swap.
+    document.documentElement.classList.remove('utilities-inplace-navigation');
+  }
+  window.addEventListener('pageswap', prepareForNavigationAway);
+  window.addEventListener('pagehide', prepareForNavigationAway);
+  window.addEventListener('pageshow', prepareForNavigationAway);
 
   const visiblePanel = () =>
     main.querySelector(':scope > .card, :scope > .utilities-frame-slot');
@@ -85,15 +109,48 @@
     current?.removeAttribute('aria-current');
     next.setAttribute('aria-current', 'page');
 
-    // Reuse the actual indicator so same-document View Transitions can
-    // animate its bounds without replacing the entire sidebar snapshot.
-    let indicator = sidebar.querySelector('.utilities-active-indicator');
+    // Animate the blue background using its actual DOM box. During the
+    // motion it is a direct child of the menu, underneath ALL nine rows.
+    // Reattach it to the selected row after the animation for the overview
+    // morph's tile capture.
+    let indicator = menu.querySelector('.utilities-active-indicator');
+    const from = indicator?.getBoundingClientRect();
+    selectionMotion?.cancel();
+    selectionMotion = null;
     if (!indicator) {
       indicator = document.createElement('span');
       indicator.className = 'utilities-active-indicator';
       indicator.setAttribute('aria-hidden', 'true');
     }
+    indicator.removeAttribute('style');
     next.prepend(indicator);
+    const to = next.getBoundingClientRect();
+    if (from?.width && from.height && to.width && to.height &&
+        !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const bounds = menu.getBoundingClientRect();
+      menu.append(indicator);
+      Object.assign(indicator.style, {
+        inset: 'auto',
+        top: (to.top - bounds.top + menu.scrollTop) + 'px',
+        left: (to.left - bounds.left + menu.scrollLeft) + 'px',
+        width: to.width + 'px',
+        height: to.height + 'px'
+      });
+      const dx = from.left - to.left, dy = from.top - to.top;
+      const animation = indicator.animate([
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' +
+            (from.width / to.width) + ',' + (from.height / to.height) + ')' },
+        { transform: 'translate(0,0) scale(1,1)' }
+      ], { duration: 340, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'both' });
+      selectionMotion = animation;
+      animation.onfinish = () => {
+        if (selectionMotion !== animation) return;
+        selectionMotion = null;
+        animation.cancel();
+        indicator.removeAttribute('style');
+        next.prepend(indicator);
+      };
+    }
 
     const title = next.querySelector('.utilities-name')?.textContent || '';
     const toggleIcon = sidebar.querySelector('.utilities-toggle > img');
@@ -108,7 +165,9 @@
     const doSwap = () => {
       main.querySelector(':scope > .card')?.remove();
       main.querySelector(':scope > .info')?.remove();
-      main.querySelector(':scope > .utilities-frame-slot')?.remove();
+      main.querySelectorAll(':scope > .utilities-frame-slot').forEach(slot => {
+        if (slot !== target) slot.remove();
+      });
 
       if (target === 'original') {
         sidebar.after(original.card);
@@ -120,16 +179,18 @@
         target.style.removeProperty('visibility');
         target.style.removeProperty('width');
         target.style.removeProperty('view-transition-name');
-        sidebar.after(target);
+        // Already connected to main; moving an iframe in the DOM would
+        // reload it and briefly blank the right panel.
+        // Grid placement puts the slot in the correct column without a move.
       }
       updateSelection(path);
       document.title = title;
       if (push) history.pushState({ utilitiesPanel: true }, '', path);
     };
 
-    // Suppress ALL sidebar snapshots except the active indicator. Because the
-    // root is also un-named, the actual icon/text DOM remains visible and
-    // unchanged throughout the right-hand content transition.
+    // Suppress ALL sidebar snapshots, including the active indicator.
+    // Only the right panel is captured. The selection animation is a live
+    // DOM animation, so it cannot obscure the icons or labels.
     const id = ++transitionId;
     const root = document.documentElement;
     root.classList.add('utilities-inplace-navigation');
@@ -226,8 +287,12 @@
     if (event.defaultPrevented || event.button !== 0 ||
         event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const link = event.target.closest('a[href]');
-    if (!link || !link.closest('.utilities-menu') || link.hasAttribute('download') ||
+    if (!link || link.hasAttribute('download') ||
         (link.target && link.target !== '_self')) return;
+    if (!link.closest('.utilities-menu')) {
+      if (link.matches('.utilities-home, .utilities-overview')) prepareForNavigationAway();
+      return;
+    }
     const url = new URL(link.href);
     if (url.origin !== location.origin || !toolPaths.has(url.pathname)) return;
     event.preventDefault();

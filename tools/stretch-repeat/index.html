@@ -12,8 +12,8 @@
   <script src="vendor/svgpath.min.js" defer></script>
   <script src="../shared/normalize-svg.js?v=1" defer></script>
   <script src="script.js?v=6" defer></script>
-  <link rel="stylesheet" href="../shared/utilities-shell.css?v=7">
-  <script src="../shared/utilities-shell.js?v=6" defer></script>
+  <link rel="stylesheet" href="../shared/utilities-shell.css?v=8">
+  <script src="../shared/utilities-shell.js?v=7" defer></script>
   <link rel="expect" href="#utilities-ready" blocking="render">
   <script>
     // Set responsive layout and fallback entry state before first render.
@@ -32,20 +32,6 @@
       }
     } catch {}
 
-    // Returning to /tools/: include the blue selection with its tile
-    // snapshot, so it moves and crossfades with the grid morph instead
-    // of vanishing before that animation has begun.
-    window.addEventListener('pageswap', event => {
-      const next = event.activation?.entry?.url;
-      if (event.viewTransition && next &&
-          new URL(next).pathname === '/tools/') {
-        document.documentElement.classList.add('utilities-returning-overview');
-      }
-    });
-    // A document restored from bfcache must not inherit the outgoing class.
-    window.addEventListener('pagereveal', () => {
-      document.documentElement.classList.remove('utilities-returning-overview');
-    });
   </script>
 </head>
 <body class="utilities-shell">

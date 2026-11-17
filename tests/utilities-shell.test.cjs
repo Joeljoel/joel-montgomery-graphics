@@ -13,14 +13,19 @@ const { chromium } = require('playwright');
   try {
     const css = readFileSync(join(__dirname, '../tools/shared/utilities-shell.css'), 'utf8');
     assert.match(css,
-      /::view-transition-new\(utilities-active\):only-child\s*\{\s*animation:\s*160ms 580ms/,
-      'Blue highlight should appear only after the overview morph settles');
-    assert.match(css,
-      /html\.utilities-returning-overview[^}]+\.utilities-active-indicator\s*\{\s*view-transition-name:\s*none/s,
-      'On return, blue highlight must be part of the moving tile snapshot');
+      /\.utilities-menu > \.utilities-active-indicator\s*\{\s*z-index:\s*0/,
+      'Sliding highlight should be beneath the menu rows');
+    assert.doesNotMatch(css, /view-transition-name:\s*utilities-active\s*;/,
+      'The highlight must not become an overlay snapshot');
     assert.match(css,
       /html\.utilities-inplace-navigation[^}]+\.utilities-menu > a\s*\{\s*view-transition-name:\s*none/s,
       'Sidebar icons and labels must stay live while the right panel changes');
+    assert.match(css,
+      /::view-transition-group\(utilities-surface\)\s*\{[^}]*background:\s*#fff[^}]*overflow:\s*clip/s,
+      'The surface must paint the interpolated rectangle instead of stretching an image');
+    assert.match(css,
+      /::view-transition-new\(utilities-surface\)\s*\{[^}]*opacity:\s*0/s,
+      'Hide aspect-ratio-dependent surface snapshots');
 
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     const errors = [];
@@ -30,7 +35,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=6', async route => {
+    await slow.route('**/utilities-shell.js?v=7', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
@@ -90,6 +95,18 @@ const { chromium } = require('playwright');
       getComputedStyle(document.querySelector('.utilities-sidebar')).viewTransitionName
     ), 'none');
     assert.equal(await page.locator('.utilities-menu img').count(), 9);
+    const indicatorStack = await page.evaluate(() => {
+      const menu = document.querySelector('.utilities-menu');
+      const indicator = menu.querySelector('.utilities-active-indicator');
+      return {
+        name: getComputedStyle(indicator).viewTransitionName,
+        rowZ: getComputedStyle(menu.querySelector('a[aria-current="page"]')).zIndex,
+        indicatorZ: getComputedStyle(indicator).zIndex
+      };
+    });
+    assert.equal(indicatorStack.name, 'none');
+    assert.equal(indicatorStack.rowZ, '1');
+    assert.ok(Number(indicatorStack.indicatorZ) < Number(indicatorStack.rowZ));
 
     await page.setViewportSize({ width: 375, height: 812 });
     const toggle = page.locator('.utilities-toggle');

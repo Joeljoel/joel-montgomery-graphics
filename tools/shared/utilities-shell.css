@@ -4,7 +4,10 @@
 
 /* Shared elements: a solid white surface, heading and nine moving tiles.
    The original parent snapshots caused the entire sidebar to disappear. */
-:root { view-transition-name: none; background: #2184fc; }
+/* Keep a complete, stable backdrop for cross-document capture. In-place
+   tool switching explicitly disables the root capture below. */
+:root { view-transition-name: root; background: #2184fc; }
+html.utilities-inplace-navigation { view-transition-name: none; }
 
 body > main.card,
 body.utilities-shell main > .utilities-sidebar {
@@ -101,6 +104,9 @@ body.utilities-shell main > nav {
 .utilities-sidebar .utilities-home img { width: 30px; height: 30px; flex: none; }
 .utilities-sidebar .utilities-home:hover { color: #216dce; }
 .utilities-sidebar .utilities-menu {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 3px;
@@ -111,6 +117,7 @@ body.utilities-shell main > nav {
 }
 .utilities-sidebar .utilities-menu a {
   position: relative;
+  z-index: 1;
   isolation: isolate;
   display: flex;
   align-items: center;
@@ -134,6 +141,9 @@ body.utilities-shell main > nav {
   color: #145eb2;
   font-weight: 600;
 }
+.utilities-sidebar .utilities-menu a[aria-current="page"]:hover {
+  background: transparent;
+}
 .utilities-sidebar .utilities-menu img {
   display: block;
   flex: 0 0 42px;
@@ -148,7 +158,15 @@ body.utilities-shell main > nav {
   border-radius: 9px;
   background: #eaf3ff;
   box-shadow: inset 0 0 0 1px #d6e7ff;
-  view-transition-name: utilities-active;
+  pointer-events: none;
+  transform-origin: top left;
+  view-transition-name: none;
+}
+/* The sliding background is below every row, rather than a snapshot on
+   top of them. When settled inside a row, its original negative z-index
+   keeps it behind that row's artwork and text. */
+.utilities-sidebar .utilities-menu > .utilities-active-indicator {
+  z-index: 0;
 }
 .utilities-sidebar .utilities-name { flex: 1; min-width: 0; }
 .utilities-sidebar .utilities-overview {
@@ -359,7 +377,7 @@ html.utilities-embedded body.utilities-shell > main > .info {
    mounted and visible as real DOM. Its tiles and white background must
    NEVER become View Transition snapshots, otherwise Chromium hides them
    and briefly redraws their text/icons during each navigation. Only the
-   selected blue indicator gets a snapshot so it slides to the new row. */
+   selected blue indicator animates as a live layer underneath the rows. */
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar,
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-surface,
 html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-home,
@@ -367,12 +385,9 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   view-transition-name: none;
 }
 
-/* When going BACK to /tools/, the selected row travels with its tile:
-   its blue background is included in the outgoing tile snapshot and
-   crossfades away as the tile moves into the two-column overview. */
-html.utilities-returning-overview body.utilities-shell .utilities-active-indicator {
-  view-transition-name: none;
-}
+/* Overview transitions capture each tile as a unit, including its blue
+   selection background. The highlight stays beneath the tile's text/icon
+   in both directions and travels with the tile instead of floating above. */
 
 /* Avoid the previous outgoing-then-delayed-incoming blank frames. */
 @keyframes utilities-content-out {
@@ -387,15 +402,10 @@ html.utilities-returning-overview body.utilities-shell .utilities-active-indicat
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes utilities-highlight-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-@keyframes utilities-highlight-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
+/* The browser interpolates the group's width, height and position; fill
+   that rectangle directly rather than scaling the portrait sidebar image
+   to the landscape overview's width (which produced a huge tall panel).
+   The root backdrop and the rectangle remain opaque throughout. */
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-group(utilities-surface),
   ::view-transition-group(utilities-brand),
@@ -412,11 +422,94 @@ html.utilities-returning-overview body.utilities-shell .utilities-active-indicat
     animation-timing-function: cubic-bezier(.22, 1, .36, 1);
   }
 
-  /* The blank white background morphs without opacity crossfades. */
+  /* Do not let the incoming snapshot's intrinsic aspect ratio determine
+     the height. The UA animates the group rectangle from the EXACT old
+     border box to the EXACT new border box. Paint that rectangle itself. */
+  ::view-transition-group(root) {
+    z-index: 0;
+    animation-duration: 600ms;
+    background: #2184fc;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    opacity: 1;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-group(utilities-surface) {
+    z-index: 1;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px #15151633;
+    overflow: clip;
+  }
+  ::view-transition-image-pair(utilities-surface) {
+    width: 100%;
+    height: 100%;
+    overflow: clip;
+  }
   ::view-transition-old(utilities-surface),
   ::view-transition-new(utilities-surface) {
     animation: none;
-    opacity: 1;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+  }
+  ::view-transition-group(utilities-content),
+  ::view-transition-group(utilities-description) { z-index: 2; }
+  ::view-transition-group(utilities-brand),
+  ::view-transition-group(utilities-secret),
+  ::view-transition-group(utilities-tile-shape-mask),
+  ::view-transition-group(utilities-tile-stretch-repeat),
+  ::view-transition-group(utilities-tile-repeat),
+  ::view-transition-group(utilities-tile-stretchable),
+  ::view-transition-group(utilities-tile-trim),
+  ::view-transition-group(utilities-tile-barcode),
+  ::view-transition-group(utilities-tile-qr),
+  ::view-transition-group(utilities-tile-image-grid),
+  ::view-transition-group(utilities-tile-pdf-inspector) { z-index: 3; }
+
+  /* Morph the matched tiles and heading inside their interpolated boxes.
+     Keep their intrinsic aspect ratio from extending past those boxes.
+     Other tool-content snapshots retain their existing sizing. */
+  ::view-transition-image-pair(utilities-brand),
+  ::view-transition-image-pair(utilities-tile-shape-mask),
+  ::view-transition-image-pair(utilities-tile-stretch-repeat),
+  ::view-transition-image-pair(utilities-tile-repeat),
+  ::view-transition-image-pair(utilities-tile-stretchable),
+  ::view-transition-image-pair(utilities-tile-trim),
+  ::view-transition-image-pair(utilities-tile-barcode),
+  ::view-transition-image-pair(utilities-tile-qr),
+  ::view-transition-image-pair(utilities-tile-image-grid),
+  ::view-transition-image-pair(utilities-tile-pdf-inspector) {
+    width: 100%;
+    height: 100%;
+    overflow: clip;
+  }
+  ::view-transition-old(utilities-brand),
+  ::view-transition-new(utilities-brand),
+  ::view-transition-old(utilities-tile-shape-mask),
+  ::view-transition-new(utilities-tile-shape-mask),
+  ::view-transition-old(utilities-tile-stretch-repeat),
+  ::view-transition-new(utilities-tile-stretch-repeat),
+  ::view-transition-old(utilities-tile-repeat),
+  ::view-transition-new(utilities-tile-repeat),
+  ::view-transition-old(utilities-tile-stretchable),
+  ::view-transition-new(utilities-tile-stretchable),
+  ::view-transition-old(utilities-tile-trim),
+  ::view-transition-new(utilities-tile-trim),
+  ::view-transition-old(utilities-tile-barcode),
+  ::view-transition-new(utilities-tile-barcode),
+  ::view-transition-old(utilities-tile-qr),
+  ::view-transition-new(utilities-tile-qr),
+  ::view-transition-old(utilities-tile-image-grid),
+  ::view-transition-new(utilities-tile-image-grid),
+  ::view-transition-old(utilities-tile-pdf-inspector),
+  ::view-transition-new(utilities-tile-pdf-inspector) {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
   }
 
   /* Both content snapshots overlap throughout the utility-to-utility swap. */
@@ -435,21 +528,6 @@ html.utilities-returning-overview body.utilities-shell .utilities-active-indicat
     animation: 350ms 110ms cubic-bezier(.22, 1, .36, 1) both utilities-content-first-in;
   }
 
-  ::view-transition-group(utilities-active) {
-    animation-duration: 360ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
-  }
-  /* The highlight only appears on overview -> utility. Delay it until the
-     600ms grid-to-sidebar morph has settled, instead of flashing early. */
-  ::view-transition-new(utilities-active):only-child {
-    animation: 160ms 580ms ease-out both utilities-highlight-in;
-  }
-  /* Returning to /tools/ removes the indicator's independent name before
-     capture, so the blue highlight crossfades WITH its moving tile. The
-     only-child case is a fallback for a transition with no matched tile. */
-  ::view-transition-old(utilities-active):only-child {
-    animation: 170ms 425ms ease-in both utilities-highlight-out;
-  }
   ::view-transition-old(utilities-secret) {
     animation: 180ms ease-out both utilities-content-out;
   }

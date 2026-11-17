@@ -29,66 +29,24 @@ collapses into a mobile selector. The basketball Easter egg stays on the /tools 
 and is deliberately omitted from the sidebar.
 
 Each utility remains a standalone HTML document with its original script and
-URL. Same-origin document navigation uses CSS View Transitions where available.
-The main /tools/ overview panel morphs into the left sidebar; the right utility
-panel enters independently. Older browsers use a short exit/entrance fallback;
-reduced-motion preferences disable the navigation animation.
+URL. After entering a utility, tool-to-tool navigation keeps the real sidebar
+mounted and replaces only the right-hand content using a same-origin iframe.
+The blue active indicator is a live animated layer beneath the menu rows,
+rather than a view-transition overlay. The selected row retains its artwork
+and text throughout the animation. The frame is preserved after loading to
+avoid a second navigation.
+
+On Chromium and Safari, overview-to-utility navigation and its reverse use
+native cross-document View Transitions. The white background is rendered as a
+solid rectangle whose dimensions and position interpolate between the actual
+overview and sidebar border boxes; it does not stretch either snapshot's
+intrinsic aspect ratio. All nine tiles move independently and the highlight
+is included in its tile, behind its icon and text, in both directions.
+
+Firefox uses a short overview fade fallback. Older browsers without
+same-document View Transitions use ordinary navigation. Reduced-motion
+preferences disable the animations.
 
 ## Other projects
 
 The site also includes [Joeldle](https://joelmontgomery.graphics/joeldle/), [Joelculator](https://joelmontgomery.graphics/calculator/) and a few hidden extras.
-
-
-### Firefox utility navigation
-
-Firefox currently supports same-document View Transitions, but not
-cross-document view transitions. To avoid the sidebar vanishing during each
-full page load, the shared shell intercepts internal tool-to-tool navigation
-and loads the next tool inside a same-origin, unsandboxed iframe. Each tool
-keeps its independent HTML, CSS and JavaScript context. The URL is updated
-with History API so a direct link or page refresh still loads the standalone
-tool page. Browser Back/Forward restores the corresponding panel.
-
-The iframe mode is only used as a fallback when native cross-document
-transitions aren't available. It hides the duplicated tool sidebar, resizes
-the embedded content as its layout changes, and keeps the outer sidebar
-mounted. The `/tools/` overview continues to use the ordinary page
-navigation fallback on Firefox.
-
-### Grid-to-sidebar transition
-
-The empty white surface behind the illustrated overview and tool sidebar has
-one shared transition name. Each of the nine utility cards has its own matching
-name on the overview and the left navigation, so the two-column grid flows
-into its single-column equivalent. The brand and right-hand tool content have
-independent snapshots. The old sequential exit/entrance animations were
-replaced by overlapping crossfades without a blank interval.
-
-Arc/Chromium navigation uses the browser's native multi-page transition
-without additional JavaScript interception or page-entry animations. Firefox
-continues to use the persistent iframe shell for tool-to-tool navigation.
-
-### Stable Chromium utility navigation and delayed selection
-
-The tool-page bootstrap registers `pageswap` and `pagereveal` before the
-first frame. On tool-to-tool navigation only, it captures the entire sidebar
-as a single shared image while keeping the selected-item indicator separately
-named so it can slide between rows. The nine named overview tiles remain
-unchanged for overview-to-sidebar transitions. The active blue highlight
-waits until the 600ms overview morph has completed before fading in.
-
-### Persistent utility sidebar and return highlight (follow-up)
-
-The full grid-to-sidebar morph still uses native cross-document View
-Transitions for `/tools/` -> utility and the reverse navigation. Once
-inside a utility, **every browser with same-document View Transitions** now
-keeps the actual sidebar DOM mounted and replaces only the right-hand tool in
-an isolated same-origin iframe. During the swap, the sidebar and nine links
-are never snapshot: the unchanged text and artwork remain continuously
-visible. Only the active blue row indicator moves as a named snapshot.
-
-Returning to `/tools/` opts the indicator into the outgoing utility tile's
-snapshot instead. It travels with its button and fades as the button returns
-to the two-column overview, rather than disappearing before the morph.
-
-Older browsers without same-document transitions use ordinary navigation.
