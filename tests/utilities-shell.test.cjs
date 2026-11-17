@@ -13,6 +13,34 @@ const { chromium } = require('playwright');
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
 
+    // Hold the enhancement script back: the sidebar and two-column layout
+    // must already be present in the HTML before the script runs.
+    const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+    let releaseScript;
+    await slow.route('**/utilities-shell.js?v=2', async route => {
+      await new Promise(resolve => { releaseScript = resolve; });
+      await route.continue();
+    });
+    await slow.goto('http://localhost:8765/tools/qr/', { waitUntil: 'commit' });
+    await slow.locator('aside.utilities-sidebar').waitFor({ state: 'attached' });
+    assert.equal(await slow.locator('body.utilities-shell > main > .utilities-sidebar').isVisible(), true);
+    assert.equal(await slow.locator('main > .card').isVisible(), true);
+    const [leftPanel, rightPanel] = await Promise.all([
+      slow.locator('main > .utilities-sidebar').boundingBox(),
+      slow.locator('main > .card').boundingBox()
+    ]);
+    assert.ok(rightPanel.x >= leftPanel.x + leftPanel.width);
+    assert.ok(releaseScript, 'The delayed script request should have started');
+    releaseScript();
+    await slow.waitForLoadState('domcontentloaded');
+    await slow.close();
+
+    await page.addInitScript(() => {
+      window.__documentTransitionSeen = false;
+      addEventListener('pagereveal', event => {
+        if (event.viewTransition) window.__documentTransitionSeen = true;
+      });
+    });
     await page.goto('http://localhost:8765/tools/shape-mask/');
     const links = page.locator('.utilities-menu a');
     assert.equal(await links.count(), 9);
@@ -34,6 +62,11 @@ const { chromium } = require('playwright');
     await page.waitForURL('**/tools/qr/');
     assert.equal(await page.locator('.utilities-menu a[aria-current="page"] .utilities-name').innerText(), 'Bulk QR Code Generator');
     assert.equal(await page.locator('#paste').count(), 1);
+    // Chromium supports cross-document View Transitions: assert that an
+    // actual transition was created, beyond just checking the CSS name.
+    if (await page.evaluate(() => typeof document.startViewTransition === 'function')) {
+      await page.waitForFunction(() => window.__documentTransitionSeen === true);
+    }
 
     await page.setViewportSize({ width: 375, height: 812 });
     const toggle = page.locator('.utilities-toggle');
@@ -74,7 +107,7 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('.utilities-sidebar').isVisible(), true);
     assert.equal(await page.locator('#drop-zone').count(), 1);
     assert.deepEqual(errors, []);
-    console.log('PASS: nine matching overview icons, desktop/mobile navigation, overview transition and reduced-motion fallback');
+    console.log('PASS: static sidebar before JS, cross-document transition, icons, responsive navigation and reduced motion');
   } finally {
     await browser.close();
   }
