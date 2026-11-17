@@ -228,6 +228,59 @@ body.utilities-shell main > nav {
   body.utilities-shell main > .card { border-radius: 10px; }
 }
 
+
+/* Firefox fallback: the top-level sidebar stays mounted while the tool runs
+   as an independent same-origin document in the content column. */
+body.utilities-shell main > .utilities-frame-slot {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  width: 100%;
+  view-transition-name: utilities-panel;
+}
+body.utilities-shell main > .utilities-frame-slot > iframe {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  background: transparent;
+}
+
+/* The iframe owns only a tool's content: no second sidebar, no extra blue
+   gutters, and no nested scrolling. Direct visits still render normally. */
+html.utilities-embedded,
+html.utilities-embedded body {
+  background: transparent !important;
+  min-height: 0 !important;
+  overflow-x: hidden;
+}
+html.utilities-embedded body.utilities-shell > main {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html.utilities-embedded body.utilities-shell > main > .utilities-sidebar,
+html.utilities-embedded body.utilities-shell > main > nav {
+  display: none !important;
+}
+html.utilities-embedded body.utilities-shell > main > .card {
+  display: block;
+  width: 100%;
+  margin: 0;
+  view-transition-name: none;
+}
+html.utilities-embedded body.utilities-shell > main > .info {
+  width: 100%;
+  margin: 14px 0 0;
+  view-transition-name: none;
+}
+@media (max-width: 960px) {
+  body.utilities-shell main > .utilities-frame-slot { width: 100%; }
+}
+
 /* The cards, sidebar, and selected row can transition independently.
    Unsupported browsers still navigate between standard HTML documents. */
 @keyframes utilities-panel-exit {

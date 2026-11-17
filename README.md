@@ -38,3 +38,19 @@ reduced-motion preferences disable the navigation animation.
 
 The site also includes [Joeldle](https://joelmontgomery.graphics/joeldle/), [Joelculator](https://joelmontgomery.graphics/calculator/) and a few hidden extras.
 
+
+### Firefox utility navigation
+
+Firefox currently supports same-document View Transitions, but not
+cross-document view transitions. To avoid the sidebar vanishing during each
+full page load, the shared shell intercepts internal tool-to-tool navigation
+and loads the next tool inside a same-origin, unsandboxed iframe. Each tool
+keeps its independent HTML, CSS and JavaScript context. The URL is updated
+with History API so a direct link or page refresh still loads the standalone
+tool page. Browser Back/Forward restores the corresponding panel.
+
+The iframe mode is only used as a fallback when native cross-document
+transitions aren't available. It hides the duplicated tool sidebar, resizes
+the embedded content as its layout changes, and keeps the outer sidebar
+mounted. The `/tools/` overview continues to use the ordinary page
+navigation fallback on Firefox.

@@ -12,12 +12,16 @@
   <script src="vendor/svgpath.min.js" defer></script>
   <script src="../shared/normalize-svg.js?v=1" defer></script>
   <script src="script.js?v=6" defer></script>
-  <link rel="stylesheet" href="../shared/utilities-shell.css?v=3">
-  <script src="../shared/utilities-shell.js?v=3" defer></script>
+  <link rel="stylesheet" href="../shared/utilities-shell.css?v=4">
+  <script src="../shared/utilities-shell.js?v=4" defer></script>
   <link rel="expect" href="#utilities-ready" blocking="render">
   <script>
     // Set responsive layout and fallback entry state before first render.
     document.documentElement.classList.add('utilities-has-js');
+    if (window.parent !== window &&
+        new URLSearchParams(location.search).has('utilitiesFrame')) {
+      document.documentElement.classList.add('utilities-embedded');
+    }
     try {
       const key = 'jm-utilities-next-page';
       const target = sessionStorage.getItem(key);

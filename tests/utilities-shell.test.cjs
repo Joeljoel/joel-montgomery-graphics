@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=3', async route => {
+    await slow.route('**/utilities-shell.js?v=4', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
