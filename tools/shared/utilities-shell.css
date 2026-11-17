@@ -2,12 +2,39 @@
    transitions are an enhancement over normal same-origin navigation. */
 @view-transition { navigation: auto; }
 
-/* The illustrated /tools/ overview morphs directly into the LEFT sidebar.
-   The right-hand tool panel enters separately. Do not capture the whole
-   viewport as root, since its crossfade would obscure the shared element. */
+/* Shared elements: a solid white surface, heading and nine moving tiles.
+   The original parent snapshots caused the entire sidebar to disappear. */
 :root { view-transition-name: none; background: #2184fc; }
-body > main.card { view-transition-name: utilities-sidebar; }
-body.utilities-shell main > .card { view-transition-name: utilities-panel; }
+
+body > main.card,
+body.utilities-shell main > .utilities-sidebar {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  box-shadow: none;
+  view-transition-name: none;
+}
+
+body > main.card > .utilities-surface,
+body.utilities-shell main > .utilities-sidebar > .utilities-surface {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: #fff;
+  box-shadow: 0 2px 4px #15151633;
+  view-transition-name: utilities-surface;
+}
+
+body > main.card > header,
+body.utilities-shell main > .utilities-sidebar > .utilities-home {
+  view-transition-name: utilities-brand;
+}
+
+body.utilities-shell main > .card {
+  view-transition-name: utilities-content;
+}
 
 body.utilities-shell main {
   width: min(1290px, 100%);
@@ -50,12 +77,11 @@ body.utilities-shell main > nav {
 
 .utilities-sidebar {
   padding: 18px 12px 14px;
-  background: #fff;
+  background: transparent;
   border-radius: 12px;
-  box-shadow: 0 2px 4px #15151633;
+  box-shadow: none;
   font: 14px/1.35 Roboto, Arial, sans-serif;
   color: #2c2e2f;
-  view-transition-name: utilities-sidebar;
 }
 .utilities-sidebar *, .utilities-sidebar *::before, .utilities-sidebar *::after {
   box-sizing: border-box;
@@ -140,6 +166,54 @@ body.utilities-shell main > nav {
   outline-offset: 2px;
 }
 .utilities-sidebar .utilities-toggle { display: none; }
+
+/* Each overview tile moves into its corresponding sidebar row. */
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(1),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(1) {
+  view-transition-name: utilities-tile-shape-mask;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(2),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(2) {
+  view-transition-name: utilities-tile-stretch-repeat;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(3),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(3) {
+  view-transition-name: utilities-tile-repeat;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(4),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(4) {
+  view-transition-name: utilities-tile-stretchable;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(5),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(5) {
+  view-transition-name: utilities-tile-trim;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(6),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(6) {
+  view-transition-name: utilities-tile-barcode;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(7),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(7) {
+  view-transition-name: utilities-tile-qr;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(8),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(8) {
+  view-transition-name: utilities-tile-image-grid;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(9),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(9) {
+  view-transition-name: utilities-tile-pdf-inspector;
+}
+
+body > main.card .secret-reveal { view-transition-name: utilities-secret; }
 
 @media (max-width: 960px) {
   body.utilities-shell main {
@@ -236,7 +310,7 @@ body.utilities-shell main > .utilities-frame-slot {
   grid-row: 1 / span 2;
   min-width: 0;
   width: 100%;
-  view-transition-name: utilities-panel;
+  view-transition-name: utilities-content;
 }
 body.utilities-shell main > .utilities-frame-slot > iframe {
   display: block;
@@ -281,76 +355,81 @@ html.utilities-embedded body.utilities-shell > main > .info {
   body.utilities-shell main > .utilities-frame-slot { width: 100%; }
 }
 
-/* The cards, sidebar, and selected row can transition independently.
-   Unsupported browsers still navigate between standard HTML documents. */
-@keyframes utilities-panel-exit {
-  to { opacity: 0; transform: translateY(-9px) scale(.99); }
-}
-@keyframes utilities-panel-enter {
-  from { opacity: 0; transform: translate(25px, 7px) scale(.985); }
-  to { opacity: 1; transform: translate(0, 0) scale(1); }
-}
-@keyframes utilities-snapshot-out {
+/* Avoid the previous outgoing-then-delayed-incoming blank frames. */
+@keyframes utilities-content-out {
   to { opacity: 0; }
 }
-@keyframes utilities-snapshot-in {
+@keyframes utilities-content-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-@keyframes utilities-sidebar-enter {
-  from { opacity: 0; transform: translateX(-12px); }
-  to { opacity: 1; transform: translateX(0); }
+@keyframes utilities-content-first-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-@media (prefers-reduced-motion: no-preference) {
-  ::view-transition-group(utilities-panel) {
-    animation-duration: 330ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
-  }
-  ::view-transition-old(utilities-panel) {
-    animation: 160ms ease-in both utilities-panel-exit;
-  }
-  ::view-transition-new(utilities-panel) {
-    animation: 360ms 115ms cubic-bezier(.22, 1, .36, 1) both utilities-panel-enter;
-  }
-  /* The white surface physically changes position and dimensions:
-     overview card <-> sidebar. The snapshots fade inside that surface. */
-  ::view-transition-group(utilities-sidebar) {
-    animation-duration: 520ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px #15151633;
-    overflow: clip;
-  }
-  ::view-transition-old(utilities-sidebar) {
-    animation: 165ms ease-in both utilities-snapshot-out;
-  }
-  ::view-transition-new(utilities-sidebar) {
-    animation: 230ms 160ms ease-out both utilities-snapshot-in;
-  }
-  ::view-transition-group(utilities-active) {
-    animation-duration: 330ms;
-    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
-  }
-  ::view-transition-new(utilities-description) { animation-duration: 220ms; }
 
-  /* Older browsers still get a gentle panel exit / entrance on navigation. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(utilities-surface),
+  ::view-transition-group(utilities-brand),
+  ::view-transition-group(utilities-tile-shape-mask),
+  ::view-transition-group(utilities-tile-stretch-repeat),
+  ::view-transition-group(utilities-tile-repeat),
+  ::view-transition-group(utilities-tile-stretchable),
+  ::view-transition-group(utilities-tile-trim),
+  ::view-transition-group(utilities-tile-barcode),
+  ::view-transition-group(utilities-tile-qr),
+  ::view-transition-group(utilities-tile-image-grid),
+  ::view-transition-group(utilities-tile-pdf-inspector) {
+    animation-duration: 600ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+
+  /* The blank white background morphs without opacity crossfades. */
+  ::view-transition-old(utilities-surface),
+  ::view-transition-new(utilities-surface) {
+    animation: none;
+    opacity: 1;
+  }
+
+  /* Both content snapshots overlap throughout the utility-to-utility swap. */
+  ::view-transition-group(utilities-content) {
+    animation-duration: 340ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+  ::view-transition-old(utilities-content) {
+    animation: 320ms ease-in-out both utilities-content-out;
+  }
+  ::view-transition-new(utilities-content) {
+    animation: 320ms ease-in-out both utilities-content-in;
+  }
+  /* This only applies when arriving from /tools/: no old content exists. */
+  ::view-transition-new(utilities-content):only-child {
+    animation: 350ms 110ms cubic-bezier(.22, 1, .36, 1) both utilities-content-first-in;
+  }
+
+  ::view-transition-group(utilities-active) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(.22, 1, .36, 1);
+  }
+  ::view-transition-old(utilities-secret) {
+    animation: 180ms ease-out both utilities-content-out;
+  }
+
+  /* Only Firefox's overview fallback should use CSS page-entry fades. */
   html.utilities-fallback-exiting body > main.card,
   html.utilities-fallback-exiting body.utilities-shell main > .card {
-    animation: 150ms ease-in both utilities-panel-exit;
+    animation: 155ms ease-out both utilities-content-out;
   }
   html.utilities-fallback-enter body > main.card,
   html.utilities-fallback-enter body.utilities-shell main > .card {
-    animation: 280ms cubic-bezier(.22, 1, .36, 1) both utilities-panel-enter;
+    animation: 250ms ease-in both utilities-content-in;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
-  ::view-transition-old(root), ::view-transition-new(root),
-  ::view-transition-group(utilities-panel),
-  ::view-transition-group(utilities-sidebar),
-  ::view-transition-group(utilities-active),
-  ::view-transition-group(utilities-description) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
     animation-duration: 0.01ms !important;
     animation-delay: 0ms !important;
   }

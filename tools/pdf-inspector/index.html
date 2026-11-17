@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script type="module" src="script.js"></script>
-  <link rel="stylesheet" href="../shared/utilities-shell.css?v=4">
-  <script src="../shared/utilities-shell.js?v=4" defer></script>
+  <link rel="stylesheet" href="../shared/utilities-shell.css?v=5">
+  <script src="../shared/utilities-shell.js?v=5" defer></script>
   <link rel="expect" href="#utilities-ready" blocking="render">
   <script>
     // Set responsive layout and fallback entry state before first render.
@@ -26,7 +26,8 @@
       const key = 'jm-utilities-next-page';
       const target = sessionStorage.getItem(key);
       if (target) sessionStorage.removeItem(key);
-      if (target === location.pathname && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (target === location.pathname && /Firefox\/\d+/i.test(navigator.userAgent) &&
+          !matchMedia('(prefers-reduced-motion: reduce)').matches) {
         document.documentElement.classList.add('utilities-fallback-enter');
       }
     } catch {}
@@ -35,6 +36,7 @@
 <body class="utilities-shell">
   <main class="container">
     <aside class="utilities-sidebar" aria-label="Design utilities">
+      <span class="utilities-surface" aria-hidden="true"></span>
       <a class="utilities-home" href="../" aria-label="All design utilities"><img src="../assets/easilLogo.png" alt="" width="30" height="30"><span>Design Utilities</span></a>
       <button class="utilities-toggle" type="button" aria-controls="utilities-navigation" aria-expanded="false" aria-label="Browse utilities. Current: PDF Inspector">
         <img src="../assets/icons/pdf-inspector-paper.png" alt="" width="42" height="42">

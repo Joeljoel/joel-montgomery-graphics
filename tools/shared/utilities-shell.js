@@ -26,16 +26,15 @@
     });
   }
 
-  // startViewTransition() also exists in Firefox, but that only proves
-  // same-document support. Cross-document support requires these interfaces.
-  // Firefox can expose some of the MPA-related CSS/events ahead of full
-  // navigation support, so keep its persistent-shell fallback explicit.
+  // Chromium, Arc and Safari use ordinary same-origin links so the browser
+  // can perform ONE cross-document transition, rather than racing it against
+  // a second JavaScript navigation and an additional CSS entrance fade.
+  // Firefox still uses the persistent tool panel (same-document transition).
   const isFirefox = /Firefox\/\d+/i.test(navigator.userAgent);
-  const nativeMPA = !isFirefox &&
-    'onpageswap' in window &&
-    'onpagereveal' in window &&
-    typeof CSSViewTransitionRule !== 'undefined';
-  if (nativeMPA) return;
+  if (!isFirefox) {
+    document.documentElement.classList.remove('utilities-fallback-enter');
+    return;
+  }
 
   const main = document.querySelector('body.utilities-shell > main');
   const initialCard = main?.querySelector(':scope > .card');
@@ -131,14 +130,10 @@
       return;
     }
 
-    // Don't capture a screenshot of the entire sidebar, which would make
-    // the icons briefly disappear as the view transition crossfades them.
-    sidebar.style.viewTransitionName = 'none';
-    getComputedStyle(sidebar).viewTransitionName;
+    // Each sidebar link and the white surface have their own stable snapshot
+    // identity. Keep them captured while the right-hand panel changes.
     const transition = document.startViewTransition(doSwap);
-    transition.finished.catch(() => {}).finally(() => {
-      sidebar.style.removeProperty('view-transition-name');
-    });
+    transition.finished.catch(() => {});
   }
 
   function activateFrame(frame, slot, path, push) {

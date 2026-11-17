@@ -54,3 +54,16 @@ transitions aren't available. It hides the duplicated tool sidebar, resizes
 the embedded content as its layout changes, and keeps the outer sidebar
 mounted. The `/tools/` overview continues to use the ordinary page
 navigation fallback on Firefox.
+
+### Grid-to-sidebar transition
+
+The empty white surface behind the illustrated overview and tool sidebar has
+one shared transition name. Each of the nine utility cards has its own matching
+name on the overview and the left navigation, so the two-column grid flows
+into its single-column equivalent. The brand and right-hand tool content have
+independent snapshots. The old sequential exit/entrance animations were
+replaced by overlapping crossfades without a blank interval.
+
+Arc/Chromium navigation uses the browser's native multi-page transition
+without additional JavaScript interception or page-entry animations. Firefox
+continues to use the persistent iframe shell for tool-to-tool navigation.

@@ -17,7 +17,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=4', async route => {
+    await slow.route('**/utilities-shell.js?v=5', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
@@ -56,7 +56,7 @@ const { chromium } = require('playwright');
       '../assets/icons/qr-paper.png');
     assert.equal(await page.locator('main > .card').evaluate(
       element => getComputedStyle(element).viewTransitionName
-    ), 'utilities-panel');
+    ), 'utilities-content');
 
     await page.locator('.utilities-menu a[href="../qr/"]').click();
     await page.waitForURL('**/tools/qr/');
@@ -88,9 +88,9 @@ const { chromium } = require('playwright');
     await page.locator('.utilities-overview').click();
     await page.waitForURL('**/tools/');
     assert.equal(await page.locator('nav[aria-label="Design utilities"] > a').count(), 9);
-    assert.equal(await page.locator('main.card').evaluate(
+    assert.equal(await page.locator('main.card > .utilities-surface').evaluate(
       element => getComputedStyle(element).viewTransitionName
-    ), 'utilities-sidebar');
+    ), 'utilities-surface');
 
     // The overview retains its illustrated cards and transitions into the shell.
     const overviewIcons = await page.locator('nav[aria-label="Design utilities"] > a .tool-icon')
@@ -103,12 +103,27 @@ const { chromium } = require('playwright');
     assert.equal(await page.locator('.utilities-sidebar').isVisible(), true);
     // Both the overview card and this utility sidebar must share the name;
     // the right content card must use a different name, so it can enter.
-    assert.equal(await page.locator('.utilities-sidebar').evaluate(
+    assert.equal(await page.locator('.utilities-sidebar > .utilities-surface').evaluate(
       element => getComputedStyle(element).viewTransitionName
-    ), 'utilities-sidebar');
+    ), 'utilities-surface');
     assert.equal(await page.locator('main > .card').evaluate(
       element => getComputedStyle(element).viewTransitionName
-    ), 'utilities-panel');
+    ), 'utilities-content');
+
+    // The same nine names exist in BOTH grid and sidebar. This is what
+    // causes nine spatial moves, rather than one large grid snapshot fade.
+    const sidebarNames = await page.locator('.utilities-menu > a').evaluateAll(
+      links => links.map(link => getComputedStyle(link).viewTransitionName)
+    );
+    assert.equal(new Set(sidebarNames).size, 9);
+    assert.ok(sidebarNames.every(name => name.startsWith('utilities-tile-')));
+    assert.equal(await page.locator('.utilities-frame-slot').count(), 0,
+      'Chromium should use native multi-page navigation, not the Firefox iframe');
+    await page.locator('.utilities-overview').click();
+    await page.waitForURL('**/tools/');
+    const overviewNames = await page.locator('main.card > nav[aria-label="Design utilities"] > a')
+      .evaluateAll(links => links.map(link => getComputedStyle(link).viewTransitionName));
+    assert.deepEqual(overviewNames, sidebarNames);
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('http://localhost:8765/tools/pdf-inspector/');
