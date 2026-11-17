@@ -28,7 +28,11 @@
 
   // startViewTransition() also exists in Firefox, but that only proves
   // same-document support. Cross-document support requires these interfaces.
-  const nativeMPA = 'onpageswap' in window &&
+  // Firefox can expose some of the MPA-related CSS/events ahead of full
+  // navigation support, so keep its persistent-shell fallback explicit.
+  const isFirefox = /Firefox\/\d+/i.test(navigator.userAgent);
+  const nativeMPA = !isFirefox &&
+    'onpageswap' in window &&
     'onpagereveal' in window &&
     typeof CSSViewTransitionRule !== 'undefined';
   if (nativeMPA) return;
