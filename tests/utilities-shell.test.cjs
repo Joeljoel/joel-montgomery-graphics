@@ -55,13 +55,26 @@ const { chromium } = require('playwright');
     await page.locator('.utilities-overview').click();
     await page.waitForURL('**/tools/');
     assert.equal(await page.locator('nav[aria-label="Design utilities"] > a').count(), 9);
+    assert.equal(await page.locator('main.card').evaluate(
+      element => getComputedStyle(element).viewTransitionName
+    ), 'utilities-panel');
+
+    // The overview retains its illustrated cards and transitions into the shell.
+    const overviewIcons = await page.locator('nav[aria-label="Design utilities"] > a .tool-icon')
+      .evaluateAll(images => images.map(image => image.getAttribute('src').split('/').pop()));
+    await page.locator('nav[aria-label="Design utilities"] > a[href="shape-mask/"]').click();
+    await page.waitForURL('**/tools/shape-mask/');
+    const sidebarIcons = await page.locator('.utilities-menu a img')
+      .evaluateAll(images => images.map(image => image.getAttribute('src').split('/').pop()));
+    assert.deepEqual(sidebarIcons, overviewIcons);
+    assert.equal(await page.locator('.utilities-sidebar').isVisible(), true);
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('http://localhost:8765/tools/pdf-inspector/');
     assert.equal(await page.locator('.utilities-sidebar').isVisible(), true);
     assert.equal(await page.locator('#drop-zone').count(), 1);
     assert.deepEqual(errors, []);
-    console.log('PASS: nine existing icons, current state, desktop/mobile navigation, responsive shell and reduced-motion fallback');
+    console.log('PASS: nine matching overview icons, desktop/mobile navigation, overview transition and reduced-motion fallback');
   } finally {
     await browser.close();
   }
