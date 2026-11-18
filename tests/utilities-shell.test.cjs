@@ -239,7 +239,7 @@ const { chromium } = require('playwright');
             [...rule.cssRules].some(nested => nested.cssText.includes('@view-transition'))
           );
         } catch { return false; }
-      }
+      })
     ), true);
     assert.deepEqual(errors, []);
     console.log('PASS: persistent overview and sidebar, zero main-document requests, history, preloading and reduced motion');
