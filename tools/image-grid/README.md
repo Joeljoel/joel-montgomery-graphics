@@ -10,7 +10,7 @@ A static, browser-only utility at [`/tools/image-grid/`](https://joelmontgomery.
 4. Use **Columns** (`Auto` or 1–8) to choose the gallery width, **Background** to change the canvas colour, or hover over a tile to remove it. **Restore removed** brings the tiles back.
 5. Select **Screenshot view** to hide the toolbar and removal controls. Capture only the occupied part of the canvas; click the grid or press Escape to exit.
 
-Only images loaded into the Easil page at the time of collection can be copied. Saved HTML or View Source may miss dynamically loaded images. The utility accepts Easil S3 image links, deduplicates them, and tries the original image before falling back to its thumbnail. Failed links show an unavailable tile.
+Only images loaded into the Easil page at the time of collection can be copied. Saved HTML or View Source may miss dynamically loaded images. The utility accepts Easil S3 image links, deduplicates them, and loads up to six images at a time and tries supplied thumbnails before falling back to their originals. Failed links show an unavailable tile.
 
 ## Layout
 

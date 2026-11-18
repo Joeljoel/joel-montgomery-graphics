@@ -240,13 +240,13 @@ test('pre-redesign homepage is archived without a link from the new page', () =>
   assert.match(legacy, /<meta name="robots" content="noindex,follow">/);
   assert.match(legacy, /href="css\/style\.css"/);
   assert.match(legacy, /src="js\/home-edge\.js"/);
-  assert.match(legacy, /src="js\/jquery-1\.11\.0\.min\.js"/);
+  assert.match(legacy, /src="\.\.\/js\/jquery-3\.7\.1\.min\.js"/);
   assert.doesNotMatch(home, /href="\/?legacy\//);
   for (const path of [
     'legacy/css/style.css',
     'legacy/css/fonts/BASICTITLE.woff',
     'legacy/js/home-edge.js',
-    'legacy/js/jquery-1.11.0.min.js',
+    'js/jquery-3.7.1.min.js',
     'legacy/images/logo.png',
     'legacy/images/hLogo.png',
     'legacy/images/arrow.png',

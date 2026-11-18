@@ -25,7 +25,7 @@ export function pack(ratios, columns, columnWidth, gap = 12) {
 
   // Refine with moves/swaps. Minimizing squared heights reduces bottom-edge
   // variance. Stop after a bounded number of passes for large image sets.
-  const passes = Math.min(24, Math.max(0, ratios.length - columns) * 2);
+  const passes = ratios.length > 120 ? 0 : Math.min(24, Math.max(0, ratios.length - columns) * 2);
   for (let pass = 0; pass < passes; pass++) {
     let bestDelta = -1e-7, best = null;
     for (let i = 0; i < weights.length; i++) {

@@ -1,9 +1,7 @@
 # PDF Inspector
 
 A static, client-side PDF page-box inspector at `/tools/pdf-inspector/`.
-No PDF bytes are uploaded or persisted. The viewer loads the pinned MIT-licensed
-[`pdf-lib` 1.17.1](https://github.com/Hopding/pdf-lib) browser build from jsDelivr;
-the library requires a network connection on first use.
+No PDF bytes are uploaded or persisted. The parser runs in a worker using the bundled MIT-licensed pdf-lib 1.17.1.
 
 ## What is measured
 
