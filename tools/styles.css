@@ -1,41 +1,43 @@
 * { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; padding: 32px 24px; display: flex; align-items: center; justify-content: center; background: #2184fc; color: #2c2e2f; font: 16px/1.5 Roboto, Arial, sans-serif; }
-.card { --tool-gap: 16px; width: 960px; max-width: 100%; padding: 44px; border-radius: 18px; background: white; box-shadow: 0 2px 4px #15151633; }
-header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
-header img { width: 36px; height: 36px; }
-h1 { margin: 0; font-size: 32px; line-height: 1.25; font-weight: 600; }
-nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tool-gap); }
-nav a { display: flex; align-items: center; gap: 20px; min-height: 136px; padding: 24px; background: #f5f5f8; border-radius: 16px; color: #2c2e2f; text-decoration: none; transition: background-color 150ms, color 150ms; }
-.tool-icon { width: 64px; height: 64px; object-fit: contain; flex: 0 0 64px; }
+body:not(.utilities-shell) { margin: 0; min-height: 100vh; padding: 32px 24px; display: flex; align-items: center; justify-content: center; background: #2184fc; color: #2c2e2f; font: 16px/1.5 Roboto, Arial, sans-serif; }
+body:not(.utilities-shell) > main.card { min-height: 0; margin: 0; display: block; --tool-gap: 16px; width: 960px; max-width: 100%; padding: 44px; border-radius: 18px; background: white; box-shadow: 0 2px 4px #15151633; }
+body:not(.utilities-shell) > main.card header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
+body:not(.utilities-shell) > main.card header img { width: 36px; height: 36px; }
+body:not(.utilities-shell) > main.card h1 { margin: 0; font-size: 32px; line-height: 1.25; font-weight: 600; }
+body:not(.utilities-shell) > main.card nav { margin: 0; padding: 0; text-align: left; font: inherit; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tool-gap); }
+body:not(.utilities-shell) > main.card nav a { display: flex; align-items: center; gap: 20px; min-height: 136px; padding: 24px; background: #f5f5f8; border-radius: 16px; color: #2c2e2f; text-decoration: none; transition: background-color 150ms, color 150ms; }
+body:not(.utilities-shell) > main.card .tool-icon { width: 64px; height: 64px; object-fit: contain; flex: 0 0 64px; }
 /* Enlarge utility artwork without shifting the labels or the bonus icon. */
-nav > a .tool-icon { transform: scale(1.15); }
-.tool-copy { flex: 1; min-width: 0; }
-.tool-name { display: block; font-size: 23px; font-weight: 600; line-height: 1.2; }
-.tool-subtitle { display: block; margin-top: 7px; font-size: 14px; font-weight: 400; line-height: 1.35; color: #6b6f75; }
-.chevron { width: 12px; height: 12px; flex: 0 0 12px; border-top: 3px solid currentColor; border-right: 3px solid currentColor; transform: rotate(45deg); opacity: .75; margin-right: 4px; }
-nav a:hover { background: #edf4ff; color: #2675d4; }
-nav a:hover .tool-subtitle { color: #5c6f86; }
-a:focus-visible { outline: 3px solid #083f81; outline-offset: 4px; }
+body:not(.utilities-shell) > main.card nav > a .tool-icon { transform: scale(1.15); }
+body:not(.utilities-shell) > main.card .tool-copy { flex: 1; min-width: 0; }
+body:not(.utilities-shell) > main.card .tool-name { display: block; font-size: 23px; font-weight: 600; line-height: 1.2; }
+body:not(.utilities-shell) > main.card .tool-subtitle { display: block; margin-top: 7px; font-size: 14px; font-weight: 400; line-height: 1.35; color: #6b6f75; }
+body:not(.utilities-shell) > main.card .chevron { width: 12px; height: 12px; flex: 0 0 12px; border-top: 3px solid currentColor; border-right: 3px solid currentColor; transform: rotate(45deg); opacity: .75; margin-right: 4px; }
+body:not(.utilities-shell) > main.card nav a:hover { background: #edf4ff; color: #2675d4; }
+body:not(.utilities-shell) > main.card nav a:hover .tool-subtitle { color: #5c6f86; }
+body:not(.utilities-shell) > main.card a:focus-visible { outline: 3px solid #083f81; outline-offset: 4px; }
 /* Fill the next grid cell; on mobile the wrapper grows into a new row. */
-.secret-reveal { display: grid; min-width: 0; }
-.secret-reveal a { height: 100%; }
+body:not(.utilities-shell) > main.card .secret-reveal { display: grid; min-width: 0; }
+body:not(.utilities-shell) > main.card .secret-reveal a { height: 100%; }
 /* An even number of utility links leaves the bonus on its own row. */
-.secret-reveal:nth-child(odd) { grid-column: 1 / -1; }
+body:not(.utilities-shell) > main.card .secret-reveal:nth-child(odd) { grid-column: 1 / -1; }
 @media (max-width: 760px) {
-  body { padding: 24px 16px; }
-  .card { padding: 28px; }
-  nav a { gap: 12px; padding: 20px 16px; }
-  .tool-icon { width: 54px; height: 54px; flex-basis: 54px; }
-  .tool-name { font-size: 20px; }
-  .tool-subtitle { font-size: 13px; }
+  body:not(.utilities-shell) { padding: 24px 16px; }
+  body:not(.utilities-shell) > main.card { padding: 28px; }
+  body:not(.utilities-shell) > main.card nav a { gap: 12px; padding: 20px 16px; }
+  body:not(.utilities-shell) > main.card .tool-icon { width: 54px; height: 54px; flex-basis: 54px; }
+  body:not(.utilities-shell) > main.card .tool-name { font-size: 20px; }
+  body:not(.utilities-shell) > main.card .tool-subtitle { font-size: 13px; }
 }
 @media (max-width: 620px) {
-  .card { padding: 24px; border-radius: 14px; }
-  header { gap: 12px; margin-bottom: 24px; }
-  header img { width: 28px; height: 28px; }
-  h1 { font-size: 25px; }
-  nav { grid-template-columns: minmax(0, 1fr); }
-  nav a, .secret-reveal a { min-height: 106px; }
-  .tool-name { font-size: 18px; }
+  body:not(.utilities-shell) > main.card { padding: 24px; border-radius: 14px; }
+  body:not(.utilities-shell) > main.card header { gap: 12px; margin-bottom: 24px; }
+  body:not(.utilities-shell) > main.card header img { width: 28px; height: 28px; }
+  body:not(.utilities-shell) > main.card h1 { font-size: 25px; }
+  body:not(.utilities-shell) > main.card nav { grid-template-columns: minmax(0, 1fr); }
+  body:not(.utilities-shell) > main.card nav a, body:not(.utilities-shell) > main.card .secret-reveal a { min-height: 106px; }
+  body:not(.utilities-shell) > main.card .tool-name { font-size: 18px; }
 }
-@media (prefers-reduced-motion: reduce) { nav a { transition: none; } }
+@media (prefers-reduced-motion: reduce) { body:not(.utilities-shell) > main.card nav a { transition: none; } }
+
+body:not(.utilities-shell) > main.card nav > a[data-utilities-pending] { background: #e5efff; color: #176ac8; cursor: progress; }

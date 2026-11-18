@@ -19,7 +19,34 @@ The [Design Utilities page](https://joelmontgomery.graphics/tools/) brings toget
 
 Each tool includes its own usage instructions.
 
+### Utility navigation
+
+The nine utility pages include the sidebar HTML before rendering to avoid
+layout shifts. Shared behaviour and styling live in
+`tools/shared/utilities-shell.js` and `utilities-shell.css`. The sidebar
+reuses the existing /tools card artwork, highlights the active utility and
+collapses into a mobile selector. The basketball Easter egg stays on the /tools overview
+and is deliberately omitted from the sidebar.
+
+Each utility remains a standalone HTML document with its original script and
+URL. Internal navigation retains both the overview grid and utility shell in
+one top-level document, using the History API for normal URLs and Back/Forward.
+Opening a new tool loads it in an independent same-origin iframe; the original
+tool or the currently active frame can be reused. The blue indicator slides
+behind the live sidebar rows, and hover/focus warms at most one next tool.
+
+The 400ms overview-to-sidebar morph and reverse use same-document View
+Transitions, so there is no cross-document handoff or loading-frame flash.
+The white rectangle interpolates its geometry and corner radius, the nine
+matched tiles move independently, and the All utilities link fades in after
+the morph or fades out within the first 75ms of the reverse. The other layout
+remains hidden and inert until needed. The overview retains its original
+responsive layout and ten-second basketball reveal.
+
+Older browsers without same-document View Transitions use ordinary links.
+Reduced-motion preferences disable animations, and direct URLs and reloads
+still render their corresponding standalone HTML pages.
+
 ## Other projects
 
 The site also includes [Joeldle](https://joelmontgomery.graphics/joeldle/), [Joelculator](https://joelmontgomery.graphics/calculator/) and a few hidden extras.
-

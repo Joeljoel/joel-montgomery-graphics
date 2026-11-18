@@ -2,11 +2,56 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Barcode Data Merge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css?v=2"><script type="module" src="script.js?v=2"></script></head>
-<body><main><section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Barcode Data Merge</h1></header>
+<link rel="icon" type="image/png" sizes="50x50" href="../assets/utilities-favicon-group-11.png"><link rel="stylesheet" href="styles.css?v=2"><script type="module" src="script.js?v=2"></script>  <link rel="stylesheet" href="../styles.css?v=utilities-overview-2">
+  <link rel="stylesheet" href="../shared/utilities-shell.css?v=11">
+  <script src="../shared/utilities-shell.js?v=10" defer></script>
+  <link rel="expect" href="#utilities-ready" blocking="render">
+  <script>
+    // Set responsive layout and fallback entry state before first render.
+    document.documentElement.classList.add('utilities-has-js');
+    if (window.parent !== window &&
+        new URLSearchParams(location.search).has('utilitiesFrame')) {
+      document.documentElement.classList.add('utilities-embedded');
+    }
+    try {
+      const key = 'jm-utilities-next-page';
+      const target = sessionStorage.getItem(key);
+      if (target) sessionStorage.removeItem(key);
+      if (target === location.pathname && /Firefox\/\d+/i.test(navigator.userAgent) &&
+          !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('utilities-fallback-enter');
+      }
+    } catch {}
+
+  </script>
+</head>
+<body class="utilities-shell"><main>
+    <aside class="utilities-sidebar" aria-label="Design utilities">
+      <span class="utilities-surface" aria-hidden="true"></span>
+      <a class="utilities-home" href="../" aria-label="All design utilities"><img src="../assets/easilLogo.png" alt="" width="30" height="30"><span>Design Utilities</span></a>
+      <button class="utilities-toggle" type="button" aria-controls="utilities-navigation" aria-expanded="false" aria-label="Browse utilities. Current: Barcode Data Merge">
+        <img src="../assets/icons/barcode-paper.png" alt="" width="42" height="42">
+        <span class="utilities-toggle-copy"><small>Current utility</small><strong>Barcode Data Merge</strong></span>
+        <span class="utilities-toggle-chevron" aria-hidden="true"></span>
+      </button>
+      <nav id="utilities-navigation" class="utilities-menu" aria-label="Choose a design utility">
+        <a href="../shape-mask/"><img src="../assets/icons/shape-mask-paper.png" alt="" width="42" height="42"><span class="utilities-name">Shape Mask Converter</span></a>
+        <a href="../stretch-repeat/"><img src="../assets/icons/stretch-repeat-paper-v2.png" alt="" width="42" height="42"><span class="utilities-name">Stretch &amp; Repeat Converter</span></a>
+        <a href="../repeat/"><img src="../assets/icons/repeat-paper-v2.png" alt="" width="42" height="42"><span class="utilities-name">Repeating Shape Converter</span></a>
+        <a href="../stretchable/"><img src="../assets/icons/stretchable-paper.png" alt="" width="42" height="42"><span class="utilities-name">Stretchable Shape Converter</span></a>
+        <a href="../trim/"><img src="../assets/icons/trim-plastic.png" alt="" width="42" height="42"><span class="utilities-name">Trim SVG Contents</span></a>
+        <a href="../barcode/" aria-current="page"><span class="utilities-active-indicator" aria-hidden="true"></span><img src="../assets/icons/barcode-paper.png" alt="" width="42" height="42"><span class="utilities-name">Barcode Data Merge</span></a>
+        <a href="../qr/"><img src="../assets/icons/qr-paper.png" alt="" width="42" height="42"><span class="utilities-name">Bulk QR Code Generator</span></a>
+        <a href="../image-grid/"><img src="../assets/icons/image-grid-paper.png" alt="" width="42" height="42"><span class="utilities-name">Image Reference Grid</span></a>
+        <a href="../pdf-inspector/"><img src="../assets/icons/pdf-inspector-paper.png" alt="" width="42" height="42"><span class="utilities-name">PDF Inspector</span></a>
+      </nav>
+      <a class="utilities-overview" href="../">← All utilities</a>
+    </aside>
+<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Barcode Data Merge</h1></header>
 <button type="button" id="drop">Click or drop a TSV, CSV or TXT file here</button><input id="file" type="file" accept=".tsv,.csv,.txt,text/plain,text/csv,text/tab-separated-values" hidden>
 <label for="paste">Or paste codes or spreadsheet cells</label><textarea id="paste" rows="5" placeholder="Paste your data here" spellcheck="false"></textarea>
 <div class="options"><label>Separator <select id="delimiter"><option value="\t">Tabs / one code per line</option><option value=",">Commas (CSV)</option></select></label><label class="check"><input id="header" type="checkbox" checked> First row contains column headings</label></div>
 <p id="status" role="status" aria-live="polite"></p>
 <section id="settings" hidden><div class="options"><label>Barcode source <select id="source"></select></label><label>New column name <input id="name" value="BarcodeFormatted"></label></div><p id="count"></p><p id="last-row" class="hint"></p><div class="table-wrap"><table id="preview"></table></div><button type="button" id="download">Download for InDesign</button></section>
-</section><p class="info">Creates Code 128B text for Libre Barcode 128. Existing columns and values are kept; a formatted barcode column is added. Apply the barcode font to that field in InDesign. Import the tab-delimited TXT as Unicode.</p><nav><a href="../">All utilities</a></nav></main></body></html>
+</section><p class="info">Creates Code 128B text for Libre Barcode 128. Existing columns and values are kept; a formatted barcode column is added. Apply the barcode font to that field in InDesign. Import the tab-delimited TXT as Unicode.</p><nav><a href="../">All utilities</a></nav>  <span id="utilities-ready" hidden></span>
+  </main></body></html>

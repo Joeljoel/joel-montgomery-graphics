@@ -1,0 +1,668 @@
+/* The sidebar is present in HTML before the first paint. Native document
+   transitions are an enhancement over normal same-origin navigation. */
+@view-transition { navigation: none; }
+
+/* Shared elements: a solid white surface, heading and nine moving tiles.
+   The original parent snapshots caused the entire sidebar to disappear. */
+/* A solid backdrop remains throughout same-document overview morphs.
+   Tool-only switching explicitly disables the root capture below. */
+:root {
+  view-transition-name: root;
+  background: #2184fc;
+  --utilities-morph-duration: 400ms;
+  --utilities-morph-easing: cubic-bezier(.22, 1, .36, 1);
+  --utilities-overview-radius: 18px;
+  --utilities-sidebar-radius: 12px;
+  /* The destination document determines which way the radius travels. */
+  --utilities-radius-from: var(--utilities-sidebar-radius);
+  --utilities-radius-to: var(--utilities-overview-radius);
+}
+:root:has(body.utilities-shell) {
+  --utilities-radius-from: var(--utilities-overview-radius);
+  --utilities-radius-to: var(--utilities-sidebar-radius);
+}
+@media (max-width: 620px) {
+  :root { --utilities-overview-radius: 14px; }
+}
+html.utilities-inplace-navigation { view-transition-name: none; }
+
+/* Both layouts exist in the persistent document. A hidden overview must
+   never be captured, and a hidden tool host is staged off-screen so any
+   prepared iframe can lay out at its normal width before it enters. */
+body > main.utilities-overview-card[hidden] { display: none !important; }
+body > main.utilities-host[hidden] {
+  display: grid !important;
+  position: fixed !important;
+  left: -200vw !important;
+  top: 0 !important;
+  width: min(1290px, 100vw) !important;
+  grid-template-columns: 252px minmax(0, 1fr);
+  visibility: hidden !important;
+  pointer-events: none;
+}
+body > main.utilities-host[hidden],
+body > main.utilities-host[hidden] * {
+  view-transition-name: none !important;
+}
+body.utilities-overview-origin.utilities-shell {
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  display: block;
+  background: #2184fc;
+  color: #2c2e2f;
+  font: 15px/1.5 Roboto, Arial, sans-serif;
+}
+/* The off-screen slot remains connected during warm-up and activation. */
+main.utilities-host > .utilities-frame-slot > iframe {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  background: transparent;
+}
+@media (max-width: 960px) {
+  body > main.utilities-host[hidden] {
+    width: min(900px, 100vw) !important;
+    grid-template-columns: 1fr;
+  }
+}
+
+body > main.card,
+body:not(.utilities-shell) > main.card,
+body.utilities-shell main > .utilities-sidebar {
+  position: relative;
+  isolation: isolate;
+  background: transparent;
+  box-shadow: none;
+  view-transition-name: none;
+}
+
+body > main.card > .utilities-surface,
+body.utilities-shell main > .utilities-sidebar > .utilities-surface {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background: #fff;
+  box-shadow: 0 2px 4px #15151633;
+  view-transition-name: utilities-surface;
+}
+
+body > main.card > header,
+body.utilities-shell main > .utilities-sidebar > .utilities-home {
+  view-transition-name: utilities-brand;
+}
+
+body.utilities-shell main > .card {
+  view-transition-name: utilities-content;
+}
+
+body.utilities-shell main {
+  width: min(1290px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: grid;
+  grid-template-columns: 252px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 20px;
+  align-content: center;
+  align-items: start;
+}
+
+body.utilities-shell main > .utilities-sidebar {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  align-self: start;
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+
+body.utilities-shell main > .card {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  width: 100%;
+  border-radius: 12px;
+}
+body.utilities-shell main > .info {
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+  view-transition-name: utilities-description;
+}
+body.utilities-shell main > nav {
+  display: none;
+}
+
+.utilities-sidebar {
+  padding: 18px 12px 14px;
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: none;
+  font: 14px/1.35 Roboto, Arial, sans-serif;
+  color: #2c2e2f;
+}
+.utilities-sidebar *, .utilities-sidebar *::before, .utilities-sidebar *::after {
+  box-sizing: border-box;
+}
+.utilities-sidebar .utilities-home {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0 7px 15px;
+  color: #2c2e2f;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+  line-height: 1.2;
+}
+.utilities-sidebar .utilities-home img { width: 30px; height: 30px; flex: none; }
+.utilities-sidebar .utilities-home:hover { color: #216dce; }
+.utilities-sidebar .utilities-menu {
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font-size: inherit;
+}
+.utilities-sidebar .utilities-menu a {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 5px 8px;
+  border-radius: 9px;
+  background: transparent;
+  color: #343a40;
+  text-decoration: none;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.utilities-sidebar .utilities-menu a:hover {
+  background: #f3f6fb;
+  color: #176ac8;
+}
+.utilities-sidebar .utilities-menu a[aria-current="page"] {
+  color: #145eb2;
+  font-weight: 600;
+}
+.utilities-sidebar .utilities-menu a[aria-current="page"]:hover {
+  background: transparent;
+}
+.utilities-sidebar .utilities-menu img {
+  display: block;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+.utilities-sidebar .utilities-active-indicator {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 9px;
+  background: #eaf3ff;
+  box-shadow: inset 0 0 0 1px #d6e7ff;
+  pointer-events: none;
+  transform-origin: top left;
+  view-transition-name: none;
+}
+/* The sliding background is below every row, rather than a snapshot on
+   top of them. When settled inside a row, its original negative z-index
+   keeps it behind that row's artwork and text. */
+.utilities-sidebar .utilities-menu > .utilities-active-indicator {
+  z-index: 0;
+}
+.utilities-sidebar .utilities-name { flex: 1; min-width: 0; }
+.utilities-sidebar .utilities-overview {
+  display: inline-block;
+  margin: 14px 8px 2px;
+  color: #416a9a;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+.utilities-sidebar .utilities-overview:hover { color: #176ac8; text-decoration: underline; }
+/* This link has no counterpart in the overview. Capture it separately, so
+   it never leaks into the root snapshot underneath the moving white panel. */
+.utilities-sidebar .utilities-overview {
+  view-transition-name: utilities-back-link;
+}
+.utilities-sidebar .utilities-toggle {
+  view-transition-name: utilities-mobile-toggle;
+}
+.utilities-sidebar .utilities-menu a[data-utilities-pending] {
+  background: #f0f6ff;
+  color: #176ac8;
+  cursor: progress;
+}
+.utilities-sidebar .utilities-menu a:active,
+body > main.card > nav > a:active {
+  background: #e5efff;
+}
+.utilities-sidebar a:focus-visible,
+.utilities-sidebar button:focus-visible {
+  outline: 3px solid #083f81;
+  outline-offset: 2px;
+}
+.utilities-sidebar .utilities-toggle { display: none; }
+
+/* Each overview tile moves into its corresponding sidebar row. */
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(1),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(1) {
+  view-transition-name: utilities-tile-shape-mask;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(2),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(2) {
+  view-transition-name: utilities-tile-stretch-repeat;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(3),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(3) {
+  view-transition-name: utilities-tile-repeat;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(4),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(4) {
+  view-transition-name: utilities-tile-stretchable;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(5),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(5) {
+  view-transition-name: utilities-tile-trim;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(6),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(6) {
+  view-transition-name: utilities-tile-barcode;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(7),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(7) {
+  view-transition-name: utilities-tile-qr;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(8),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(8) {
+  view-transition-name: utilities-tile-image-grid;
+}
+
+body > main.card > nav[aria-label="Design utilities"] > a:nth-child(9),
+body.utilities-shell .utilities-sidebar .utilities-menu > a:nth-child(9) {
+  view-transition-name: utilities-tile-pdf-inspector;
+}
+
+body > main.card .secret-reveal { view-transition-name: utilities-secret; }
+
+@media (max-width: 960px) {
+  body.utilities-shell main {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: min(900px, 100%);
+    padding: 24px 16px;
+    gap: 0;
+  }
+  body.utilities-shell main > .utilities-sidebar {
+    position: static;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  body.utilities-shell main > .card,
+  body.utilities-shell main > .info {
+    width: 100%;
+  }
+  .utilities-sidebar { padding: 12px; }
+  .utilities-sidebar .utilities-home { margin: 2px 4px 12px; font-size: 16px; }
+  .utilities-sidebar .utilities-home img { width: 26px; height: 26px; }
+  html.utilities-has-js .utilities-sidebar .utilities-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 66px;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border: 1px solid #e3e8ef;
+    border-radius: 9px;
+    background: #f5f7fa;
+    color: #2c2e2f;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+  }
+  .utilities-sidebar .utilities-toggle:hover { background: #edf4ff; }
+  .utilities-sidebar .utilities-toggle img {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    object-fit: contain;
+  }
+  .utilities-sidebar .utilities-toggle-copy { flex: 1; min-width: 0; }
+  .utilities-sidebar .utilities-toggle-copy small {
+    display: block;
+    color: #6b7280;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+  .utilities-sidebar .utilities-toggle-copy strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .utilities-sidebar .utilities-toggle-chevron {
+    flex: 0 0 9px;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid #5d6a79;
+    border-bottom: 2px solid #5d6a79;
+    transform: rotate(45deg);
+    transition: transform 180ms ease;
+    margin: -4px 5px 0;
+  }
+  .utilities-sidebar.is-open .utilities-toggle-chevron { transform: rotate(225deg); margin-top: 4px; }
+  /* The full menu remains accessible if JavaScript is disabled. */
+  .utilities-sidebar .utilities-menu {
+    display: grid;
+    max-height: min(58vh, 470px);
+    overflow-y: auto;
+  }
+  html.utilities-has-js .utilities-sidebar .utilities-menu { display: none; }
+  html.utilities-has-js .utilities-sidebar.is-open .utilities-menu {
+    display: grid;
+    max-height: min(58vh, 470px);
+    overflow-y: auto;
+    padding-top: 10px;
+  }
+  .utilities-sidebar .utilities-overview { margin: 10px 7px 2px; }
+}
+
+@media (max-width: 620px) {
+  body.utilities-shell main { padding: 20px 12px; }
+  body.utilities-shell main > .card { border-radius: 10px; }
+}
+
+
+/* The top-level sidebar stays mounted while the tool runs
+   as an independent same-origin document in the content column. */
+body.utilities-shell main > .utilities-frame-slot {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+  width: 100%;
+  view-transition-name: utilities-content;
+}
+body.utilities-shell main > .utilities-frame-slot > iframe {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  background: transparent;
+}
+
+/* The iframe owns only a tool's content: no second sidebar, no extra blue
+   gutters, and no nested scrolling. Direct visits still render normally. */
+html.utilities-embedded,
+html.utilities-embedded body {
+  background: transparent !important;
+  min-height: 0 !important;
+  overflow-x: hidden;
+}
+html.utilities-embedded body.utilities-shell > main {
+  display: block !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+html.utilities-embedded body.utilities-shell > main > .utilities-sidebar,
+html.utilities-embedded body.utilities-shell > main > nav {
+  display: none !important;
+}
+html.utilities-embedded body.utilities-shell > main > .card {
+  display: block;
+  width: 100%;
+  margin: 0;
+  view-transition-name: none;
+}
+html.utilities-embedded body.utilities-shell > main > .info {
+  width: 100%;
+  margin: 14px 0 0;
+  view-transition-name: none;
+}
+@media (max-width: 960px) {
+  body.utilities-shell main > .utilities-frame-slot { width: 100%; }
+}
+
+/* Tool-to-tool navigation is a same-document change: keep the sidebar
+   mounted and visible as real DOM. Its tiles and white background must
+   NEVER become View Transition snapshots, otherwise Chromium hides them
+   and briefly redraws their text/icons during each navigation. Only the
+   selected blue indicator animates as a live layer underneath the rows. */
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-surface,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar > .utilities-home,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-overview,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-toggle,
+html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar .utilities-menu > a {
+  view-transition-name: none;
+}
+
+/* Overview transitions capture each tile as a unit, including its blue
+   selection background. The highlight stays beneath the tile's text/icon
+   in both directions and travels with the tile instead of floating above. */
+
+/* Avoid the previous outgoing-then-delayed-incoming blank frames. */
+@keyframes utilities-content-out {
+  to { opacity: 0; }
+}
+@keyframes utilities-content-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes utilities-content-first-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes utilities-surface-radius {
+  from { border-radius: var(--utilities-radius-from); }
+  to { border-radius: var(--utilities-radius-to); }
+}
+
+/* The browser interpolates the group's width, height and position; fill
+   that rectangle directly rather than scaling the portrait sidebar image
+   to the landscape overview's width (which produced a huge tall panel).
+   The root backdrop and the rectangle remain opaque throughout. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(utilities-surface),
+  ::view-transition-group(utilities-brand),
+  ::view-transition-group(utilities-tile-shape-mask),
+  ::view-transition-group(utilities-tile-stretch-repeat),
+  ::view-transition-group(utilities-tile-repeat),
+  ::view-transition-group(utilities-tile-stretchable),
+  ::view-transition-group(utilities-tile-trim),
+  ::view-transition-group(utilities-tile-barcode),
+  ::view-transition-group(utilities-tile-qr),
+  ::view-transition-group(utilities-tile-image-grid),
+  ::view-transition-group(utilities-tile-pdf-inspector) {
+    animation-duration: var(--utilities-morph-duration);
+    animation-timing-function: var(--utilities-morph-easing);
+  }
+
+  /* Do not let the incoming snapshot's intrinsic aspect ratio determine
+     the height. The UA animates the group rectangle from the EXACT old
+     border box to the EXACT new border box. Paint that rectangle itself. */
+  ::view-transition-group(root) {
+    z-index: 0;
+    animation-duration: var(--utilities-morph-duration);
+    background: #2184fc;
+  }
+  /* All visible UI has a named capture. Keeping only the solid blue root
+     backdrop avoids a one-frame composite of the destination's unnamed UI. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    opacity: 0;
+    mix-blend-mode: normal;
+  }
+  ::view-transition-group(utilities-surface) {
+    z-index: 1;
+    /* The UA handles geometry; the image pair below paints the surface. */
+    overflow: visible;
+  }
+  ::view-transition-image-pair(utilities-surface) {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    border-radius: var(--utilities-radius-to);
+    box-shadow: 0 2px 4px #15151633;
+    overflow: clip;
+    animation: utilities-surface-radius var(--utilities-morph-duration) var(--utilities-morph-easing) both;
+  }
+  ::view-transition-old(utilities-surface),
+  ::view-transition-new(utilities-surface) {
+    animation: none;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+  }
+  ::view-transition-group(utilities-content),
+  ::view-transition-group(utilities-description) { z-index: 2; }
+  ::view-transition-group(utilities-brand),
+  ::view-transition-group(utilities-secret),
+  ::view-transition-group(utilities-back-link),
+  ::view-transition-group(utilities-mobile-toggle),
+  ::view-transition-group(utilities-tile-shape-mask),
+  ::view-transition-group(utilities-tile-stretch-repeat),
+  ::view-transition-group(utilities-tile-repeat),
+  ::view-transition-group(utilities-tile-stretchable),
+  ::view-transition-group(utilities-tile-trim),
+  ::view-transition-group(utilities-tile-barcode),
+  ::view-transition-group(utilities-tile-qr),
+  ::view-transition-group(utilities-tile-image-grid),
+  ::view-transition-group(utilities-tile-pdf-inspector) { z-index: 3; }
+
+  /* Morph the matched tiles and heading inside their interpolated boxes.
+     Keep their intrinsic aspect ratio from extending past those boxes.
+     Other tool-content snapshots retain their existing sizing. */
+  ::view-transition-image-pair(utilities-brand),
+  ::view-transition-image-pair(utilities-tile-shape-mask),
+  ::view-transition-image-pair(utilities-tile-stretch-repeat),
+  ::view-transition-image-pair(utilities-tile-repeat),
+  ::view-transition-image-pair(utilities-tile-stretchable),
+  ::view-transition-image-pair(utilities-tile-trim),
+  ::view-transition-image-pair(utilities-tile-barcode),
+  ::view-transition-image-pair(utilities-tile-qr),
+  ::view-transition-image-pair(utilities-tile-image-grid),
+  ::view-transition-image-pair(utilities-tile-pdf-inspector) {
+    width: 100%;
+    height: 100%;
+    overflow: clip;
+  }
+  ::view-transition-old(utilities-brand),
+  ::view-transition-new(utilities-brand),
+  ::view-transition-old(utilities-tile-shape-mask),
+  ::view-transition-new(utilities-tile-shape-mask),
+  ::view-transition-old(utilities-tile-stretch-repeat),
+  ::view-transition-new(utilities-tile-stretch-repeat),
+  ::view-transition-old(utilities-tile-repeat),
+  ::view-transition-new(utilities-tile-repeat),
+  ::view-transition-old(utilities-tile-stretchable),
+  ::view-transition-new(utilities-tile-stretchable),
+  ::view-transition-old(utilities-tile-trim),
+  ::view-transition-new(utilities-tile-trim),
+  ::view-transition-old(utilities-tile-barcode),
+  ::view-transition-new(utilities-tile-barcode),
+  ::view-transition-old(utilities-tile-qr),
+  ::view-transition-new(utilities-tile-qr),
+  ::view-transition-old(utilities-tile-image-grid),
+  ::view-transition-new(utilities-tile-image-grid),
+  ::view-transition-old(utilities-tile-pdf-inspector),
+  ::view-transition-new(utilities-tile-pdf-inspector) {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+  }
+
+  /* Both content snapshots overlap throughout the utility-to-utility swap. */
+  ::view-transition-group(utilities-content) {
+    animation-duration: 220ms;
+    animation-timing-function: var(--utilities-morph-easing);
+  }
+  ::view-transition-old(utilities-content) {
+    animation: 210ms ease-in-out both utilities-content-out;
+  }
+  ::view-transition-new(utilities-content) {
+    animation: 210ms ease-in-out both utilities-content-in;
+  }
+  /* Start the new tool as the navigation panel is moving, rather than
+     holding it invisible for an additional tenth of a second. */
+  ::view-transition-new(utilities-content):only-child {
+    animation: 240ms 35ms var(--utilities-morph-easing) both utilities-content-first-in;
+  }
+
+  /* The return link appears only when the sidebar is in its final position.
+     On the way back, it leaves quickly with the departing sidebar. */
+  ::view-transition-group(utilities-back-link),
+  ::view-transition-group(utilities-mobile-toggle) {
+    animation-duration: var(--utilities-morph-duration);
+  }
+  ::view-transition-new(utilities-back-link):only-child,
+  ::view-transition-new(utilities-mobile-toggle):only-child {
+    animation: 100ms var(--utilities-morph-duration) ease-out both utilities-content-in;
+  }
+  /* Fade the outgoing return-link GROUP (not just its image). The
+     destination layout changes in the update callback, and the old
+     layer fades without changing the geometry of any moving tiles. */
+  :root:not(:has(body.utilities-shell))::view-transition-group(utilities-back-link) {
+    animation: 75ms linear both utilities-content-out;
+  }
+  ::view-transition-old(utilities-back-link) {
+    animation: none;
+    opacity: 1;
+  }
+  ::view-transition-old(utilities-mobile-toggle):only-child {
+    animation: 100ms ease-in both utilities-content-out;
+  }
+  ::view-transition-old(utilities-secret) {
+    animation: 120ms ease-out both utilities-content-out;
+  }
+
+  /* Only Firefox's overview fallback should use CSS page-entry fades. */
+  html.utilities-fallback-exiting body > main.card,
+  html.utilities-fallback-exiting body.utilities-shell main > .card {
+    animation: 90ms ease-out both utilities-content-out;
+  }
+  html.utilities-fallback-enter body > main.card,
+  html.utilities-fallback-enter body.utilities-shell main > .card {
+    animation: 160ms ease-out both utilities-content-in;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+  }
+  .utilities-sidebar .utilities-toggle-chevron { transition: none; }
+}
