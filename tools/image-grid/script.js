@@ -30,12 +30,73 @@ function scheduleArrange(){
   requestAnimationFrame(()=>{arrangePending=false;arrange();});
 }
 function status(){const ready=items.filter(i=>i.state==='ready').length,failed=items.filter(i=>i.state==='failed').length; $('progress').textContent=`${ready}/${items.length} loaded${failed?` · ${failed} unavailable`:''}`;scheduleArrange();}
-function load(){const urls=extract($('paste').value);if(!urls.length){$('status').textContent='No image links found. Use the Copy image links bookmark on the Easil image list; View Source and saved pages may not contain the images.';return;}const gen=++generation;items=[];$('masonry').replaceChildren();$('modal').classList.remove('clean');$('modal').showModal();document.body.style.overflow='hidden';$('status').textContent='';let nextIndex = 0;
-function startNext() {
-  if (gen !== generation || nextIndex >= urls.length) return;
-  const url = urls[nextIndex++];
-const cell=document.createElement('div'),img=new Image(),remove=document.createElement('button'),label=document.createElement('span');cell.className='tile';remove.className='remove';remove.textContent='×';remove.setAttribute('aria-label','Remove '+new URL(url).pathname.split('/').pop());label.textContent='Loading…';img.alt='';img.referrerPolicy='no-referrer';img.hidden=true;const item={cell,img,state:'loading',removed:false};items.push(item);remove.onclick=()=>{item.removed=true;cell.hidden=true;arrange();};cell.append(img,label,remove);$('masonry').append(cell);let triedFallback=false;const finish=ok=>{if(gen!==generation || item.state !== 'loading')return;clearTimeout(timeout);item.state=ok?'ready':'failed';img.hidden=!ok;label.hidden=ok;label.textContent='Image unavailable';startNext();status();};const fallback=()=>{if(gen!==generation)return;if(!triedFallback&&url.includes('/thumb_')){triedFallback=true;clearTimeout(timeout);timeout=setTimeout(()=>finish(false),20000);img.src=url.replace('/thumb_','/');}else finish(false);};let timeout=setTimeout(fallback,20000);img.onload=()=>finish(true);img.onerror=fallback;img.src=url;
+function load(){const urls=extract($('paste').value);if(!urls.length){$('status').textContent='No image links found. Use the Copy image links bookmark on the Easil image list; View Source and saved pages may not contain the images.';return;}const gen=++generation;items=[];$('masonry').replaceChildren();$('modal').classList.remove('clean');$('modal').showModal();document.body.style.overflow='hidden';$('status').textContent='';const originals = [];
+  let active = 0;
+
+  function pump() {
+    while (gen === generation && active < 6 && originals.length) {
+      const job = originals.shift();
+      active++;
+      job().finally(() => { active--; pump(); });
+    }
+  }
+
+  function fetchImage(url) {
+    const image = new Image();
+    image.alt = '';
+    image.referrerPolicy = 'no-referrer';
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        image.removeAttribute('src');
+        reject(new Error('Image timed out'));
+      }, 20000);
+      image.onload = () => { clearTimeout(timeout); resolve(image); };
+      image.onerror = () => { clearTimeout(timeout); reject(new Error('Image unavailable')); };
+      image.src = url;
+    });
+  }
+
+  for (const url of urls) {
+    const cell = document.createElement('div');
+    const label = document.createElement('span');
+    const remove = document.createElement('button');
+    cell.className = 'tile';
+    label.textContent = 'Loading…';
+    remove.className = 'remove';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', 'Remove ' + new URL(url).pathname.split('/').pop());
+    const item = { cell, img: new Image(), state: 'loading', removed: false };
+    items.push(item);
+    remove.onclick = () => { item.removed = true; cell.hidden = true; arrange(); };
+    cell.append(label, remove);
+    function show(img) {
+      if (gen !== generation) return;
+      item.img.remove();
+      item.img = img;
+      cell.prepend(img);
+      label.hidden = true;
+      item.state = 'ready';
+      status();
+    }
+    const original = new URL(url);
+    original.pathname = original.pathname.replace(/(^|\/)(?:thumb_|preview_)([^/]+)$/i, '$1$2');
+    function queueOriginal() {
+      if (gen !== generation) return;
+      originals.push(async () => {
+        try { show(await fetchImage(original.href)); }
+        catch {
+          if (gen === generation && item.state !== 'ready') {
+            item.state = 'failed';
+            label.textContent = 'Image unavailable';
+            status();
+          }
+        }
+      });
+      pump();
+    }
+    if (original.href === url) queueOriginal();
+    else fetchImage(url).then(show, () => {}).then(queueOriginal);
+  }
+  status();
 }
-for (let i = 0; i < Math.min(6, urls.length); i++) startNext();
-status();}
 $('load').onclick=load;$('drop').onclick=()=>$('file').click();async function file(f){if(!f)return;try{$('paste').value=await f.text();load();}catch{$('status').textContent='Could not read this file. Try pasting the copied links.';}}$('file').onchange=e=>{file(e.target.files[0]);e.target.value='';};$('drop').ondragover=e=>e.preventDefault();$('drop').ondrop=e=>{e.preventDefault();file(e.dataTransfer.files[0]);};$('restore').onclick=()=>{items.forEach(i=>{i.removed=false;i.cell.hidden=false;});arrange();};$('columns').onchange=arrange;$('background').oninput=()=>{$('grid').style.background=$('background').value;};$('clean').onclick=()=>{$('modal').classList.add('clean');arrange();};$('grid').onclick=()=>{if($('modal').classList.contains('clean')){$('modal').classList.remove('clean');arrange();}};$('close').onclick=()=>$('modal').close();$('modal').addEventListener('cancel',e=>{if($('modal').classList.contains('clean')){e.preventDefault();$('modal').classList.remove('clean');arrange();}});$('modal').addEventListener('close',()=>{document.body.style.overflow='';$('load').focus();});new ResizeObserver(scheduleArrange).observe($('grid'));
