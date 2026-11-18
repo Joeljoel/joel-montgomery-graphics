@@ -10,8 +10,7 @@ const { chromium } = require('playwright');
   });
   try {
     const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-    // Chromium uses this path by default for tool-to-tool navigation, while
-    // retaining native cross-document morphs when entering from /tools/.
+    // Chromium and Firefox both keep the overview and tool shell mounted.
     const page = await context.newPage();
     const failures = [];
     page.on('pageerror', error => failures.push(error.message));

@@ -35,7 +35,7 @@ const { chromium } = require('playwright');
     // must already be present in the HTML before the script runs.
     const slow = await browser.newPage({ viewport: { width: 1280, height: 900 } });
     let releaseScript;
-    await slow.route('**/utilities-shell.js?v=9', async route => {
+    await slow.route('**/utilities-shell.js?v=10', async route => {
       await new Promise(resolve => { releaseScript = resolve; });
       await route.continue();
     });
@@ -143,17 +143,22 @@ const { chromium } = require('playwright');
     ), true);
     assert.equal(await page.locator('.utilities-menu a[aria-current="page"] .utilities-name').innerText(), 'Trim SVG Contents');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
+    await page.setViewportSize({ width: 1280, height: 900 });
     await page.locator('.utilities-overview').click();
     await page.waitForURL('**/tools/');
-    assert.equal(await page.locator('nav[aria-label="Design utilities"] > a').count(), 9);
+    assert.equal(await page.locator('main.utilities-overview-card > nav > a').count(), 9);
+    assert.equal(await page.evaluate(() =>
+      document.querySelector('.utilities-sidebar') === window.__sidebarIdentity &&
+      document.querySelector('main.utilities-host') === window.__mainIdentity
+    ), true, 'Returning to the overview must not replace the top document or sidebar');
     assert.equal(await page.locator('main.card > .utilities-surface').evaluate(
       element => getComputedStyle(element).viewTransitionName
     ), 'utilities-surface');
 
     // The overview retains its illustrated cards and transitions into the shell.
-    const overviewIcons = await page.locator('nav[aria-label="Design utilities"] > a .tool-icon')
+    const overviewIcons = await page.locator('main.utilities-overview-card > nav > a .tool-icon')
       .evaluateAll(images => images.map(image => image.getAttribute('src').split('/').pop()));
-    await page.locator('nav[aria-label="Design utilities"] > a[href="shape-mask/"]').click();
+    await page.locator('main.utilities-overview-card > nav > a[href="/tools/shape-mask/"]').click();
     await page.waitForURL('**/tools/shape-mask/');
     const sidebarIcons = await page.locator('.utilities-menu a img')
       .evaluateAll(images => images.map(image => image.getAttribute('src').split('/').pop()));
@@ -176,12 +181,50 @@ const { chromium } = require('playwright');
     assert.equal(new Set(sidebarNames).size, 9);
     assert.ok(sidebarNames.every(name => name.startsWith('utilities-tile-')));
     assert.equal(await page.locator('.utilities-frame-slot').count(), 0,
-      'Overview navigation should still enter a standalone tool page and morph the grid');
+      'Returning to the original tool should reuse its original card');
     await page.locator('.utilities-overview').click();
     await page.waitForURL('**/tools/');
     const overviewNames = await page.locator('main.card > nav[aria-label="Design utilities"] > a')
       .evaluateAll(links => links.map(link => getComputedStyle(link).viewTransitionName));
     assert.deepEqual(overviewNames, sidebarNames);
+
+    // A fresh visit to /tools/ must also keep the same document through
+    // forward, reverse, and history navigation. No full-page load is allowed.
+    await page.goto('http://localhost:8765/tools/');
+    await page.locator('main.utilities-overview-card').waitFor({ state: 'visible' });
+    await page.evaluate(() => {
+      window.__overviewIdentity = document.querySelector('main.utilities-overview-card');
+      window.__sidebarIdentity = document.querySelector('.utilities-sidebar');
+      window.__rootIdentity = document.documentElement;
+    });
+    let documentRequests = 0;
+    const countDocumentRequest = request => {
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame()) documentRequests++;
+    };
+    page.on('request', countDocumentRequest);
+    await page.locator('main.utilities-overview-card > nav > a[href="qr/"]').click();
+    await page.waitForURL('**/tools/qr/');
+    await page.locator('main.utilities-host > .utilities-frame-slot > iframe').waitFor({ state: 'visible' });
+    assert.equal(await page.frameLocator('main.utilities-host > .utilities-frame-slot > iframe').locator('.card h1').innerText(), 'Bulk QR Code Generator');
+    const sameDocument = () => page.evaluate(() =>
+      document.documentElement === window.__rootIdentity &&
+      document.querySelector('main.utilities-overview-card') === window.__overviewIdentity &&
+      document.querySelector('.utilities-sidebar') === window.__sidebarIdentity
+    );
+    assert.equal(await sameDocument(), true);
+    await page.locator('.utilities-overview').click();
+    await page.waitForURL('**/tools/');
+    assert.equal(await sameDocument(), true);
+    assert.equal(await page.locator('main.utilities-overview-card').isVisible(), true);
+    assert.equal(await page.locator('.utilities-sidebar').isVisible(), false);
+    await page.goBack();
+    await page.waitForURL('**/tools/qr/');
+    assert.equal(await sameDocument(), true);
+    await page.goForward();
+    await page.waitForURL('**/tools/');
+    assert.equal(await sameDocument(), true);
+    assert.equal(documentRequests, 0, 'No overview transition may reload the main document');
+    page.off('request', countDocumentRequest);
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('http://localhost:8765/tools/pdf-inspector/');
@@ -199,7 +242,7 @@ const { chromium } = require('playwright');
       }
     ), true);
     assert.deepEqual(errors, []);
-    console.log('PASS: persistent icon sidebar, in-place tool transitions, overview grid morph and reduced motion');
+    console.log('PASS: persistent overview and sidebar, zero main-document requests, history, preloading and reduced motion');
   } finally {
     await browser.close();
   }

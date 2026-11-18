@@ -5,7 +5,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
  try{
   const page=await browser.newPage({viewport:{width:1100,height:1000}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.clock.install({time:new Date('2026-01-01T00:00:00Z')});await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));await page.goto('http://localhost:8765/tools/');
-  const cards=page.locator('nav > a');assert.equal(await cards.count(),9);
+  const cards=page.locator('main.card > nav > a');assert.equal(await cards.count(),9);
   const expected=[
    ['Shape Mask Converter','Create image masks from vector shapes'],
    ['Stretch & Repeat Converter','Repeat a centre section with fixed endcaps'],
@@ -27,23 +27,23 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   const a=await cards.nth(0).boundingBox(),b=await cards.nth(1).boundingBox(),c=await cards.nth(2).boundingBox();
   assert.equal(a.y,b.y);assert.ok(b.x>a.x);assert.equal(a.x,c.x);assert.ok(c.y>a.y);
   const before=(await page.locator('.card').boundingBox()).height;
-  await page.clock.runFor(9999);assert.equal(await page.locator('a[href="../basketball/"]').count(),0);
+  await page.clock.runFor(9999);assert.equal(await page.locator('a[href="/basketball/"]').count(),0);
   await page.screenshot({path:'/tmp/tools-before.png',fullPage:true});
-  await page.clock.runFor(101);assert.equal(await page.locator('a[href="../basketball/"]').count(),1);
+  await page.clock.runFor(101);assert.equal(await page.locator('a[href="/basketball/"]').count(),1);
   const during=(await page.locator('.card').boundingBox()).height;
   await page.clock.runFor(1000);
   // Web Animations use the compositor clock; allow the real 600ms transition to finish.
   await new Promise(resolve=>setTimeout(resolve,750));
-  const secret=page.locator('a[href="../basketball/"]'),box=await secret.boundingBox();
+  const secret=page.locator('a[href="/basketball/"]'),box=await secret.boundingBox();
   assert.equal((await secret.locator('.tool-subtitle').innerText()).trim(),'Hoops of Fun');
   const after=(await page.locator('.card').boundingBox()).height;
   const last=await cards.last().boundingBox();
   assert.ok(Math.abs(after-before)<1);assert.ok(Math.abs(during-before)<1);
   assert.equal(box.x,b.x);assert.equal(box.y,last.y);
   assert.ok(Math.abs(box.width-last.width)<1);assert.ok(Math.abs(box.height-last.height)<1);
-  await page.locator('nav img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode())));
-  assert.equal(await page.locator('nav img').count(),10);
-  assert.equal(await page.locator('nav img').evaluateAll(imgs=>imgs.every(img=>img.naturalWidth>0)),true);
+  await page.locator('main.card nav img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode())));
+  assert.equal(await page.locator('main.card nav img').count(),10);
+  assert.equal(await page.locator('main.card nav img').evaluateAll(imgs=>imgs.every(img=>img.naturalWidth>0)),true);
   await page.screenshot({path:'/tmp/tools-after.png',fullPage:true});
   await cards.first().focus();assert.equal(await cards.first().evaluate(el=>getComputedStyle(el).outlineStyle),'solid');
   for(const width of [375,620,700]){
@@ -52,7 +52,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
    if(width===375){const first=await cards.nth(0).boundingBox(),second=await cards.nth(1).boundingBox();assert.equal(first.x,second.x);assert.ok(second.y>first.y);await page.screenshot({path:'/tmp/tools-mobile.png',fullPage:true});}
   }
   await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await page.clock.runFor(10001);
-  assert.equal(await page.locator('a[href="../basketball/"]').count(),1);
+  assert.equal(await page.locator('a[href="/basketball/"]').count(),1);
   assert.equal(await page.locator('.secret-reveal').evaluate(el=>el.getAnimations({subtree:true}).length),0);
   assert.deepEqual(errors,[]);console.log('PASS: two columns, titles, subtitles, icons, 10-second reveal, equal-size bonus in next column, keyboard focus, mobile and reduced motion.',{before,during,after});
  }finally{await browser.close();}

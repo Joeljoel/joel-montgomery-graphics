@@ -8,9 +8,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" sizes="50x50" href="assets/utilities-favicon-group-11.png">
-  <link rel="stylesheet" href="styles.css?v=paper-icons-1">
-  <link rel="stylesheet" href="shared/utilities-shell.css?v=10">
-  <script src="shared/utilities-shell.js?v=9" defer></script>
+  <link rel="stylesheet" href="styles.css?v=utilities-overview-2">
+  <link rel="stylesheet" href="shared/utilities-shell.css?v=11">
+  <script src="shared/utilities-shell.js?v=10" defer></script>
   <link rel="expect" href="#utilities-ready" blocking="render">
   <script>
     // Set responsive layout and fallback entry state before first render.
@@ -43,41 +43,7 @@
     </nav>
     <span id="utilities-ready" hidden></span>
   </main>
-  <script>
-    window.setTimeout(() => {
-      const link = document.createElement('a');
-      link.href = '../basketball/';
-      link.innerHTML = '<img class="tool-icon" src="assets/icons/basketball-paper.png" alt="" width="72" height="72"><span class="tool-copy"><span class="tool-name">Secret<br>Basketball Game</span><span class="tool-subtitle">Hoops of Fun</span></span><span class="chevron" aria-hidden="true"></span>';
-      const reveal = document.createElement('div');
-      reveal.className = 'secret-reveal';
-      reveal.append(link);
-      const animate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (animate) {
-        reveal.style.height = '0px';
-        reveal.style.overflow = 'hidden';
-      }
-      document.querySelector('nav[aria-label="Design utilities"]').append(reveal);
 
-      if (animate) {
-        const previous = reveal.previousElementSibling.getBoundingClientRect();
-        const sameRow = Math.abs(previous.top - reveal.getBoundingClientRect().top) < 1;
-        const height = Math.max(link.getBoundingClientRect().height, sameRow ? previous.height : 0);
-        const expand = reveal.animate(
-          [{ height: '0px' }, { height: height + 'px' }],
-          { duration: 600, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'forwards' }
-        );
-        link.animate(
-          [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }],
-          { duration: 450, delay: 120, easing: 'ease-out', fill: 'backwards' }
-        );
-        expand.onfinish = () => {
-          reveal.style.removeProperty('height');
-          reveal.style.removeProperty('overflow');
-          expand.cancel();
-        };
-      }
-    }, 10000);
-  </script>
 </body>
 </html>
 

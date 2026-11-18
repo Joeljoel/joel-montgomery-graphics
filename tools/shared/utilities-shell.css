@@ -1,11 +1,11 @@
 /* The sidebar is present in HTML before the first paint. Native document
    transitions are an enhancement over normal same-origin navigation. */
-@view-transition { navigation: auto; }
+@view-transition { navigation: none; }
 
 /* Shared elements: a solid white surface, heading and nine moving tiles.
    The original parent snapshots caused the entire sidebar to disappear. */
-/* Keep a complete, stable backdrop for cross-document capture. In-place
-   tool switching explicitly disables the root capture below. */
+/* A solid backdrop remains throughout same-document overview morphs.
+   Tool-only switching explicitly disables the root capture below. */
 :root {
   view-transition-name: root;
   background: #2184fc;
@@ -26,7 +26,50 @@
 }
 html.utilities-inplace-navigation { view-transition-name: none; }
 
+/* Both layouts exist in the persistent document. A hidden overview must
+   never be captured, and a hidden tool host is staged off-screen so any
+   prepared iframe can lay out at its normal width before it enters. */
+body > main.utilities-overview-card[hidden] { display: none !important; }
+body > main.utilities-host[hidden] {
+  display: grid !important;
+  position: fixed !important;
+  left: -200vw !important;
+  top: 0 !important;
+  width: min(1290px, 100vw) !important;
+  grid-template-columns: 252px minmax(0, 1fr);
+  visibility: hidden !important;
+  pointer-events: none;
+}
+body > main.utilities-host[hidden],
+body > main.utilities-host[hidden] * {
+  view-transition-name: none !important;
+}
+body.utilities-overview-origin.utilities-shell {
+  margin: 0;
+  min-height: 100vh;
+  padding: 0;
+  display: block;
+  background: #2184fc;
+  color: #2c2e2f;
+  font: 15px/1.5 Roboto, Arial, sans-serif;
+}
+/* The off-screen slot remains connected during warm-up and activation. */
+main.utilities-host > .utilities-frame-slot > iframe {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  background: transparent;
+}
+@media (max-width: 960px) {
+  body > main.utilities-host[hidden] {
+    width: min(900px, 100vw) !important;
+    grid-template-columns: 1fr;
+  }
+}
+
 body > main.card,
+body:not(.utilities-shell) > main.card,
 body.utilities-shell main > .utilities-sidebar {
   position: relative;
   isolation: isolate;
@@ -355,7 +398,7 @@ body > main.card .secret-reveal { view-transition-name: utilities-secret; }
 }
 
 
-/* Firefox fallback: the top-level sidebar stays mounted while the tool runs
+/* The top-level sidebar stays mounted while the tool runs
    as an independent same-origin document in the content column. */
 body.utilities-shell main > .utilities-frame-slot {
   grid-column: 2;
@@ -585,9 +628,9 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   ::view-transition-new(utilities-mobile-toggle):only-child {
     animation: 100ms var(--utilities-morph-duration) ease-out both utilities-content-in;
   }
-  /* Fade the outgoing return-link GROUP (not just its image). It has no
-     matching destination on /tools/, so its entire layer can disappear
-     immediately without affecting any of the moving tiles. */
+  /* Fade the outgoing return-link GROUP (not just its image). The
+     destination layout changes in the update callback, and the old
+     layer fades without changing the geometry of any moving tiles. */
   :root:not(:has(body.utilities-shell))::view-transition-group(utilities-back-link) {
     animation: 75ms linear both utilities-content-out;
   }
@@ -597,12 +640,6 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   }
   ::view-transition-old(utilities-mobile-toggle):only-child {
     animation: 100ms ease-in both utilities-content-out;
-  }
-  /* Start the live link's fade on click, even while the next page loads.
-     No artificial navigation delay is introduced. */
-  html.utilities-leaving-overview .utilities-sidebar .utilities-overview {
-    opacity: 0;
-    transition: opacity 75ms linear;
   }
   ::view-transition-old(utilities-secret) {
     animation: 120ms ease-out both utilities-content-out;
