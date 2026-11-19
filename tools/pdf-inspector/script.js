@@ -241,35 +241,51 @@ function renderReport(report) {
   return card;
 }
 
-function render() {
+function render(report) {
   resultSection.hidden = reports.length === 0;
   dropZone.classList.toggle('has-results', reports.length > 0);
   fileCount.textContent = '(' + reports.length + ')';
   exportButton.disabled = !reports.some(report => report.pages);
-  resultList.replaceChildren(...reports.map(renderReport));
+  if (report) resultList.append(renderReport(report));
+  else resultList.replaceChildren();
 }
 
-async function inspectFiles(files) {
+let generation = 0;
+let queue = Promise.resolve();
+let cancelActive;
+function inspectFiles(files) {
+  const current = generation;
+  queue = queue.then(() => processFiles(files, current));
+}
+async function processFiles(files, current) {
   if (!files.length) return;
-  const library = window.PDFLib;
+
   let failures = 0;
   for (const file of files) {
+    if (current !== generation) return;
     status.textContent = 'Inspecting ' + file.name + '…';
     // Let the status paint before parsing large documents.
     await new Promise(resolve => setTimeout(resolve, 0));
+    if (current !== generation) return;
     const report = { name: file.name, bytes: file.size, pages: null, summary: null, error: null };
     try {
       if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf')
         throw new Error('Please select PDF files only.');
       if (file.size > MAX_BYTES)
         throw new Error('This file exceeds the 150 MB browser processing limit.');
-      if (!library || !library.PDFDocument)
-        throw new Error('The PDF parser could not load. Check your connection and reload the page.');
-      const bytes = await file.arrayBuffer();
-      const doc = await library.PDFDocument.load(bytes, { updateMetadata: false });
-      report.pages = doc.getPages().map(page => analysePage(page, library));
-      if (!report.pages.length) throw new Error('This PDF has no pages.');
-      report.summary = summarisePages(report.pages);
+      const worker = new Worker(new URL('inspect-worker.mjs', import.meta.url), {type: 'module'});
+      try {
+        const result = await new Promise((resolve, reject) => {
+          cancelActive = () => reject(new Error('Cancelled'));
+          worker.onmessage = ({data}) => data.error ? reject(new Error(data.error)) : resolve(data);
+          worker.onerror = () => reject(new Error('The PDF parser could not load.'));
+          worker.postMessage(file);
+        });
+        Object.assign(report, result);
+      } finally {
+        worker.terminate();
+        cancelActive = null;
+      }
     } catch (error) {
       failures++;
       const message = String(error?.message || error);
@@ -278,8 +294,9 @@ async function inspectFiles(files) {
         : message;
       report.pages = null;
     }
+    if (current !== generation) return;
     reports.push(report);
-    render();
+    render(report);
   }
   status.textContent = files.length + ' file(s) processed' +
     (failures ? ' · ' + failures + ' could not be inspected.' : '. All PDF data stayed in your browser.');
@@ -309,6 +326,8 @@ dropZone.addEventListener('drop', event => {
   inspectFiles(Array.from(event.dataTransfer?.files || []));
 });
 clearButton.addEventListener('click', () => {
+  generation++;
+  cancelActive?.();
   reports.length = 0;
   render();
   status.textContent = '';
@@ -317,7 +336,7 @@ clearButton.addEventListener('click', () => {
 function csvQuote(value) {
   const raw = String(value ?? '');
   // Protect spreadsheet users from formulas in untrusted filenames.
-  const safe = /^[=+@\t\r]/.test(raw) ? "'" + raw : raw;
+  const safe = /^[\s]*[-=+@\t\r]/.test(raw) && typeof value === 'string' ? "'" + raw : raw;
   return '"' + safe.replaceAll('"', '""') + '"';
 }
 exportButton.addEventListener('click', () => {
