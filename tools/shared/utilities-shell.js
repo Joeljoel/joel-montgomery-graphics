@@ -325,9 +325,7 @@
     if (!doc?.body) return;
     const innerMain = doc.querySelector('body > main');
     const mainHeight = innerMain ? innerMain.getBoundingClientRect().height : 0;
-    const modalVisible = !!doc.querySelector('dialog[open]');
-    frame.style.height = Math.ceil(Math.max(120, mainHeight,
-      modalVisible ? window.innerHeight - 48 : 0)) + 'px';
+    frame.style.height = Math.ceil(Math.max(120, mainHeight)) + 'px';
   }
 
   function activateFrame(frame, slot, path, push) {
@@ -340,23 +338,40 @@
     }
 
     if (cleanupFrame) { cleanupFrame(); cleanupFrame = null; }
-    const resize = () => { if (!main.hidden) resizeFrame(frame); };
-    resize();
-    const observer = new ResizeObserver(resize);
+    const root = doc.documentElement;
+    function syncFrame() {
+      if (main.hidden) return;
+      const modal = !!doc.querySelector('dialog:modal');
+      if (modal && !slot.classList.contains('utilities-frame-modal')) {
+        slot.style.setProperty('--panel-height', frame.offsetHeight + 'px');
+      }
+      slot.classList.toggle('utilities-frame-modal', modal);
+      root.classList.toggle('utilities-embedded-modal', modal);
+      sidebar.inert = modal;
+      if (modal) {
+        const bounds = slot.getBoundingClientRect();
+        root.style.setProperty('--panel-left', bounds.left + 'px');
+        root.style.setProperty('--panel-top', bounds.top + 'px');
+        root.style.setProperty('--panel-width', bounds.width + 'px');
+      } else {
+        resizeFrame(frame);
+      }
+    }
+    const observer = new ResizeObserver(syncFrame);
     observer.observe(doc.body);
-    const modalObserver = new MutationObserver(resize);
+    const modalObserver = new MutationObserver(syncFrame);
     modalObserver.observe(doc.body, { subtree: true, attributes: true, attributeFilter: ['open'] });
-    const onResize = () => resize();
-    window.addEventListener('resize', onResize);
+    window.addEventListener('resize', syncFrame);
     cleanupFrame = () => {
       observer.disconnect();
       modalObserver.disconnect();
-      window.removeEventListener('resize', onResize);
+      window.removeEventListener('resize', syncFrame);
+      sidebar.inert = false;
     };
 
     const title = doc.title || 'Design Utilities';
     swapPanel(slot, path, title, push);
-    resize();
+    syncFrame();
   }
 
   function cancelWarmTimer() {
@@ -499,6 +514,8 @@
   });
 
   window.addEventListener('popstate', () => {
+    const modalFrame = main.querySelector('.utilities-frame-modal > iframe');
+    (modalFrame?.contentDocument || document).querySelector('dialog:modal')?.close();
     if (!navigate(location.pathname, false)) location.reload();
   });
 })();

@@ -108,7 +108,7 @@ body.utilities-shell main {
   grid-template-columns: 252px minmax(0, 1fr);
   grid-template-rows: auto auto;
   column-gap: 20px;
-  align-content: center;
+  align-content: start;
   align-items: start;
 }
 
@@ -127,6 +127,41 @@ body.utilities-shell main > .card {
   min-width: 0;
   width: 100%;
   border-radius: 12px;
+  /* Size headers against the panel for both direct and sidebar visits. */
+  container-type: inline-size;
+  padding: clamp(24px, 5%, 32px) clamp(18px, 5%, 32px);
+}
+body.utilities-shell main > .card > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  margin: 0 0 24px;
+  padding: 0;
+}
+body.utilities-shell main > .card > header > img {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+body.utilities-shell main > .card > header > h1 {
+  margin: 0;
+  font: 400 26px/1.25 Roboto, Arial, sans-serif;
+}
+@container (max-width: 400px) {
+  body.utilities-shell main > .card > header:has(.how-to-button) {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    grid-template-rows: minmax(38px, auto) auto;
+  }
+  body.utilities-shell main > .card > header > .how-to-button {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0;
+  }
+}
+@container (max-width: 560px) {
+  body.utilities-shell main > .card > header > h1 { font-size: 21px; }
 }
 body.utilities-shell main > .info {
   grid-column: 2;
@@ -314,7 +349,7 @@ body > main.card .secret-reveal { view-transition-name: utilities-secret; }
   body.utilities-shell main {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     width: min(900px, 100%);
     padding: 24px 16px;
     gap: 0;
@@ -443,7 +478,7 @@ html.utilities-embedded body.utilities-shell > main > .card {
 }
 html.utilities-embedded body.utilities-shell > main > .info {
   width: 100%;
-  margin: 14px 0 0;
+  margin: 24px 0 0;
   view-transition-name: none;
 }
 @media (max-width: 960px) {
@@ -665,4 +700,35 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
     animation-delay: 0ms !important;
   }
   .utilities-sidebar .utilities-toggle-chevron { transition: none; }
+}
+
+/* A native dialog fills its own browsing context. Expand that context while
+   it is modal, keeping the tool card aligned with its original grid slot. */
+body.utilities-shell:has(.utilities-frame-modal) { overflow: hidden; }
+body.utilities-shell main > .utilities-frame-modal {
+  view-transition-name: none;
+  height: var(--panel-height);
+}
+body.utilities-shell main > .utilities-frame-modal > iframe {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100% !important;
+  z-index: 100;
+}
+html.utilities-embedded-modal body.utilities-shell > main {
+  position: absolute;
+  left: var(--panel-left);
+  top: var(--panel-top);
+  width: var(--panel-width) !important;
+}
+
+/* The primary file drop target shares its dimensions across file utilities. */
+body.utilities-shell main > .card > :is(#drop, #drop-area, #drop-zone) {
+  width: 100%;
+  min-height: 144px;
+  padding: 24px 20px;
+  border: 1px dashed #cbd0d6;
+  border-radius: 8px;
+  text-align: center;
 }

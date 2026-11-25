@@ -87,7 +87,7 @@ const { chromium } = require('playwright');
     await page.locator('.utilities-menu a[href="../qr/"]').hover();
     await page.waitForFunction(() => {
       const frame = document.querySelector('main > .utilities-frame-slot > iframe');
-      return frame?.contentDocument?.documentElement.classList.contains('utilities-embedded') &&
+      return frame?.contentDocument?.documentElement?.classList.contains('utilities-embedded') &&
         frame.contentDocument.readyState === 'complete';
     });
     await page.evaluate(() => {
@@ -241,6 +241,20 @@ const { chromium } = require('playwright');
         } catch { return false; }
       })
     ), true);
+    // A sidebar-loaded native dialog must cover the sidebar as well as the tool.
+    await page.locator('.utilities-menu a[href="../stretch-repeat/"]').click();
+    await page.waitForURL('**/tools/stretch-repeat/');
+    const slot = page.locator('.utilities-frame-slot:not([aria-hidden])');
+    const tutorial = slot.frameLocator('iframe').locator('#how-to-open');
+    await tutorial.click();
+    await page.waitForSelector('.utilities-frame-modal');
+    const { width, height } = page.viewportSize();
+    assert.deepEqual(await slot.locator('iframe').boundingBox(), { x: 0, y: 0, width, height });
+    assert.equal(await page.locator('.utilities-sidebar').evaluate(el => el.inert), true);
+    await page.keyboard.press('Escape');
+    await page.waitForSelector('.utilities-frame-modal', { state: 'detached' });
+    assert.equal(await tutorial.evaluate(el => el === document.activeElement), true);
+    assert.equal(await page.locator('.utilities-sidebar').evaluate(el => el.inert), false);
     assert.deepEqual(errors, []);
     console.log('PASS: persistent overview and sidebar, zero main-document requests, history, preloading and reduced motion');
   } finally {
