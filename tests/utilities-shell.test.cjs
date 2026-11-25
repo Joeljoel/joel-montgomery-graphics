@@ -21,7 +21,7 @@ const { chromium } = require('playwright');
       /html\.utilities-inplace-navigation[^}]+\.utilities-menu > a\s*\{\s*view-transition-name:\s*none/s,
       'Sidebar icons and labels must stay live while the right panel changes');
     assert.match(css,
-      /::view-transition-image-pair\(utilities-surface\)\s*\{[^}]*background:\s*#fff[^}]*overflow:\s*clip/s,
+      /::view-transition-image-pair\(utilities-surface\)\s*\{[^}]*background:\s*var\(--utility-surface, #fff\)[^}]*overflow:\s*clip/s,
       'The surface must paint the interpolated rectangle instead of stretching an image');
     assert.match(css,
       /::view-transition-new\(utilities-surface\)\s*\{[^}]*opacity:\s*0/s,
