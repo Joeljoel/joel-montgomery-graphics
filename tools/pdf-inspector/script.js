@@ -214,6 +214,8 @@ function bleedEditor(report) {
   const recover = element('input');
   recover.type = 'checkbox';
   recover.checked = true;
+  const outline = element('input');
+  outline.type = 'checkbox';
   const message = element('p', 'status');
   message.setAttribute('role', 'status');
   let worker;
@@ -226,7 +228,7 @@ function bleedEditor(report) {
   }
   report.dispose = reset;
   form.addEventListener('input', reset);
-  function downloadPdf(mm, cropMarks, reveal) {
+  function downloadPdf(mm, cropMarks, reveal, recreateOutline = false) {
     reset();
     quick.disabled = prepare.disabled = true;
     message.textContent = 'Preparing PDF…';
@@ -246,15 +248,16 @@ function bleedEditor(report) {
       download.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
-    worker.postMessage({ action: 'bleed', source: report.file, mm, marks: cropMarks, recover: reveal });
+    worker.postMessage({ action: 'bleed', source: report.file, mm, marks: cropMarks, recover: reveal, recreateOutline });
   }
   quick.onclick = () => downloadPdf(3, true, true);
   form.onsubmit = event => {
     event.preventDefault();
-    downloadPdf(amount.valueAsNumber, marks.checked, recover.checked);
+    downloadPdf(amount.valueAsNumber, marks.checked, recover.checked, outline.checked);
   };
   form.append(append(element('label', '', 'Bleed per edge (mm) '), amount),
     append(element('label'), marks, ' Crop marks'), prepare);
+  if (report.hasRasterOutline) form.insertBefore(append(element('label'), outline, ' Recreate clipped outline (experimental)'), prepare);
   if (report.illustrator) form.insertBefore(append(element('label'), recover, ' Reveal Illustrator artwork at trim edges'), prepare);
   if (report.pages.some(page => !page.explicit.trim))
     editor.append(element('p', 'metric-note', 'Pages without a TrimBox use their current crop as the finished size.'));
