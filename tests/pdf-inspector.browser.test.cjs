@@ -65,7 +65,9 @@ function pdfWithBoxes(hasBoxes) {
       const amount = editor.getByRole('spinbutton');
       assert.equal(await amount.inputValue(), '3');
       await amount.fill(mm);
+      const started = page.waitForEvent('download');
       await editor.getByRole('button', { name: 'Prepare PDF' }).click();
+      assert.ok((await started).suggestedFilename().endsWith(mm + 'mm.pdf'));
       const download = editor.getByRole('link', { name: 'Download PDF' });
       await download.waitFor();
       assert.match(await download.getAttribute('download'), new RegExp(mm + 'mm\\.pdf$'));

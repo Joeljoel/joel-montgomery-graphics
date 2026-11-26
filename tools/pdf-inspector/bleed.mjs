@@ -1,6 +1,7 @@
+import { revealIllustrator } from './illustrator-bleed.mjs';
 import { MM_PER_POINT, analysePage } from './core.mjs';
 
-export async function writeBleed(file, mm, marks, lib) {
+export async function writeBleed(file, mm, marks, lib, recover = true) {
   if (!Number.isFinite(mm) || mm < 0) throw new Error('Enter a bleed of 0 mm or more.');
   const pdf = await lib.PDFDocument.load(await file.arrayBuffer(), { updateMetadata: false });
   for (const page of pdf.getPages()) {
@@ -10,6 +11,7 @@ export async function writeBleed(file, mm, marks, lib) {
     const bleed = mm * scale;
     const margin = marks ? 6 * scale : 0;
     const extent = bleed + margin;
+    if (recover && bleed > 0) revealIllustrator(page, { x, y, width, height }, bleed, lib);
     page.setTrimBox(x, y, width, height);
     page.setBleedBox(x - bleed, y - bleed, width + 2 * bleed, height + 2 * bleed);
     page.setMediaBox(x - extent, y - extent, width + 2 * extent, height + 2 * extent);

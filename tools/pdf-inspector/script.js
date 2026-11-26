@@ -200,6 +200,9 @@ function bleedEditor(report) {
   const marks = element('input');
   marks.type = 'checkbox';
   const prepare = element('button', '', 'Prepare PDF');
+  const recover = element('input');
+  recover.type = 'checkbox';
+  recover.checked = report.illustrator;
   const links = element('div', 'actions');
   const message = element('p', 'status');
   message.setAttribute('role', 'status');
@@ -233,11 +236,13 @@ function bleedEditor(report) {
       download.href = url;
       download.download = report.name.replace(/\.pdf$/i, '') + '-' + amount.value + 'mm.pdf';
       links.append(preview, download);
+      download.click();
     };
-    worker.postMessage({ action: 'bleed', source: report.file, mm: amount.valueAsNumber, marks: marks.checked });
+    worker.postMessage({ action: 'bleed', source: report.file, mm: amount.valueAsNumber, marks: marks.checked, recover: recover.checked });
   });
   form.append(append(element('label', '', 'Bleed per edge (mm) '), amount),
     append(element('label'), marks, ' Crop marks'), prepare);
+  if (report.illustrator) form.insertBefore(append(element('label'), recover, ' Reveal Illustrator artwork at trim edges'), prepare);
   editor.append(form, element('p', 'metric-sub', 'Applies to every page. Set 0 to remove bleed. Check the preview for artwork at each edge.'));
   if (report.pages.some(page => !page.explicit.trim))
     editor.append(element('p', 'metric-note', 'Pages without a TrimBox use their current crop as the finished size.'));
