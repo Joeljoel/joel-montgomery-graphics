@@ -1,18 +1,18 @@
 // Offset only the sides of a convex clip that coincide with the finished page.
 // Intersections of adjacent sides preserve the angles of rotated image masks.
-function expandPolygon(points, trim, bleed) {
+function expandPolygon(points, trim, bleed, edgeTolerance = 0.002) {
   const tolerance = 0.002;
   const sides = points.map(([x,y], i) => {
     const [ex,ey] = points[(i+1) % points.length];
     const dx = ex-x, dy = ey-y;
     let shiftX = 0, shiftY = 0;
     if (Math.abs(dx) < tolerance) {
-      if (Math.abs(x-trim.x) < tolerance) shiftX = -bleed;
-      else if (Math.abs(x-trim.x-trim.width) < tolerance) shiftX = bleed;
+      if (Math.abs(x-trim.x) < edgeTolerance) shiftX = trim.x - bleed - x;
+      else if (Math.abs(x-trim.x-trim.width) < edgeTolerance) shiftX = trim.x + trim.width + bleed - x;
     }
     if (Math.abs(dy) < tolerance) {
-      if (Math.abs(y-trim.y) < tolerance) shiftY = -bleed;
-      else if (Math.abs(y-trim.y-trim.height) < tolerance) shiftY = bleed;
+      if (Math.abs(y-trim.y) < edgeTolerance) shiftY = trim.y - bleed - y;
+      else if (Math.abs(y-trim.y-trim.height) < edgeTolerance) shiftY = trim.y + trim.height + bleed - y;
     }
     return {x:x+shiftX,y:y+shiftY,dx,dy,shifted:!!(shiftX || shiftY)};
   });
@@ -30,7 +30,28 @@ function expandPolygon(points, trim, bleed) {
   // Reject self-intersecting paths as well as concave ones.
   if (sides.some((s, i) => points.some(([x,y]) =>
     winding*(s.dx*(y-points[i][1])-s.dy*(x-points[i][0])) < -tolerance))) return;
+  return vertices;
+}
+
+function polygonPath(vertices) {
   return vertices.map(([x,y],i) => x.toFixed(6)+' '+y.toFixed(6)+(i?' l':' m')).join('\n')+'\nh';
+}
+
+// Intersect a convex polygon with the exterior half-plane of one trim edge.
+function beyondEdge(vertices, axis, edge, direction) {
+  const result = [];
+  let previous = vertices.at(-1);
+  for (const current of vertices) {
+    const a = direction * (previous[axis] - edge);
+    const b = direction * (current[axis] - edge);
+    if ((a > 0) !== (b > 0)) {
+      const t = a / (a - b);
+      result.push(previous.map((v,k) => v + t*(current[k]-v)));
+    }
+    if (b > 0) result.push(current);
+    previous = current;
+  }
+  return result;
 }
 
 // Some print exports begin with a scaled page, a rectangular page clip,
@@ -116,18 +137,30 @@ export function revealTrimClips(page, trim, bleed, lib) {
   }
   pieces.push(source.slice(cursor));
   const code = pieces.join('');
+  const background = backgroundOutsideTrim(code, page, trim, bleed, lib);
+  const prefix = backgroundPrefix.exec(code.slice(0,2048));
+  const firstMatrix = new RegExp('^\\s*q\\s+' + operands(6) + '\\s+cm(?=\\s)').exec(code);
+  const scale = firstMatrix && firstMatrix.slice(1).map(Number);
+  const scaledPage = scale && scale.every(Number.isFinite) && scale[0] > 0 && scale[3] > 0 &&
+    !scale[1] && !scale[2];
   const stack = [];
   let transformed = false;
   const edits = [];
   const op = /(?:^|\s)(q|Q|cm)(?=\s|$)/g;
   for (let m; (m = op.exec(code));) {
-    if (m[1] === 'cm') { transformed = true; continue; }
+    if (m[1] === 'cm') {
+      transformed = scaledPage && op.lastIndex === firstMatrix[0].length ? 'page' : true;
+      continue;
+    }
     if (m[1] === 'Q') { transformed = stack.pop() ?? false; continue; }
     stack.push(transformed);
-    if (transformed) continue;
+    // The leading scale still applies between the background and its sibling
+    // objects. Ignore any scope with an additional local transform.
+    const foreground = transformed === 'page' && op.lastIndex >= (prefix?.[0].length ?? 0);
+    if (transformed && !foreground) continue;
     const start = op.lastIndex;
-    const path = /^\s*((?:[-+.\d]+[ \t]+){4}re|(?:[-+.\d]+[ \t]+[-+.\d]+[ \t]+m\s+)(?:[-+.\d]+[ \t]+[-+.\d]+[ \t]+l\s+){2,12}h)\s+W\*?\s+n\b/.exec(code.slice(start,start+1200));
-    if (!path) continue;
+    const path = /^\s*((?:[-+.\d]+[ \t]+){4}re|[-+.\d]+[ \t]+[-+.\d]+[ \t]+m(?:\s+[-+.\d]+[ \t]+[-+.\d]+[ \t]+l){2,12}(?:\s+h)?)\s+W\*?\s+n\b/.exec(code.slice(start,start+1200));
+    if (!path || /^\s*Q\b/.test(code.slice(start + path[0].length, start + path[0].length + 32))) continue;
     const values = path[1].match(/[-+.\d]+/g).map(Number);
     if (!values.every(Number.isFinite)) continue;
     let points = [];
@@ -135,15 +168,33 @@ export function revealTrimClips(page, trim, bleed, lib) {
       const [x,y,w,h] = values;
       points = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
     } else for(let j=0;j<values.length;j+=2) points.push(values.slice(j,j+2));
-    const replacement = expandPolygon(points,trim,bleed);
-    if (replacement) {
-      const pos = start+path[0].indexOf(path[1]);
-      edits.push([pos,pos+path[1].length,replacement]);
+    if (points.length > 3 && points[0].every((v,k) => v === points.at(-1)[k])) points.pop();
+    const startIndex = start + path[0].indexOf(path[1]);
+    if (foreground) {
+      const [sx,,,sy,tx,ty] = scale;
+      const mapped = points.map(([x,y]) => [x*sx+tx, y*sy+ty]);
+      const expanded = expandPolygon(mapped, trim, bleed, 0.5);
+      if (expanded) {
+        const boundaries = [[0,trim.x,-1], [0,trim.x+trim.width,1],
+          [1,trim.y,-1], [1,trim.y+trim.height,1]];
+        const extensions = boundaries.map(([axis,edge,direction]) =>
+          beyondEdge(expanded,axis,edge,direction)).filter(part => part.length >= 3);
+        if (extensions.length) {
+          // The original convex clip and the outside pieces all wind the same
+          // way. Nonzero clipping takes their union even at bleed corners.
+          const paths = extensions.map(part =>
+            polygonPath(part.map(([x,y]) => [(x-tx)/sx, (y-ty)/sy])));
+          edits.push([startIndex, start+path[0].length,
+            [source.slice(startIndex, startIndex+path[1].length), ...paths, 'W n'].join('\n')]);
+        }
+      }
+    } else {
+      const expanded = expandPolygon(points, trim, bleed);
+      if (expanded) edits.push([startIndex, startIndex+path[1].length, polygonPath(expanded)+' ']);
     }
   }
-  const perimeter = backgroundOutsideTrim(code, page, trim, bleed, lib);
-  if (!edits.length && !perimeter) return;
-  const parts = [perimeter];
+  if (!edits.length && !background) return;
+  const parts = [background];
   let pos = 0;
   for (const [from,to,value] of edits) { parts.push(source.slice(pos,from),value); pos=to; }
   parts.push(source.slice(pos));
