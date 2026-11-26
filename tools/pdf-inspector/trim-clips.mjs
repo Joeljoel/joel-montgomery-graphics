@@ -33,6 +33,44 @@ function expandPolygon(points, trim, bleed) {
   return vertices.map(([x,y],i) => x.toFixed(6)+' '+y.toFixed(6)+(i?' l':' m')).join('\n')+'\nh';
 }
 
+// Some print exports begin with a scaled page, a rectangular page clip,
+// a white backing rectangle, and one oversized background image.
+const numeric = '([-+]?(?:\\d+\\.?\\d*|\\.\\d+))';
+const operands = count => Array(count).fill(numeric).join('\\s+');
+const backgroundPrefix = new RegExp('^\\s*q\\s+' + operands(6) + '\\s+cm\\s+q\\s+' +
+  operands(4) + '\\s+re\\s+W\\*?\\s+n\\s+1\\s+g\\s+' + operands(4) +
+  '\\s+re\\s+f\\s+q\\s+' + operands(6) + '\\s+cm\\s+/([A-Za-z0-9_-]+)\\s+Do\\s+Q\\s+Q(?=\\s|$)');
+
+function backgroundOutsideTrim(code, page, trim, bleed, lib) {
+  const match = backgroundPrefix.exec(code.slice(0, 2048));
+  if (!match) return '';
+  const values = match.slice(1, -1).map(Number);
+  const [sx, skewY, skewX, sy, tx, ty, x, y, w, h] = values;
+  const [iw, iySkew, ixSkew, ih, ix, iy] = values.slice(14);
+  if (!values.every(Number.isFinite) || skewY || skewX || iySkew || ixSkew ||
+      sx <= 0 || sy <= 0 || iw <= 0 || ih <= 0) return '';
+
+  const left = trim.x, right = left + trim.width;
+  const bottom = trim.y, top = bottom + trim.height;
+  // Allow up to half a PDF point of page-box rounding on each edge.
+  const errors = [x*sx+tx-left, (x+w)*sx+tx-right, y*sy+ty-bottom, (y+h)*sy+ty-top];
+  if (errors.some(error => Math.abs(error) > 0.5)) return '';
+  if (ix*sx+tx >= left || (ix+iw)*sx+tx <= right ||
+      iy*sy+ty >= bottom || (iy+ih)*sy+ty <= top) return '';
+  const name = lib.PDFName.of;
+  const imageName = match.at(-1);
+  const image = page.node.Resources()?.lookup(name('XObject'))?.lookup(name(imageName));
+  if (image?.dict?.get(name('Subtype'))?.toString() !== '/Image' ||
+      ['Mask', 'SMask', 'ImageMask', 'OC', 'SMaskInData'].some(key => image.dict.has(name(key)))) return '';
+
+  // Paint only the perimeter. The original page, including its fractional
+  // trim insets, still renders from its original operators.
+  return ['q', [left-bleed, bottom-bleed, trim.width+2*bleed, trim.height+2*bleed].join(' ') + ' re',
+    [left, bottom, trim.width, trim.height].join(' ') + ' re W* n',
+    match.slice(1, 7).join(' ') + ' cm', match.slice(15, 21).join(' ') + ' cm',
+    '/' + imageName + ' Do', 'Q', ''].join('\n');
+}
+
 export function revealTrimClips(page, trim, bleed, lib) {
   const contents = page.node.Contents();
   const streams = contents instanceof lib.PDFArray
@@ -103,8 +141,9 @@ export function revealTrimClips(page, trim, bleed, lib) {
       edits.push([pos,pos+path[1].length,replacement]);
     }
   }
-  if (!edits.length) return;
-  const parts = [];
+  const perimeter = backgroundOutsideTrim(code, page, trim, bleed, lib);
+  if (!edits.length && !perimeter) return;
+  const parts = [perimeter];
   let pos = 0;
   for (const [from,to,value] of edits) { parts.push(source.slice(pos,from),value); pos=to; }
   parts.push(source.slice(pos));
