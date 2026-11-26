@@ -77,7 +77,7 @@ function pdfWithBoxes(hasBoxes) {
       const doc = await lib.PDFDocument.load(require('node:fs').readFileSync(await download.path()));
       const [result] = doc.getPages();
       assert.ok(Math.abs(result.getBleedBox().width - pt(210 + 2 * mm)) < 0.001);
-      assert.ok(Math.abs(result.getMediaBox().width - (mm ? pt(216) + 36 : pt(210))) < 0.001);
+      assert.ok(Math.abs(result.getMediaBox().width - (mm ? pt(210) + 66 : pt(210))) < 0.001);
     }
     assert.equal(await editor.getByRole('link').count(), 0);
     await page.locator('#files').setInputFiles({ name: 'replacement.pdf', mimeType: 'application/pdf', buffer: pdfWithBoxes(true) });

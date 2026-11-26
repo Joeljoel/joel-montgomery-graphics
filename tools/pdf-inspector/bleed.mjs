@@ -10,9 +10,9 @@ export async function writeBleed(file, mm, marks, lib, recover = true) {
     const scale = 1 / (MM_PER_POINT * userUnit);
     const { x, y, width, height } = page.getTrimBox();
     const bleed = mm * scale;
-    const markStart = Math.max(6 / userUnit, bleed);
-    const markEnd = markStart + 18 / userUnit;
-    const extent = marks ? markEnd : bleed;
+    const markStart = 6 / userUnit;
+    const markEnd = markStart + 27 / userUnit;
+    const extent = marks ? Math.max(markEnd, bleed) : bleed;
     if (recover && bleed > 0) {
       const trim = { x, y, width, height };
       const privateAI = page.node.lookup(lib.PDFName.of('PieceInfo'))?.has?.(lib.PDFName.of('Illustrator'));
@@ -36,22 +36,25 @@ export async function writeBleed(file, mm, marks, lib, recover = true) {
     const registration = ['Separation', 'All', 'DeviceCMYK', {
       FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: [1, 1, 1, 1], N: 1
     }];
-    const lines = [
-      lib.PDFOperator.of('CS', [lib.PDFName.of('Registration')]),
-      lib.PDFOperator.of('SCN', [lib.PDFNumber.of(1)]),
-      lib.setLineWidth(0.25 / userUnit), lib.setLineCap(0),
-    ];
+    const path = [];
     for (const sx of [-1, 1]) {
       for (const sy of [-1, 1]) {
         const cx = sx < 0 ? x : x + width;
         const cy = sy < 0 ? y : y + height;
-        lines.push(
+        path.push(
           lib.moveTo(cx + sx * markStart, cy), lib.lineTo(cx + sx * markEnd, cy),
           lib.moveTo(cx, cy + sy * markStart), lib.lineTo(cx, cy + sy * markEnd)
         );
       }
     }
-    lines.push(lib.stroke());
+    // Illustrator paints the same eight segments twice with flat ends.
+    const lines = [
+      lib.setLineCap(0), lib.PDFOperator.of('CS', [lib.PDFName.of('Registration')]),
+      lib.PDFOperator.of('SCN', [lib.PDFNumber.of(0)]),
+      lib.setLineWidth(1.25 / userUnit), ...path, lib.stroke(),
+      lib.PDFOperator.of('SCN', [lib.PDFNumber.of(1)]),
+      lib.setLineWidth(0.25 / userUnit), ...path, lib.stroke(),
+    ];
     const form = pdf.context.formXObject(lines, {
       BBox: [x - extent, y - extent, x + width + extent, y + height + extent],
       Resources: { ColorSpace: { Registration: registration } },
