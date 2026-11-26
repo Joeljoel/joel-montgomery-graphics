@@ -83,3 +83,32 @@ test('extend only the trim side of a scaled foreground mask outside trim', async
   assert.ok(content.includes('-14.400000 91.440000 l'));
   assert.equal(content.split(inset).length - 1, 1);
 });
+
+test('recreate a detected flat raster outline only when requested', async () => {
+  const { findRasterOutline } = await import('../tools/pdf-inspector/raster-outline.mjs');
+  const doc = await lib.PDFDocument.create();
+  const page = doc.addPage([100,100]);
+  function image(width, height, top, bottom, color) {
+    const format = { Type: 'XObject', Subtype: 'Image', Width: width, Height: height, BitsPerComponent: 8 };
+    const alpha = new Uint8Array(width*height);
+    alpha.fill(255,top*width,bottom*width);
+    const mask = doc.context.flateStream(alpha, { ...format, ColorSpace: 'DeviceGray' });
+    const bytes = new Uint8Array(width*height*4).fill(color);
+    const stream = doc.context.flateStream(bytes, { ...format, ColorSpace: 'DeviceCMYK', SMask: doc.context.register(mask) });
+    return page.node.newXObject('Image',doc.context.register(stream));
+  }
+  const flat = image(130,100,4,94,64);
+  const photo = image(160,100,10,88,128);
+  const contents = 'q .5 0 0 .5 0 0 cm q 130 0 0 100 70 0 cm ' + flat +
+    ' Do Q q 70 0 130 100 re W n q 160 0 0 100 70 0 cm ' + photo + ' Do Q Q Q';
+  page.node.set(lib.PDFName.of('Contents'),doc.context.register(doc.context.flateStream(contents)));
+  const file = new Blob([await doc.save()]);
+  const source = await lib.PDFDocument.load(await file.arrayBuffer());
+  assert.ok(findRasterOutline(source.getPages()[0],lib));
+  for (const enabled of [false,true]) {
+    const result = await lib.PDFDocument.load(await writeBleed(file,3,false,lib,true,enabled));
+    const data = lib.decodePDFRawStream(result.getPages()[0].node.Contents()).decode();
+    const code = new TextDecoder().decode(data);
+    assert.equal(code.includes('h f\nQ'),enabled);
+  }
+});
