@@ -244,6 +244,17 @@
       cleanup();
       return;
     }
+    // Only overview morphs need document snapshots. A panel switch can
+    // animate the incoming element directly, even during rapid navigation.
+    if (inplace) {
+      change();
+      const panel = activePanel === 'original' ? original.card : activePanel;
+      const fade = panel.animate([{ opacity: 0.45 }, { opacity: 1 }], {
+        duration: 180, easing: 'ease-out'
+      });
+      fade.finished.then(cleanup, cleanup);
+      return;
+    }
     const transition = document.startViewTransition(change);
     activeTransition = transition;
     transition.finished.then(cleanup, cleanup);
