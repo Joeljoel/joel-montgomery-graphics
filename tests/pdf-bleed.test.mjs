@@ -37,3 +37,27 @@ test('extend trim edges in split page streams while preserving interior and tran
   assert.match(content, /5 5 20 30 re W n/);
   assert.match(content, /cm q 0 0 80 60 re W n/);
 });
+
+test('reveal only a scaled, trim-sized background with an oversized unmasked image', async () => {
+  for (const [clip, imageWidth, masked, recover] of [
+    ['0 1 399 399', 440, false, true],
+    ['0 1 390 399', 440, false, false],
+    ['0 1 399 399', 400, false, false],
+    ['0 1 399 399', 440, true, false],
+  ]) {
+    const pdf = await lib.PDFDocument.create();
+    const page = pdf.addPage([100, 100]);
+    const image = pdf.context.flateStream(new Uint8Array([255]), {
+      Type: 'XObject', Subtype: 'Image', Width: 1, Height: 1, BitsPerComponent: 8,
+      ColorSpace: 'DeviceGray', ...(masked ? { Mask: [0, 0] } : {}),
+    });
+    const name = page.node.newXObject('Background', pdf.context.register(image));
+    const original = 'q .25 0 0 .25 0 0 cm q ' + clip + ' re W* n 1 g -20 -20 440 440 re f q ' +
+      imageWidth + ' 0 0 440 -20 -20 cm ' + name + ' Do Q Q q 0 0 10 10 re W n Q Q';
+    page.node.set(lib.PDFName.of('Contents'), pdf.context.register(pdf.context.flateStream(original)));
+    const result = await lib.PDFDocument.load(await writeBleed(new Blob([await pdf.save()]), 3, false, lib));
+    const content = new TextDecoder().decode(lib.decodePDFRawStream(result.getPages()[0].node.Contents()).decode());
+    assert.equal(content.trimEnd().endsWith(original), true);
+    assert.equal(content.split(name + ' Do').length - 1, recover ? 2 : 1);
+  }
+});
