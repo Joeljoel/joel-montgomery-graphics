@@ -747,47 +747,82 @@ body.utilities-shell main > .card > :is(#drop, #drop-area, #drop-zone) {
 }
 
 :root { color-scheme: light dark; }
+:root[data-utility-theme="light"] { color-scheme: light; }
 body.utilities-shell .card > .info {
   margin: 24px 0 0;
   color: var(--utility-muted, #58616c);
   text-align: start;
   overflow-wrap: anywhere;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --utility-canvas: #10213a;
-    --utility-surface: #2d3643;
-    --utility-panel-edge: #889cb5;
-    --utility-raised: #374353;
-    --utility-selected: #284c74;
-    --utility-text: #fafbfd;
-    --utility-muted: #d6dfe9;
-    --utility-link: #abd3ff;
-    --utility-action: #2466ae;
-    --utility-line: #77889b;
-    --utility-danger: #ffaaa1;
-    --utility-warning: #f5ca80;
-    --utility-success: #9adcb3;
-    --utility-error-bg: #462c31;
-    --utility-warn-bg: #413622;
-    --utility-ok-bg: #203c32;
-  }
-  .utilities-surface,
-  body.utilities-shell main > .card {
-    outline: 1px solid var(--utility-panel-edge);
-    outline-offset: -1px;
-  }
-  ::view-transition-image-pair(utilities-surface) {
-    outline: 1px solid var(--utility-panel-edge);
-    outline-offset: -1px;
-  }
-  :is(.utilities-home, .card > header) > img[src$="easilLogo.png"] { filter: brightness(0) invert(1); }
-  .utilities-sidebar .utilities-name { font-weight: 600; }
-  .card :is(input:not([type]), input[type="text"], input[type="number"], textarea, select) {
-    background-color: #191f28;
-    color: var(--utility-text);
-    border-color: var(--utility-line);
-  }
-  .card ::placeholder { color: #afbcca; opacity: 1; }
-  .card a { color: var(--utility-link); }
+:root[data-utility-theme="dark"] {
+  color-scheme: dark;
+  --utility-canvas: #10213a;
+  --utility-surface: #2d3643;
+  --utility-panel-edge: #889cb5;
+  --utility-raised: #374353;
+  --utility-selected: #284c74;
+  --utility-text: #fafbfd;
+  --utility-muted: #d6dfe9;
+  --utility-link: #abd3ff;
+  --utility-action: #2466ae;
+  --utility-line: #77889b;
+  --utility-danger: #ffaaa1;
+  --utility-warning: #f5ca80;
+  --utility-success: #9adcb3;
+  --utility-error-bg: #462c31;
+  --utility-warn-bg: #413622;
+  --utility-ok-bg: #203c32;
+}
+[data-utility-theme="dark"] :is(.utilities-surface, body.utilities-shell main > .card) {
+  outline: 1px solid var(--utility-panel-edge);
+  outline-offset: -1px;
+}
+:root[data-utility-theme="dark"]::view-transition-image-pair(utilities-surface) {
+  outline: 1px solid var(--utility-panel-edge);
+  outline-offset: -1px;
+}
+[data-utility-theme="dark"] :is(.utilities-home, .card > header) > img[src$="easilLogo.png"] { filter: brightness(0) invert(1); }
+[data-utility-theme="dark"] .utilities-sidebar .utilities-name { font-weight: 600; }
+[data-utility-theme="dark"] .card :is(input:not([type]), input[type="text"], input[type="number"], textarea, select) {
+  background-color: #191f28;
+  color: var(--utility-text);
+  border-color: var(--utility-line);
+}
+[data-utility-theme="dark"] .card ::placeholder { color: #afbcca; opacity: 1; }
+[data-utility-theme="dark"] .card a { color: var(--utility-link); }
+
+.utilities-theme-toggle {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--utility-line, #cbd0d6);
+  border-radius: 50%;
+  background: var(--utility-surface, #fff);
+  color: var(--utility-text, #2c2e2f);
+  box-shadow: 0 2px 4px #15151633;
+  cursor: pointer;
+}
+.utilities-theme-toggle:hover { background: var(--utility-raised, #f0f3f7); }
+.utilities-theme-toggle:focus-visible {
+  outline: 2px solid var(--utility-surface, #fff);
+  outline-offset: 3px;
+}
+.utilities-theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.utilities-theme-toggle[aria-pressed="false"] .utilities-theme-sun,
+.utilities-theme-toggle[aria-pressed="true"] .utilities-theme-moon {
+  display: none;
 }
