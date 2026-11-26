@@ -235,11 +235,15 @@ function bleedEditor(report) {
     worker.onmessage = ({ data }) => {
       reset();
       if (data.error) { message.textContent = data.error; return; }
-      const url = URL.createObjectURL(new Blob([data.bytes], { type: 'application/pdf' }));
+      const url = URL.createObjectURL(new Blob([data.bytes], { type: 'application/octet-stream' }));
       const download = element('a');
       download.href = url;
       download.download = report.name.replace(/\.pdf$/i, '') + '-' + mm + 'mm.pdf';
+      download.target = '_self';
+      download.hidden = true;
+      document.body.append(download);
       download.click();
+      download.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
     worker.postMessage({ action: 'bleed', source: report.file, mm, marks: cropMarks, recover: reveal });

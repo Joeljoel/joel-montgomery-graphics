@@ -18,7 +18,7 @@ test('expand and remove bleed around offset, rotated trim in scaled page units',
     assert.equal(result.getRotation().angle, 90);
     const expected = mm * 72 / 25.4 / 2;
     assert.ok(Math.abs(result.getBleedBox().x - (10 - expected)) < 1e-8);
-    assert.ok(Math.abs(result.getCropBox().width - (80 + 2 * (expected + (marks ? 6 * 72 / 25.4 / 2 : 0)))) < 1e-8);
+    assert.ok(Math.abs(result.getCropBox().width - (80 + 2 * (marks ? Math.max(3, expected) + 9 : expected))) < 1e-8);
   }
 });
 

@@ -66,6 +66,8 @@ function pdfWithBoxes(hasBoxes) {
     assert.equal(await editor.getByLabel('Crop marks').isChecked(), true);
     await amount.fill('0');
     await editor.getByLabel('Crop marks').uncheck();
+    const popups = [];
+    page.context().on('page', popup => popups.push(popup));
     for (const [label, mm] of [['Download with custom bleed', 0], ['Download with 3mm bleed', 3]]) {
       const started = page.waitForEvent('download');
       await editor.getByRole('button', { name: label }).click();
@@ -75,12 +77,13 @@ function pdfWithBoxes(hasBoxes) {
       const doc = await lib.PDFDocument.load(require('node:fs').readFileSync(await download.path()));
       const [result] = doc.getPages();
       assert.ok(Math.abs(result.getBleedBox().width - pt(210 + 2 * mm)) < 0.001);
-      assert.ok(Math.abs(result.getMediaBox().width - pt(mm ? 228 : 210)) < 0.001);
+      assert.ok(Math.abs(result.getMediaBox().width - (mm ? pt(216) + 36 : pt(210))) < 0.001);
     }
     assert.equal(await editor.getByRole('link').count(), 0);
     await page.locator('#files').setInputFiles({ name: 'replacement.pdf', mimeType: 'application/pdf', buffer: pdfWithBoxes(true) });
     await page.getByRole('heading', { name: 'replacement.pdf' }).waitFor();
     assert.equal(await cards.count(), 1);
+    assert.equal(popups.length, 0);
     assert.deepEqual(errors, []);
     console.log('PASS: PDF parser, defined / fallback boxes, page details, mobile layout.');
   } finally {

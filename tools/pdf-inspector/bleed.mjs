@@ -10,8 +10,9 @@ export async function writeBleed(file, mm, marks, lib, recover = true) {
     const scale = 1 / (MM_PER_POINT * userUnit);
     const { x, y, width, height } = page.getTrimBox();
     const bleed = mm * scale;
-    const margin = marks ? 6 * scale : 0;
-    const extent = bleed + margin;
+    const markStart = Math.max(6 / userUnit, bleed);
+    const markEnd = markStart + 18 / userUnit;
+    const extent = marks ? markEnd : bleed;
     if (recover && bleed > 0) {
       const trim = { x, y, width, height };
       const privateAI = page.node.lookup(lib.PDFName.of('PieceInfo'))?.has?.(lib.PDFName.of('Illustrator'));
@@ -31,17 +32,32 @@ export async function writeBleed(file, mm, marks, lib, recover = true) {
     const restore = pdf.context.contentStream([lib.popGraphicsState()]);
     page.node.normalize();
     page.node.wrapContentStreams(pdf.context.register(clip), pdf.context.register(restore));
-    const gap = bleed + scale;
-    const end = extent - scale;
+    // A Separation named All prints the trim guides on every plate, including spot inks.
+    const registration = ['Separation', 'All', 'DeviceCMYK', {
+      FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: [1, 1, 1, 1], N: 1
+    }];
+    const lines = [
+      lib.PDFOperator.of('CS', [lib.PDFName.of('Registration')]),
+      lib.PDFOperator.of('SCN', [lib.PDFNumber.of(1)]),
+      lib.setLineWidth(0.25 / userUnit), lib.setLineCap(0),
+    ];
     for (const sx of [-1, 1]) {
       for (const sy of [-1, 1]) {
         const cx = sx < 0 ? x : x + width;
         const cy = sy < 0 ? y : y + height;
-        const stroke = { thickness: 0.25 / userUnit, color: lib.cmyk(0, 0, 0, 1) };
-        page.drawLine({ start: { x: cx + sx * gap, y: cy }, end: { x: cx + sx * end, y: cy }, ...stroke });
-        page.drawLine({ start: { x: cx, y: cy + sy * gap }, end: { x: cx, y: cy + sy * end }, ...stroke });
+        lines.push(
+          lib.moveTo(cx + sx * markStart, cy), lib.lineTo(cx + sx * markEnd, cy),
+          lib.moveTo(cx, cy + sy * markStart), lib.lineTo(cx, cy + sy * markEnd)
+        );
       }
     }
+    lines.push(lib.stroke());
+    const form = pdf.context.formXObject(lines, {
+      BBox: [x - extent, y - extent, x + width + extent, y + height + extent],
+      Resources: { ColorSpace: { Registration: registration } },
+    });
+    const marksName = page.node.newXObject('TrimMarks', pdf.context.register(form));
+    page.pushOperators(lib.drawObject(marksName));
   }
   return pdf.save({ updateFieldAppearances: false });
 }
