@@ -57,8 +57,9 @@ test('reveal only a scaled, trim-sized background with an oversized unmasked ima
     page.node.set(lib.PDFName.of('Contents'), pdf.context.register(pdf.context.flateStream(original)));
     const result = await lib.PDFDocument.load(await writeBleed(new Blob([await pdf.save()]), 3, false, lib));
     const content = new TextDecoder().decode(lib.decodePDFRawStream(result.getPages()[0].node.Contents()).decode());
-    assert.equal(content.trimEnd().endsWith(original), true);
-    assert.equal(content.split(name + ' Do').length - 1, recover ? 2 : 1);
+    const expanded = '-34.015748 -34.015748 m\n434.015748 -34.015748 l\n434.015748 434.015748 l\n-34.015748 434.015748 l\nh';
+    assert.equal(content.trimEnd(), recover ? original.replace(clip + ' re', expanded + ' ') : original);
+    assert.equal(content.split(name + ' Do').length - 1, 1);
   }
 });
 
@@ -71,12 +72,13 @@ test('extend only the trim side of a scaled foreground mask outside trim', async
   const name = page.node.newXObject('Photo', pdf.context.register(image));
   const draw = 'q 200 0 0 200 -10 0 cm ' + name + ' Do Q';
   const inset = 'q 4 10 80 80 re W n ' + draw + ' Q';
-  const original = 'q .5 0 0 .5 0 0 cm q 0 20 m 100 30 l 100 80 l 0 90 l W n ' +
+  const original = 'q .5 0 0 .5 0 0 cm q 0.5 20.05 m 100 30 l 100 80 l 0.5 89.95 l W n ' +
     draw + ' Q ' + inset + ' Q';
   page.node.set(lib.PDFName.of('Contents'), pdf.context.register(pdf.context.flateStream(original)));
   const result = await lib.PDFDocument.load(await writeBleed(new Blob([await pdf.save()]), 2.54, false, lib));
   const content = new TextDecoder().decode(lib.decodePDFRawStream(result.getPages()[0].node.Contents()).decode());
-  assert.ok(content.includes("0 20 m 100 30 l 100 80 l 0 90 l"));
+  assert.equal(content.split(draw).length - 1, 2);
+  assert.equal(content.includes('0.5 20.05 m'), false);
   assert.ok(content.includes('-14.400000 18.560000'));
   assert.ok(content.includes('-14.400000 91.440000 l'));
   assert.equal(content.split(inset).length - 1, 1);
