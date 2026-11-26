@@ -755,7 +755,7 @@ body.utilities-shell .card > .info {
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --utility-canvas: #10141c;
+    --utility-canvas: #10213a;
     --utility-surface: #242b36;
     --utility-raised: #374353;
     --utility-selected: #284c74;
