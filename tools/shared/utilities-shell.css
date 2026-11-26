@@ -773,7 +773,10 @@ body.utilities-shell .card > .info {
     --utility-ok-bg: #203c32;
   }
   .utilities-surface,
-  body.utilities-shell main > .card,
+  body.utilities-shell main > .card {
+    outline: 1px solid var(--utility-panel-edge);
+    outline-offset: -1px;
+  }
   ::view-transition-image-pair(utilities-surface) {
     outline: 1px solid var(--utility-panel-edge);
     outline-offset: -1px;
