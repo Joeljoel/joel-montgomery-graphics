@@ -756,7 +756,8 @@ body.utilities-shell .card > .info {
 @media (prefers-color-scheme: dark) {
   :root {
     --utility-canvas: #10213a;
-    --utility-surface: #242b36;
+    --utility-surface: #2d3643;
+    --utility-panel-edge: #889cb5;
     --utility-raised: #374353;
     --utility-selected: #284c74;
     --utility-text: #fafbfd;
@@ -770,6 +771,12 @@ body.utilities-shell .card > .info {
     --utility-error-bg: #462c31;
     --utility-warn-bg: #413622;
     --utility-ok-bg: #203c32;
+  }
+  .utilities-surface,
+  body.utilities-shell main > .card,
+  ::view-transition-image-pair(utilities-surface) {
+    outline: 1px solid var(--utility-panel-edge);
+    outline-offset: -1px;
   }
   :is(.utilities-home, .card > header) > img[src$="easilLogo.png"] { filter: brightness(0) invert(1); }
   .utilities-sidebar .utilities-name { font-weight: 600; }
