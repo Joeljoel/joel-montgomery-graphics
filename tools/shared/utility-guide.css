@@ -13,7 +13,7 @@ body:has(.utility-guide[open]) { overflow: hidden; }
 .guide-open:hover, .guide-heading button:hover { background: var(--utility-selected, #d9e6f5); }
 .utility-guide {
   width: min(620px, calc(100% - 32px));
-  height: auto;
+  height: fit-content;
   max-height: calc(100dvh - 32px);
   margin: auto;
   padding: 0;
