@@ -47,10 +47,11 @@ function pdfWithBoxes(hasBoxes) {
     await page.locator('.file-card').nth(1).waitFor();
     const cards = page.locator('.file-card');
     assert.equal(await cards.count(), 2);
-    assert.match(await cards.nth(0).innerText(), /210 × 297 mm/);
-    assert.match(await cards.nth(0).innerText(), /3 mm on all sides/);
+    assert.match(await cards.nth(0).innerText(), /210 × 297\s*mm/);
+    assert.match(await cards.nth(0).innerText(), /3\s*mm\s*On all sides/i);
     assert.match(await cards.nth(1).innerText(), /Not defined/);
     await cards.nth(1).locator('.page-row summary').click();
+    await cards.nth(1).locator('.page-notes').waitFor();
     assert.match(await cards.nth(1).innerText(), /BleedBox is not defined/);
     await cards.first().locator('.page-row summary').click();
     await cards.first().locator('.box-table').waitFor();
@@ -58,6 +59,18 @@ function pdfWithBoxes(hasBoxes) {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.setViewportSize({ width: 375, height: 850 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    for (const [index, action, mm] of [[0, 'Adjust bleed', '0'], [1, 'Add bleed', '3']]) {
+      const editor = cards.nth(index).locator('.bleed-editor');
+      await editor.getByText(action, { exact: true }).click();
+      const amount = editor.getByRole('spinbutton');
+      assert.equal(await amount.inputValue(), '3');
+      await amount.fill(mm);
+      await editor.getByRole('button', { name: 'Prepare PDF' }).click();
+      const download = editor.getByRole('link', { name: 'Download PDF' });
+      await download.waitFor();
+      assert.match(await download.getAttribute('download'), new RegExp(mm + 'mm\\.pdf$'));
+      assert.equal(await editor.getByText('Preview PDF ↗').getAttribute('href'), await download.getAttribute('href'));
+    }
     assert.deepEqual(errors, []);
     console.log('PASS: PDF parser, defined / fallback boxes, page details, mobile layout.');
   } finally {

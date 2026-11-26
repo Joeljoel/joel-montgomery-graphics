@@ -64,12 +64,10 @@
 
     <section class="card" aria-labelledby="title">
       <header class="heading"><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1 id="title">PDF Inspector</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">Info</button></header>
-      <p class="intro">Check trim size and bleed at a glance, then explore the page boxes.</p>
       <div id="drop-zone" class="drop-zone">
         <input id="files" type="file" accept=".pdf,application/pdf" multiple hidden>
-        <strong>Click or drop PDF files here</strong>
+        <strong>Drop PDFs here</strong>
         <span>or <button id="choose" class="text-button" type="button">browse your files</button></span>
-        <small>Multiple PDFs supported · Processed locally in your browser</small>
       </div>
       <p id="status" class="status" role="status" aria-live="polite"></p>
       <section id="results" class="results" hidden aria-label="Inspection results">
@@ -79,19 +77,7 @@
         </div>
         <div id="file-results" class="file-results"></div>
       </section>
-      <p class="measurement-note">Measurements describe PDF page boxes; they don’t verify that artwork reaches the bleed edge.</p>
-      <details class="help">
-        <summary>What do the PDF page boxes mean?</summary>
-        <dl>
-          <div><dt>TrimBox</dt><dd>The intended finished size after trimming.</dd></div>
-          <div><dt>CropBox</dt><dd>The region visible in a PDF viewer, which may differ from the finished size.</dd></div>
-          <div><dt>BleedBox</dt><dd>The print-output region used to measure bleed relative to the TrimBox.</dd></div>
-          <div><dt>MediaBox</dt><dd>The full PDF page area, which can include printer marks.</dd></div>
-          <div><dt>ArtBox</dt><dd>An optional boundary around meaningful page artwork.</dd></div>
-        </dl>
-        <p>If the TrimBox or BleedBox isn't explicitly defined, the inspector marks bleed as unconfirmed. Page-box metadata does not guarantee the artwork actually reaches the bleed edge.</p>
-      </details>
-      <p class="info">Inspect PDF dimensions and bleed without uploading your files. Check individual pages, spot inconsistencies and export a CSV report.</p>
+
     </section>
     <nav class="back" aria-label="Design utilities"><a href="../">All utilities</a></nav>
     <span id="utilities-ready" hidden></span>
@@ -102,9 +88,8 @@
     <form method="dialog"><button autofocus>Close</button></form>
   </div>
   <div class="guide-body">
-      <p>Drop one or more PDFs to see the finished page size and the bleed on each edge. The inspector reads the files locally in your browser.</p>
-      <p>Expand a page to compare its boxes. TrimBox describes the finished size. BleedBox describes the area reserved beyond the trim. If either box is missing, bleed is marked unconfirmed.</p>
-      <p>The measurements describe the file’s boundaries. Checking whether the artwork fills the bleed requires a visual inspection. Use Export CSV to save the measurements.</p>
+    <p>Trim is the finished size. Bleed is measured from the trim edge to the BleedBox. Expand a page to inspect its boxes.</p>
+    <p>Changing bleed reveals artwork already in the PDF. Check the preview for blank edges, clipping or existing printer marks before printing.</p>
   </div>
 </dialog>
 </body>
