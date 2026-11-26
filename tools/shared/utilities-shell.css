@@ -737,8 +737,8 @@ body.utilities-shell main > .card > :is(#drop, #drop-area, #drop-zone) {
 @media (min-width: 961px) {
   body.utilities-shell main {
     grid-template-rows: auto;
-    align-content: stretch;
-    align-items: center;
+    align-content: center;
+    align-items: start;
   }
   body.utilities-shell main > :is(.utilities-sidebar, .utilities-frame-slot) { grid-row: 1; }
   body.utilities-shell main > .utilities-sidebar {
