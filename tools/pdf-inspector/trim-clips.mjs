@@ -37,23 +37,6 @@ function polygonPath(vertices) {
   return vertices.map(([x,y],i) => x.toFixed(6)+' '+y.toFixed(6)+(i?' l':' m')).join('\n')+'\nh';
 }
 
-// Intersect a convex polygon with the exterior half-plane of one trim edge.
-function beyondEdge(vertices, axis, edge, direction) {
-  const result = [];
-  let previous = vertices.at(-1);
-  for (const current of vertices) {
-    const a = direction * (previous[axis] - edge);
-    const b = direction * (current[axis] - edge);
-    if ((a > 0) !== (b > 0)) {
-      const t = a / (a - b);
-      result.push(previous.map((v,k) => v + t*(current[k]-v)));
-    }
-    if (b > 0) result.push(current);
-    previous = current;
-  }
-  return result;
-}
-
 // Some print exports begin with a scaled page, a rectangular page clip,
 // a white backing rectangle, and one oversized background image.
 const numeric = '([-+]?(?:\\d+\\.?\\d*|\\.\\d+))';
@@ -62,34 +45,28 @@ const backgroundPrefix = new RegExp('^\\s*q\\s+' + operands(6) + '\\s+cm\\s+q\\s
   operands(4) + '\\s+re\\s+W\\*?\\s+n\\s+1\\s+g\\s+' + operands(4) +
   '\\s+re\\s+f\\s+q\\s+' + operands(6) + '\\s+cm\\s+/([A-Za-z0-9_-]+)\\s+Do\\s+Q\\s+Q(?=\\s|$)');
 
-function backgroundOutsideTrim(code, page, trim, bleed, lib) {
-  const match = backgroundPrefix.exec(code.slice(0, 2048));
-  if (!match) return '';
+function canExpandBackground(match, page, trim, lib) {
+  if (!match) return false;
   const values = match.slice(1, -1).map(Number);
   const [sx, skewY, skewX, sy, tx, ty, x, y, w, h] = values;
   const [iw, iySkew, ixSkew, ih, ix, iy] = values.slice(14);
   if (!values.every(Number.isFinite) || skewY || skewX || iySkew || ixSkew ||
-      sx <= 0 || sy <= 0 || iw <= 0 || ih <= 0) return '';
+      sx <= 0 || sy <= 0 || iw <= 0 || ih <= 0) return false;
 
   const left = trim.x, right = left + trim.width;
   const bottom = trim.y, top = bottom + trim.height;
   // Allow up to half a PDF point of page-box rounding on each edge.
   const errors = [x*sx+tx-left, (x+w)*sx+tx-right, y*sy+ty-bottom, (y+h)*sy+ty-top];
-  if (errors.some(error => Math.abs(error) > 0.5)) return '';
+  if (errors.some(error => Math.abs(error) > 0.5)) return false;
   if (ix*sx+tx >= left || (ix+iw)*sx+tx <= right ||
-      iy*sy+ty >= bottom || (iy+ih)*sy+ty <= top) return '';
+      iy*sy+ty >= bottom || (iy+ih)*sy+ty <= top) return false;
   const name = lib.PDFName.of;
   const imageName = match.at(-1);
   const image = page.node.Resources()?.lookup(name('XObject'))?.lookup(name(imageName));
   if (image?.dict?.get(name('Subtype'))?.toString() !== '/Image' ||
-      ['Mask', 'SMask', 'ImageMask', 'OC', 'SMaskInData'].some(key => image.dict.has(name(key)))) return '';
+      ['Mask', 'SMask', 'ImageMask', 'OC', 'SMaskInData'].some(key => image.dict.has(name(key)))) return false;
 
-  // Paint only the perimeter. The original page, including its fractional
-  // trim insets, still renders from its original operators.
-  return ['q', [left-bleed, bottom-bleed, trim.width+2*bleed, trim.height+2*bleed].join(' ') + ' re',
-    [left, bottom, trim.width, trim.height].join(' ') + ' re W* n',
-    match.slice(1, 7).join(' ') + ' cm', match.slice(15, 21).join(' ') + ' cm',
-    '/' + imageName + ' Do', 'Q', ''].join('\n');
+  return true;
 }
 
 export function revealTrimClips(page, trim, bleed, lib) {
@@ -137,8 +114,8 @@ export function revealTrimClips(page, trim, bleed, lib) {
   }
   pieces.push(source.slice(cursor));
   const code = pieces.join('');
-  const background = backgroundOutsideTrim(code, page, trim, bleed, lib);
   const prefix = backgroundPrefix.exec(code.slice(0,2048));
+  const expandBackground = canExpandBackground(prefix, page, trim, lib);
   const firstMatrix = new RegExp('^\\s*q\\s+' + operands(6) + '\\s+cm(?=\\s)').exec(code);
   const scale = firstMatrix && firstMatrix.slice(1).map(Number);
   const scaledPage = scale && scale.every(Number.isFinite) && scale[0] > 0 && scale[3] > 0 &&
@@ -156,8 +133,9 @@ export function revealTrimClips(page, trim, bleed, lib) {
     stack.push(transformed);
     // The leading scale still applies between the background and its sibling
     // objects. Ignore any scope with an additional local transform.
-    const foreground = transformed === 'page' && op.lastIndex >= (prefix?.[0].length ?? 0);
-    if (transformed && !foreground) continue;
+    const inPageSpace = transformed === 'page' &&
+      (expandBackground || op.lastIndex >= (prefix?.[0].length ?? 0));
+    if (transformed && !inPageSpace) continue;
     const start = op.lastIndex;
     const path = /^\s*((?:[-+.\d]+[ \t]+){4}re|[-+.\d]+[ \t]+[-+.\d]+[ \t]+m(?:\s+[-+.\d]+[ \t]+[-+.\d]+[ \t]+l){2,12}(?:\s+h)?)\s+W\*?\s+n\b/.exec(code.slice(start,start+1200));
     if (!path || /^\s*Q\b/.test(code.slice(start + path[0].length, start + path[0].length + 32))) continue;
@@ -170,31 +148,23 @@ export function revealTrimClips(page, trim, bleed, lib) {
     } else for(let j=0;j<values.length;j+=2) points.push(values.slice(j,j+2));
     if (points.length > 3 && points[0].every((v,k) => v === points.at(-1)[k])) points.pop();
     const startIndex = start + path[0].indexOf(path[1]);
-    if (foreground) {
+    if (inPageSpace) {
       const [sx,,,sy,tx,ty] = scale;
       const mapped = points.map(([x,y]) => [x*sx+tx, y*sy+ty]);
       const expanded = expandPolygon(mapped, trim, bleed, 0.5);
       if (expanded) {
-        const boundaries = [[0,trim.x,-1], [0,trim.x+trim.width,1],
-          [1,trim.y,-1], [1,trim.y+trim.height,1]];
-        const extensions = boundaries.map(([axis,edge,direction]) =>
-          beyondEdge(expanded,axis,edge,direction)).filter(part => part.length >= 3);
-        if (extensions.length) {
-          // The original convex clip and the outside pieces all wind the same
-          // way. Nonzero clipping takes their union even at bleed corners.
-          const paths = extensions.map(part =>
-            polygonPath(part.map(([x,y]) => [(x-tx)/sx, (y-ty)/sy])));
-          edits.push([startIndex, start+path[0].length,
-            [source.slice(startIndex, startIndex+path[1].length), ...paths, 'W n'].join('\n')]);
-        }
+        // Replace the clip in its own coordinates. The original image is
+        // painted once, continuously across any fractional trim inset.
+        const local = expanded.map(([x,y]) => [(x-tx)/sx, (y-ty)/sy]);
+        edits.push([startIndex, startIndex+path[1].length, polygonPath(local)+' ']);
       }
     } else {
       const expanded = expandPolygon(points, trim, bleed);
       if (expanded) edits.push([startIndex, startIndex+path[1].length, polygonPath(expanded)+' ']);
     }
   }
-  if (!edits.length && !background) return;
-  const parts = [background];
+  if (!edits.length) return;
+  const parts = [];
   let pos = 0;
   for (const [from,to,value] of edits) { parts.push(source.slice(pos,from),value); pos=to; }
   parts.push(source.slice(pos));
