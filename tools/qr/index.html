@@ -24,6 +24,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell"><main>
     <aside class="utilities-sidebar" aria-label="Design utilities">
@@ -47,7 +49,7 @@
       </nav>
       <a class="utilities-overview" href="../">← All utilities</a>
     </aside>
-<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Bulk QR Code Generator</h1></header>
+<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Bulk QR Code Generator</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">How To</button></header>
 <fieldset id="inputs">
 <button type="button" id="drop">Click or drop a CSV, TSV or TXT file here</button><input id="file" type="file" accept=".csv,.tsv,.txt,text/plain,text/csv,text/tab-separated-values" hidden>
 <label for="paste">Or paste links, text or spreadsheet cells</label><textarea id="paste" rows="5" placeholder="One link per line, or paste columns from a spreadsheet" spellcheck="false"></textarea>
@@ -59,4 +61,17 @@
 <p id="status" role="status" aria-live="polite"></p><div class="actions"><button id="download" disabled>Download ZIP</button><button id="cancel" hidden>Cancel</button></div>
 <p class="info">Create a batch of QR codes from a list or spreadsheet. Choose the content and filenames, then download PNG or SVG files together in a ZIP.</p>
     </section><nav><a href="../">All utilities</a></nav>  <span id="utilities-ready" hidden></span>
-  </main></body></html>
+  </main><dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">Generate a batch of QR codes</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+    <ol>
+      <li>Paste one link or text value per line, or load a spreadsheet exported as CSV or TSV. Each data row becomes a QR code.</li>
+      <li>For a table, check the heading setting and choose the columns for QR content and filenames.</li>
+      <li>Choose PNG or SVG and select Download ZIP. For print, test a code at its intended size and keep the clear margin around it.</li>
+    </ol>
+  </div>
+</dialog>
+</body></html>

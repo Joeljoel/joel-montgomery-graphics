@@ -34,6 +34,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell">
   <main class="container">
@@ -60,7 +62,7 @@
     </aside>
 
     <section class="card">
-      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1>Repeating Element Maker</h1></header>
+      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1>Repeating Element Maker</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">How To</button></header>
       <button id="drop-area" class="drop-area" type="button"><span>Click or drag to upload SVG</span></button>
       <input id="file-input" type="file" accept=".svg,image/svg+xml" hidden>
       <details id="paste-panel"><summary>Or paste SVG code</summary><label class="sr-only" for="input-code">SVG source</label><textarea id="input-code" rows="7" placeholder="Paste your SVG code here" spellcheck="false"></textarea><button id="convert-code" class="secondary" type="button">Convert SVG</button></details>
@@ -80,6 +82,19 @@
     <nav aria-label="Design utilities"><a href="../">All utilities</a></nav>
     <span id="utilities-ready" hidden></span>
   </main>
+<dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">Create a horizontally repeating element</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+    <ol>
+      <li>Set the artboard to the size of one tile. The right edge should meet the left edge of the next copy, so check the join before exporting.</li>
+      <li>Drop in the SVG, or paste its code and select Convert SVG. Widen the preview to check several repeats.</li>
+      <li>Download the converted SVG or copy its code. The preview width is only for checking the result.</li>
+    </ol>
+  </div>
+</dialog>
 </body>
 </html>
 

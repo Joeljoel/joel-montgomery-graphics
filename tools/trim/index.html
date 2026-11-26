@@ -32,6 +32,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell">
   <main class="container">
@@ -58,7 +60,7 @@
     </aside>
 
     <section class="card" aria-labelledby="title">
-      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1 id="title">Trim SVG Contents</h1></header>
+      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1 id="title">Trim SVG Contents</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">Info</button></header>
       <button id="drop-area" type="button"><span>Click or drop SVG files here</span><small>Trim and download automatically</small></button>
       <input id="file-input" type="file" accept=".svg,image/svg+xml" multiple hidden>
       <p id="status" role="status" aria-live="polite"></p>
@@ -70,5 +72,15 @@
     <nav aria-label="Design utilities"><a href="../">All utilities</a></nav>
     <span id="utilities-ready" hidden></span>
   </main>
+<dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">About Trim SVG Contents</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+      <p>Drop one or more SVGs onto the page to trim transparent space around the visible artwork. The tool accounts for clips and masks. A white background counts as visible artwork.</p>
+      <p>The trimmed files download as SVGs. If your browser blocks multiple downloads, use the Download link beside each result.</p>
+  </div>
+</dialog>
 </body>
 </html>
