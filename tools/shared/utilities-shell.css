@@ -733,6 +733,19 @@ body.utilities-shell main > .card > :is(#drop, #drop-area, #drop-zone) {
   text-align: center;
 }
 
+/* Both columns share one track and keep their own natural height. */
+@media (min-width: 961px) {
+  body.utilities-shell main {
+    grid-template-rows: auto;
+    align-content: stretch;
+    align-items: center;
+  }
+  body.utilities-shell main > :is(.utilities-sidebar, .utilities-frame-slot) { grid-row: 1; }
+  body.utilities-shell main > .utilities-sidebar {
+    top: max(24px, calc((100dvh - var(--sidebar-height, 620px)) / 2));
+  }
+}
+
 :root { color-scheme: light dark; }
 body.utilities-shell .card > .info {
   margin: 24px 0 0;
@@ -742,15 +755,15 @@ body.utilities-shell .card > .info {
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --utility-canvas: #101d30;
-    --utility-surface: #1e2632;
-    --utility-raised: #2d3847;
-    --utility-selected: #243e60;
-    --utility-text: #f1f4f8;
-    --utility-muted: #bbc5d2;
-    --utility-link: #91c3ff;
+    --utility-canvas: #10141c;
+    --utility-surface: #242b36;
+    --utility-raised: #374353;
+    --utility-selected: #284c74;
+    --utility-text: #fafbfd;
+    --utility-muted: #d6dfe9;
+    --utility-link: #abd3ff;
     --utility-action: #2466ae;
-    --utility-line: #546578;
+    --utility-line: #77889b;
     --utility-danger: #ffaaa1;
     --utility-warning: #f5ca80;
     --utility-success: #9adcb3;
@@ -759,5 +772,12 @@ body.utilities-shell .card > .info {
     --utility-ok-bg: #203c32;
   }
   :is(.utilities-home, .card > header) > img[src$="easilLogo.png"] { filter: brightness(0) invert(1); }
+  .utilities-sidebar .utilities-name { font-weight: 600; }
+  .card :is(input:not([type]), input[type="text"], input[type="number"], textarea, select) {
+    background-color: #191f28;
+    color: var(--utility-text);
+    border-color: var(--utility-line);
+  }
+  .card ::placeholder { color: #afbcca; opacity: 1; }
   .card a { color: var(--utility-link); }
 }

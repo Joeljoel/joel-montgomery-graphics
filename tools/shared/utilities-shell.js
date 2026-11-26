@@ -99,6 +99,9 @@
   if (enteredFromOverview) startBonus();
 
   const sidebar = main.querySelector('.utilities-sidebar');
+  new ResizeObserver(() => {
+    main.style.setProperty('--sidebar-height', sidebar.offsetHeight + 'px');
+  }).observe(sidebar);
   const toggle = sidebar.querySelector('.utilities-toggle');
   const setOpen = open => {
     sidebar.classList.toggle('is-open', open);
