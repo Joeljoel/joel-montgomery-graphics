@@ -1,5 +1,5 @@
 // Serve the repo root on port 8765, then run with Playwright available via NODE_PATH.
-// This is a full browser smoke test; its pinned pdf-lib CDN script requires internet.
+// Both the parser and the export worker use the bundled PDF library.
 const { chromium } = require('playwright');
 const assert = require('node:assert/strict');
 
@@ -47,10 +47,11 @@ function pdfWithBoxes(hasBoxes) {
     await page.locator('.file-card').nth(1).waitFor();
     const cards = page.locator('.file-card');
     assert.equal(await cards.count(), 2);
-    assert.match(await cards.nth(0).innerText(), /210 × 297 mm/);
-    assert.match(await cards.nth(0).innerText(), /3 mm on all sides/);
+    assert.match(await cards.nth(0).innerText(), /210 × 297\s*mm/);
+    assert.match(await cards.nth(0).innerText(), /3\s*mm\s*On all sides/i);
     assert.match(await cards.nth(1).innerText(), /Not defined/);
     await cards.nth(1).locator('.page-row summary').click();
+    await cards.nth(1).locator('.page-notes').waitFor();
     assert.match(await cards.nth(1).innerText(), /BleedBox is not defined/);
     await cards.first().locator('.page-row summary').click();
     await cards.first().locator('.box-table').waitFor();
@@ -58,6 +59,31 @@ function pdfWithBoxes(hasBoxes) {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     await page.setViewportSize({ width: 375, height: 850 });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
+    const editor = cards.first().locator('.bleed-editor');
+    const amount = editor.getByRole('spinbutton');
+    assert.equal(await amount.isVisible(), false);
+    await editor.getByRole('button', { name: 'Custom Bleed', exact: true }).click();
+    assert.equal(await editor.getByLabel('Crop marks').isChecked(), true);
+    await amount.fill('0');
+    await editor.getByLabel('Crop marks').uncheck();
+    const popups = [];
+    page.context().on('page', popup => popups.push(popup));
+    for (const [label, mm] of [['Download with custom bleed', 0], ['Download with 3mm bleed', 3]]) {
+      const started = page.waitForEvent('download');
+      await editor.getByRole('button', { name: label }).click();
+      const download = await started;
+      assert.equal(download.suggestedFilename(), 'with-bleed-' + mm + 'mm.pdf');
+      const lib = require('../tools/pdf-inspector/pdf-lib.min.js');
+      const doc = await lib.PDFDocument.load(require('node:fs').readFileSync(await download.path()));
+      const [result] = doc.getPages();
+      assert.ok(Math.abs(result.getBleedBox().width - pt(210 + 2 * mm)) < 0.001);
+      assert.ok(Math.abs(result.getMediaBox().width - (mm ? pt(210) + 66 : pt(210))) < 0.001);
+    }
+    assert.equal(await editor.getByRole('link').count(), 0);
+    await page.locator('#files').setInputFiles({ name: 'replacement.pdf', mimeType: 'application/pdf', buffer: pdfWithBoxes(true) });
+    await page.getByRole('heading', { name: 'replacement.pdf' }).waitFor();
+    assert.equal(await cards.count(), 1);
+    assert.equal(popups.length, 0);
     assert.deepEqual(errors, []);
     console.log('PASS: PDF parser, defined / fallback boxes, page details, mobile layout.');
   } finally {

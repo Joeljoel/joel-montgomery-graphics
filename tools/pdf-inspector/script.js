@@ -52,11 +52,9 @@ function trimMetric(page) {
   if (page.explicit.trim) {
     const size = page.sizes.trim;
     section.append(measurement(formatMm(size.width) + ' × ' + formatMm(size.height)));
-    section.append(element('p', 'metric-sub', 'Finished width × height · TrimBox'));
   } else {
     section.append(element('p', 'metric-value metric-undefined', 'Not defined'));
     section.append(element('p', 'metric-sub', 'CropBox fallback: ' + sizeLabel(page.sizes.trim)));
-    section.append(element('p', 'metric-note', 'The finished size cannot be confirmed.'));
   }
   return section;
 }
@@ -75,7 +73,7 @@ function bleedMetric(page) {
     section.append(element('p', 'metric-sub', 'Explicit TrimBox and BleedBox required'));
   } else if (uniformBleed(page.bleed)) {
     section.append(measurement(formatMm(page.bleed.top)));
-    section.append(element('p', 'metric-sub', 'On all sides · beyond trim'));
+    section.append(element('p', 'metric-sub', 'On all sides'));
   } else {
     const grid = element('dl', 'edge-grid');
     for (const edge of EDGES) {
@@ -86,17 +84,7 @@ function bleedMetric(page) {
     }
     section.append(grid, element('p', 'metric-sub', 'Uneven bleed · beyond trim'));
   }
-  if (page.bleed && Object.values(page.bleed).some(value => value < 0.05)) {
-    section.append(element('p', 'metric-note', Object.values(page.bleed).some(value => value < -0.05)
-      ? 'Bleed falls inside trim. Check page notes.' : 'One or more edges have no bleed.'));
-  }
   return section;
-}
-
-function warningsList(messages) {
-  const list = element('div', 'notice-list');
-  messages.forEach(message => list.append(element('p', 'notice', message)));
-  return list;
 }
 
 function svgNode(tag, attributes = {}) {
@@ -173,7 +161,7 @@ function pageTable(page) {
   return wrap;
 }
 
-function renderPageRow(page, index) {
+function renderPageRow(page, index, single) {
   const details = element('details', 'page-row');
   const summary = element('summary');
   append(summary, element('span', 'page-number', 'Page ' + (index + 1)),
@@ -181,6 +169,7 @@ function renderPageRow(page, index) {
       element('span', '', page.explicit.trim ? sizeLabel(page.sizes.trim) : 'Not defined')),
     append(element('span', 'page-bleed'), element('span', 'row-label', 'Bleed'),
       element('span', '', edgeSummary(page.bleed))));
+  if (single) summary.replaceChildren(element('span', 'page-number', 'Page details'));
   if (page.warnings.length) summary.append(makePill(page.warnings.length + ' note' +
     (page.warnings.length > 1 ? 's' : ''), 'warn'));
   details.append(summary);
@@ -188,12 +177,89 @@ function renderPageRow(page, index) {
   details.addEventListener('toggle', () => {
     if (!details.open || details.querySelector('.page-content')) return;
     const content = element('div', 'page-content');
-    const measurements = element('div', 'overview page-measurements');
-    append(measurements, trimMetric(page), bleedMetric(page));
-    append(content, measurements, diagram(page), pageTable(page));
+    append(content, diagram(page), pageTable(page));
     details.append(content);
   });
   return details;
+}
+
+function bleedEditor(report) {
+  const editor = element('section', 'bleed-editor');
+  const actions = element('div', 'actions');
+  const quick = element('button', '', 'Download with 3mm bleed');
+  const custom = element('button', 'button-secondary', 'Custom Bleed');
+  const form = element('form', 'bleed-controls');
+  custom.setAttribute('aria-expanded', 'false');
+  form.hidden = true;
+  actions.append(quick, custom);
+  editor.append(actions, form);
+  custom.onclick = () => {
+    form.hidden = !form.hidden;
+    custom.setAttribute('aria-expanded', String(!form.hidden));
+    if (!form.hidden) amount.focus();
+  };
+  const amount = element('input');
+  amount.type = 'number';
+  amount.min = '0';
+  amount.step = 'any';
+  amount.required = true;
+  const current = report.pages[0].bleed;
+  const common = current && current.top > 0 && report.pages.every(page =>
+    uniformBleed(page.bleed) && Math.abs(page.bleed.top - current.top) < 0.005);
+  amount.value = common ? String(Math.round(current.top * 100) / 100) : '3';
+  const marks = element('input');
+  marks.type = 'checkbox';
+  marks.checked = true;
+  const prepare = element('button', '', 'Download with custom bleed');
+  const recover = element('input');
+  recover.type = 'checkbox';
+  recover.checked = true;
+  const message = element('p', 'status');
+  message.setAttribute('role', 'status');
+  let worker;
+  function reset() {
+    worker?.terminate();
+    worker = null;
+    quick.disabled = false;
+    prepare.disabled = false;
+    message.textContent = '';
+  }
+  report.dispose = reset;
+  form.addEventListener('input', reset);
+  function downloadPdf(mm, cropMarks, reveal) {
+    reset();
+    quick.disabled = prepare.disabled = true;
+    message.textContent = 'Preparing PDF…';
+    worker = new Worker(new URL('inspect-worker.mjs', import.meta.url), { type: 'module' });
+    worker.onerror = () => { reset(); message.textContent = 'Could not prepare PDF.'; };
+    worker.onmessage = ({ data }) => {
+      reset();
+      if (data.error) { message.textContent = data.error; return; }
+      const url = URL.createObjectURL(new Blob([data.bytes], { type: 'application/octet-stream' }));
+      const download = element('a');
+      download.href = url;
+      download.download = report.name.replace(/\.pdf$/i, '') + '-' + mm + 'mm.pdf';
+      download.target = '_self';
+      download.hidden = true;
+      document.body.append(download);
+      download.click();
+      download.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    };
+    worker.postMessage({ action: 'bleed', source: report.file, mm, marks: cropMarks, recover: reveal });
+  }
+  quick.onclick = () => downloadPdf(3, true, true);
+  form.onsubmit = event => {
+    event.preventDefault();
+    downloadPdf(amount.valueAsNumber, marks.checked, recover.checked);
+  };
+  form.append(append(element('label', '', 'Bleed per edge (mm) '), amount),
+    append(element('label'), marks, ' Crop marks'), prepare);
+  if (report.illustrator) form.insertBefore(append(element('label'), recover, ' Reveal Illustrator artwork at trim edges'), prepare);
+  if (report.pages.some(page => !page.explicit.trim))
+    editor.append(element('p', 'metric-note', 'Pages without a TrimBox use their current crop as the finished size.'));
+  editor.append(message);
+  return editor;
 }
 
 function renderReport(report) {
@@ -214,7 +280,6 @@ function renderReport(report) {
   if (report.summary.mixedSizes) pills.append(makePill('Mixed page sizes', 'warn'));
   if (report.summary.mixedBleed) pills.append(makePill('Mixed bleed', 'warn'));
   if (!pills.children.length && report.summary.warningPages) pills.append(makePill('Review page notes', 'warn'));
-  if (!pills.children.length) pills.append(makePill('Trim & bleed defined', 'good'));
   append(head, identity, pills);
   card.append(head);
   const scope = element('div', 'overview-scope');
@@ -224,20 +289,16 @@ function renderReport(report) {
   scope.append(element('span', '', report.pages.length === 1 ? 'Page 1' :
     mixed || !sameTrimSource ? 'Page 1 of ' + report.pages.length : 'All ' + report.pages.length + ' pages'));
   if (mixed || !sameTrimSource) scope.append(element('span', 'scope-note', 'Values vary · compare pages below'));
-  card.append(scope);
+  if (report.pages.length > 1) card.append(scope);
   const overview = element('div', 'overview');
   append(overview, trimMetric(first), bleedMetric(first));
   card.append(overview);
-  if (report.summary.warningPages) card.append(warningsList([
-    report.summary.warningPages + ' of ' + report.pages.length + ' page' +
-    (report.pages.length === 1 ? '' : 's') + ' with notes. Open a page below to review.'
-  ]));
-  const pagesLabel = element('div', 'pages-heading');
-  append(pagesLabel, element('span', '', 'Page details'),
-    element('span', '', 'All boxes, diagram & notes'));
+  card.append(bleedEditor(report));
+  const pagesLabel = element('div', 'pages-heading', 'Page details');
   const pages = element('div', 'page-rows');
-  report.pages.forEach((page, index) => pages.append(renderPageRow(page, index)));
-  append(card, pagesLabel, pages);
+  report.pages.forEach((page, index) => pages.append(renderPageRow(page, index, report.pages.length === 1)));
+  if (report.pages.length > 1) card.append(pagesLabel);
+  card.append(pages);
   return card;
 }
 
@@ -254,6 +315,8 @@ let generation = 0;
 let queue = Promise.resolve();
 let cancelActive;
 function inspectFiles(files) {
+  if (!files.length) return;
+  clearReports();
   const current = generation;
   queue = queue.then(() => processFiles(files, current));
 }
@@ -267,7 +330,7 @@ async function processFiles(files, current) {
     // Let the status paint before parsing large documents.
     await new Promise(resolve => setTimeout(resolve, 0));
     if (current !== generation) return;
-    const report = { name: file.name, bytes: file.size, pages: null, summary: null, error: null };
+    const report = { file, name: file.name, bytes: file.size, pages: null, summary: null, error: null };
     try {
       if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf')
         throw new Error('Please select PDF files only.');
@@ -298,8 +361,7 @@ async function processFiles(files, current) {
     reports.push(report);
     render(report);
   }
-  status.textContent = files.length + ' file(s) processed' +
-    (failures ? ' · ' + failures + ' could not be inspected.' : '. All PDF data stayed in your browser.');
+  status.textContent = failures ? failures + ' failed to load.' : '';
 }
 
 choose.addEventListener('click', () => input.click());
@@ -325,13 +387,15 @@ dropZone.addEventListener('drop', event => {
   dropZone.classList.remove('is-over');
   inspectFiles(Array.from(event.dataTransfer?.files || []));
 });
-clearButton.addEventListener('click', () => {
+function clearReports() {
   generation++;
   cancelActive?.();
+  reports.forEach(report => report.dispose?.());
   reports.length = 0;
   render();
   status.textContent = '';
-});
+}
+clearButton.addEventListener('click', clearReports);
 
 function csvQuote(value) {
   const raw = String(value ?? '');

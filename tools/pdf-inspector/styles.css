@@ -124,3 +124,8 @@ a { color: inherit; }
   .box-table { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.bleed-editor { padding: 14px 22px; border-top: 1px solid var(--utility-line, #e4e7eb); }
+.bleed-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 16px 0 10px; }
+.bleed-controls input[type=number] { width: 6em; padding: 7px; border: 1px solid var(--utility-line, #bbc3cc); border-radius: 6px; }
+.bleed-editor .actions { gap: 18px; }
