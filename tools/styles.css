@@ -1,21 +1,21 @@
 * { box-sizing: border-box; }
-body:not(.utilities-shell) { margin: 0; min-height: 100vh; padding: 32px 24px; display: flex; align-items: center; justify-content: center; background: #2184fc; color: #2c2e2f; font: 16px/1.5 Roboto, Arial, sans-serif; }
-body:not(.utilities-shell) > main.card { min-height: 0; margin: 0; display: block; --tool-gap: 16px; width: 960px; max-width: 100%; padding: 44px; border-radius: 18px; background: white; box-shadow: 0 2px 4px #15151633; }
+body:not(.utilities-shell) { margin: 0; min-height: 100vh; padding: 32px 24px; display: flex; align-items: center; justify-content: center; background: var(--utility-canvas, #2184fc); color: var(--utility-text, #2c2e2f); font: 16px/1.5 Roboto, Arial, sans-serif; }
+body:not(.utilities-shell) > main.card { min-height: 0; margin: 0; display: block; --tool-gap: 16px; width: 960px; max-width: 100%; padding: 44px; border-radius: 18px; background: var(--utility-surface, white); box-shadow: 0 2px 4px #15151633; }
 body:not(.utilities-shell) > main.card header { display: flex; align-items: center; gap: 16px; margin-bottom: 36px; }
 body:not(.utilities-shell) > main.card header img { width: 36px; height: 36px; }
 body:not(.utilities-shell) > main.card h1 { margin: 0; font-size: 32px; line-height: 1.25; font-weight: 600; }
 body:not(.utilities-shell) > main.card nav { margin: 0; padding: 0; text-align: left; font: inherit; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tool-gap); }
-body:not(.utilities-shell) > main.card nav a { display: flex; align-items: center; gap: 20px; min-height: 136px; padding: 24px; background: #f5f5f8; border-radius: 16px; color: #2c2e2f; text-decoration: none; transition: background-color 150ms, color 150ms; }
+body:not(.utilities-shell) > main.card nav a { display: flex; align-items: center; gap: 20px; min-height: 136px; padding: 24px; background: var(--utility-raised, #f5f5f8); border-radius: 16px; color: var(--utility-text, #2c2e2f); text-decoration: none; transition: background-color 150ms, color 150ms; }
 body:not(.utilities-shell) > main.card .tool-icon { width: 64px; height: 64px; object-fit: contain; flex: 0 0 64px; }
 /* Enlarge utility artwork without shifting the labels or the bonus icon. */
 body:not(.utilities-shell) > main.card nav > a .tool-icon { transform: scale(1.15); }
 body:not(.utilities-shell) > main.card .tool-copy { flex: 1; min-width: 0; }
 body:not(.utilities-shell) > main.card .tool-name { display: block; font-size: 23px; font-weight: 600; line-height: 1.2; }
-body:not(.utilities-shell) > main.card .tool-subtitle { display: block; margin-top: 7px; font-size: 14px; font-weight: 400; line-height: 1.35; color: #6b6f75; }
+body:not(.utilities-shell) > main.card .tool-subtitle { display: block; margin-top: 7px; font-size: 14px; font-weight: 400; line-height: 1.35; color: var(--utility-muted, #6b6f75); }
 body:not(.utilities-shell) > main.card .chevron { width: 12px; height: 12px; flex: 0 0 12px; border-top: 3px solid currentColor; border-right: 3px solid currentColor; transform: rotate(45deg); opacity: .75; margin-right: 4px; }
-body:not(.utilities-shell) > main.card nav a:hover { background: #edf4ff; color: #2675d4; }
-body:not(.utilities-shell) > main.card nav a:hover .tool-subtitle { color: #5c6f86; }
-body:not(.utilities-shell) > main.card a:focus-visible { outline: 3px solid #083f81; outline-offset: 4px; }
+body:not(.utilities-shell) > main.card nav a:hover { background: var(--utility-selected, #edf4ff); color: var(--utility-link, #2675d4); }
+body:not(.utilities-shell) > main.card nav a:hover .tool-subtitle { color: var(--utility-muted, #5c6f86); }
+body:not(.utilities-shell) > main.card a:focus-visible { outline: 3px solid var(--utility-link, #083f81); outline-offset: 4px; }
 /* Fill the next grid cell; on mobile the wrapper grows into a new row. */
 body:not(.utilities-shell) > main.card .secret-reveal { display: grid; min-width: 0; }
 body:not(.utilities-shell) > main.card .secret-reveal a { height: 100%; }
@@ -40,4 +40,4 @@ body:not(.utilities-shell) > main.card .secret-reveal:nth-child(odd) { grid-colu
 }
 @media (prefers-reduced-motion: reduce) { body:not(.utilities-shell) > main.card nav a { transition: none; } }
 
-body:not(.utilities-shell) > main.card nav > a[data-utilities-pending] { background: #e5efff; color: #176ac8; cursor: progress; }
+body:not(.utilities-shell) > main.card nav > a[data-utilities-pending] { background: var(--utility-selected, #e5efff); color: var(--utility-link, #176ac8); cursor: progress; }

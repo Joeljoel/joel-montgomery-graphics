@@ -8,7 +8,7 @@
    Tool-only switching explicitly disables the root capture below. */
 :root {
   view-transition-name: root;
-  background: #2184fc;
+  background: var(--utility-canvas, #2184fc);
   --utilities-morph-duration: 400ms;
   --utilities-morph-easing: cubic-bezier(.22, 1, .36, 1);
   --utilities-overview-radius: 18px;
@@ -49,8 +49,8 @@ body.utilities-overview-origin.utilities-shell {
   min-height: 100vh;
   padding: 0;
   display: block;
-  background: #2184fc;
-  color: #2c2e2f;
+  background: var(--utility-canvas, #2184fc);
+  color: var(--utility-text, #2c2e2f);
   font: 15px/1.5 Roboto, Arial, sans-serif;
 }
 /* The off-screen slot remains connected during warm-up and activation. */
@@ -85,7 +85,7 @@ body.utilities-shell main > .utilities-sidebar > .utilities-surface {
   z-index: -1;
   pointer-events: none;
   border-radius: inherit;
-  background: #fff;
+  background: var(--utility-surface, #fff);
   box-shadow: 0 2px 4px #15151633;
   view-transition-name: utilities-surface;
 }
@@ -108,7 +108,7 @@ body.utilities-shell main {
   grid-template-columns: 252px minmax(0, 1fr);
   grid-template-rows: auto auto;
   column-gap: 20px;
-  align-content: center;
+  align-content: start;
   align-items: start;
 }
 
@@ -127,6 +127,41 @@ body.utilities-shell main > .card {
   min-width: 0;
   width: 100%;
   border-radius: 12px;
+  /* Size headers against the panel for both direct and sidebar visits. */
+  container-type: inline-size;
+  padding: clamp(24px, 5%, 32px) clamp(18px, 5%, 32px);
+}
+body.utilities-shell main > .card > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  margin: 0 0 24px;
+  padding: 0;
+}
+body.utilities-shell main > .card > header > img {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+body.utilities-shell main > .card > header > h1 {
+  margin: 0;
+  font: 400 26px/1.25 Roboto, Arial, sans-serif;
+}
+@container (max-width: 400px) {
+  body.utilities-shell main > .card > header:has(.how-to-button) {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    grid-template-rows: minmax(38px, auto) auto;
+  }
+  body.utilities-shell main > .card > header > .how-to-button {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0;
+  }
+}
+@container (max-width: 560px) {
+  body.utilities-shell main > .card > header > h1 { font-size: 21px; }
 }
 body.utilities-shell main > .info {
   grid-column: 2;
@@ -144,7 +179,7 @@ body.utilities-shell main > nav {
   border-radius: 12px;
   box-shadow: none;
   font: 14px/1.35 Roboto, Arial, sans-serif;
-  color: #2c2e2f;
+  color: var(--utility-text, #2c2e2f);
 }
 .utilities-sidebar *, .utilities-sidebar *::before, .utilities-sidebar *::after {
   box-sizing: border-box;
@@ -154,7 +189,7 @@ body.utilities-shell main > nav {
   gap: 10px;
   align-items: center;
   margin: 0 7px 15px;
-  color: #2c2e2f;
+  color: var(--utility-text, #2c2e2f);
   font-size: 17px;
   font-weight: 600;
   text-decoration: none;
@@ -162,7 +197,7 @@ body.utilities-shell main > nav {
   line-height: 1.2;
 }
 .utilities-sidebar .utilities-home img { width: 30px; height: 30px; flex: none; }
-.utilities-sidebar .utilities-home:hover { color: #216dce; }
+.utilities-sidebar .utilities-home:hover { color: var(--utility-link, #216dce); }
 .utilities-sidebar .utilities-menu {
   position: relative;
   isolation: isolate;
@@ -186,7 +221,7 @@ body.utilities-shell main > nav {
   padding: 5px 8px;
   border-radius: 9px;
   background: transparent;
-  color: #343a40;
+  color: var(--utility-text, #343a40);
   text-decoration: none;
   text-align: left;
   font-size: 13px;
@@ -194,11 +229,11 @@ body.utilities-shell main > nav {
   line-height: 1.25;
 }
 .utilities-sidebar .utilities-menu a:hover {
-  background: #f3f6fb;
-  color: #176ac8;
+  background: var(--utility-raised, #f3f6fb);
+  color: var(--utility-link, #176ac8);
 }
 .utilities-sidebar .utilities-menu a[aria-current="page"] {
-  color: #145eb2;
+  color: var(--utility-link, #145eb2);
   font-weight: 600;
 }
 .utilities-sidebar .utilities-menu a[aria-current="page"]:hover {
@@ -216,7 +251,7 @@ body.utilities-shell main > nav {
   inset: 0;
   z-index: -1;
   border-radius: 9px;
-  background: #eaf3ff;
+  background: var(--utility-selected, #eaf3ff);
   box-shadow: inset 0 0 0 1px #d6e7ff;
   pointer-events: none;
   transform-origin: top left;
@@ -232,12 +267,12 @@ body.utilities-shell main > nav {
 .utilities-sidebar .utilities-overview {
   display: inline-block;
   margin: 14px 8px 2px;
-  color: #416a9a;
+  color: var(--utility-link, #416a9a);
   text-decoration: none;
   font-size: 13px;
   font-weight: 500;
 }
-.utilities-sidebar .utilities-overview:hover { color: #176ac8; text-decoration: underline; }
+.utilities-sidebar .utilities-overview:hover { color: var(--utility-link, #176ac8); text-decoration: underline; }
 /* This link has no counterpart in the overview. Capture it separately, so
    it never leaks into the root snapshot underneath the moving white panel. */
 .utilities-sidebar .utilities-overview {
@@ -247,17 +282,17 @@ body.utilities-shell main > nav {
   view-transition-name: utilities-mobile-toggle;
 }
 .utilities-sidebar .utilities-menu a[data-utilities-pending] {
-  background: #f0f6ff;
-  color: #176ac8;
+  background: var(--utility-selected, #f0f6ff);
+  color: var(--utility-link, #176ac8);
   cursor: progress;
 }
 .utilities-sidebar .utilities-menu a:active,
 body > main.card > nav > a:active {
-  background: #e5efff;
+  background: var(--utility-selected, #e5efff);
 }
 .utilities-sidebar a:focus-visible,
 .utilities-sidebar button:focus-visible {
-  outline: 3px solid #083f81;
+  outline: 3px solid var(--utility-link, #083f81);
   outline-offset: 2px;
 }
 .utilities-sidebar .utilities-toggle { display: none; }
@@ -314,7 +349,7 @@ body > main.card .secret-reveal { view-transition-name: utilities-secret; }
   body.utilities-shell main {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     width: min(900px, 100%);
     padding: 24px 16px;
     gap: 0;
@@ -338,15 +373,15 @@ body > main.card .secret-reveal { view-transition-name: utilities-secret; }
     align-items: center;
     gap: 12px;
     padding: 9px 12px;
-    border: 1px solid #e3e8ef;
+    border: 1px solid var(--utility-line, #e3e8ef);
     border-radius: 9px;
-    background: #f5f7fa;
-    color: #2c2e2f;
+    background: var(--utility-raised, #f5f7fa);
+    color: var(--utility-text, #2c2e2f);
     text-align: left;
     cursor: pointer;
     font: inherit;
   }
-  .utilities-sidebar .utilities-toggle:hover { background: #edf4ff; }
+  .utilities-sidebar .utilities-toggle:hover { background: var(--utility-selected, #edf4ff); }
   .utilities-sidebar .utilities-toggle img {
     width: 42px;
     height: 42px;
@@ -356,7 +391,7 @@ body > main.card .secret-reveal { view-transition-name: utilities-secret; }
   .utilities-sidebar .utilities-toggle-copy { flex: 1; min-width: 0; }
   .utilities-sidebar .utilities-toggle-copy small {
     display: block;
-    color: #6b7280;
+    color: var(--utility-muted, #6b7280);
     font-size: 11px;
     margin-bottom: 2px;
   }
@@ -369,8 +404,8 @@ body > main.card .secret-reveal { view-transition-name: utilities-secret; }
     flex: 0 0 9px;
     width: 9px;
     height: 9px;
-    border-right: 2px solid #5d6a79;
-    border-bottom: 2px solid #5d6a79;
+    border-right: 2px solid var(--utility-line, #5d6a79);
+    border-bottom: 2px solid var(--utility-line, #5d6a79);
     transform: rotate(45deg);
     transition: transform 180ms ease;
     margin: -4px 5px 0;
@@ -443,7 +478,7 @@ html.utilities-embedded body.utilities-shell > main > .card {
 }
 html.utilities-embedded body.utilities-shell > main > .info {
   width: 100%;
-  margin: 14px 0 0;
+  margin: 24px 0 0;
   view-transition-name: none;
 }
 @media (max-width: 960px) {
@@ -511,7 +546,7 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   ::view-transition-group(root) {
     z-index: 0;
     animation-duration: var(--utilities-morph-duration);
-    background: #2184fc;
+    background: var(--utility-canvas, #2184fc);
   }
   /* All visible UI has a named capture. Keeping only the solid blue root
      backdrop avoids a one-frame composite of the destination's unnamed UI. */
@@ -529,7 +564,7 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
   ::view-transition-image-pair(utilities-surface) {
     width: 100%;
     height: 100%;
-    background: #fff;
+    background: var(--utility-surface, #fff);
     border-radius: var(--utilities-radius-to);
     box-shadow: 0 2px 4px #15151633;
     overflow: clip;
@@ -665,4 +700,94 @@ html.utilities-inplace-navigation body.utilities-shell main > .utilities-sidebar
     animation-delay: 0ms !important;
   }
   .utilities-sidebar .utilities-toggle-chevron { transition: none; }
+}
+
+/* A native dialog fills its own browsing context. Expand that context while
+   it is modal, keeping the tool card aligned with its original grid slot. */
+body.utilities-shell:has(.utilities-frame-modal) { overflow: hidden; }
+body.utilities-shell main > .utilities-frame-modal {
+  view-transition-name: none;
+  height: var(--panel-height);
+}
+body.utilities-shell main > .utilities-frame-modal > iframe {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100% !important;
+  z-index: 100;
+}
+html.utilities-embedded-modal body.utilities-shell > main {
+  position: absolute;
+  left: var(--panel-left);
+  top: var(--panel-top);
+  width: var(--panel-width) !important;
+}
+
+/* The primary file drop target shares its dimensions across file utilities. */
+body.utilities-shell main > .card > :is(#drop, #drop-area, #drop-zone) {
+  width: 100%;
+  min-height: 144px;
+  padding: 24px 20px;
+  border: 1px dashed var(--utility-line, #cbd0d6);
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* Both columns share one track and keep their own natural height. */
+@media (min-width: 961px) {
+  body.utilities-shell main {
+    grid-template-rows: auto;
+    align-content: center;
+    align-items: start;
+  }
+  body.utilities-shell main > :is(.utilities-sidebar, .utilities-frame-slot) { grid-row: 1; }
+  body.utilities-shell main > .utilities-sidebar {
+    top: max(24px, calc((100dvh - var(--sidebar-height, 620px)) / 2));
+  }
+}
+
+:root { color-scheme: light dark; }
+body.utilities-shell .card > .info {
+  margin: 24px 0 0;
+  color: var(--utility-muted, #58616c);
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --utility-canvas: #10213a;
+    --utility-surface: #2d3643;
+    --utility-panel-edge: #889cb5;
+    --utility-raised: #374353;
+    --utility-selected: #284c74;
+    --utility-text: #fafbfd;
+    --utility-muted: #d6dfe9;
+    --utility-link: #abd3ff;
+    --utility-action: #2466ae;
+    --utility-line: #77889b;
+    --utility-danger: #ffaaa1;
+    --utility-warning: #f5ca80;
+    --utility-success: #9adcb3;
+    --utility-error-bg: #462c31;
+    --utility-warn-bg: #413622;
+    --utility-ok-bg: #203c32;
+  }
+  .utilities-surface,
+  body.utilities-shell main > .card {
+    outline: 1px solid var(--utility-panel-edge);
+    outline-offset: -1px;
+  }
+  ::view-transition-image-pair(utilities-surface) {
+    outline: 1px solid var(--utility-panel-edge);
+    outline-offset: -1px;
+  }
+  :is(.utilities-home, .card > header) > img[src$="easilLogo.png"] { filter: brightness(0) invert(1); }
+  .utilities-sidebar .utilities-name { font-weight: 600; }
+  .card :is(input:not([type]), input[type="text"], input[type="number"], textarea, select) {
+    background-color: #191f28;
+    color: var(--utility-text);
+    border-color: var(--utility-line);
+  }
+  .card ::placeholder { color: #afbcca; opacity: 1; }
+  .card a { color: var(--utility-link); }
 }
