@@ -20,6 +20,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head><body class="utilities-shell"><main>
     <aside class="utilities-sidebar" aria-label="Design utilities">
       <span class="utilities-surface" aria-hidden="true"></span>
@@ -42,5 +44,18 @@
       </nav>
       <a class="utilities-overview" href="../">← All utilities</a>
     </aside>
-<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Image Reference Grid</h1></header><details open><summary>Get images from Easil</summary><ol><li>Drag <a id="bookmark" class="bookmark">Copy image links</a> to your browser’s bookmarks bar (one-time setup).</li><li>Open your image list in Easil, scroll to load the images you want, then click that bookmark.</li><li>Return here, paste the copied links and click Find Images.</li></ol><p class="hint">Only images currently loaded on the page can be collected. View Source and saved HTML may omit them.</p></details><label for="paste">Image links or copied HTML</label><textarea id="paste" rows="6" placeholder="Paste here"></textarea><div class="actions"><button id="load">Find Images</button><button id="drop" class="secondary">Upload HTML</button><input id="file" type="file" accept=".html,.htm,.txt" hidden></div><p id="status" role="status"></p></section><nav><a href="../">All utilities</a></nav>  <span id="utilities-ready" hidden></span>
-  </main><dialog id="modal" aria-labelledby="grid-title"><div class="toolbar"><h2 id="grid-title">Image grid</h2><span id="progress" role="status"></span><label>Columns <select id="columns" aria-label="Number of columns"><option value="auto">Auto</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label><label>Background <input id="background" type="color" value="#ffffff"></label><button id="restore" class="secondary">Restore removed</button><button id="clean">Screenshot view</button><button id="close" class="secondary" aria-label="Close image grid">×</button></div><p class="hint modal-hint">Images are automatically sorted to balance column heights while keeping their natural proportions. Hover to remove. Screenshot view hides the controls; press Escape or click the grid to return.</p><div id="grid"><div id="masonry" class="masonry"></div></div></dialog></body></html>
+<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Image Reference Grid</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">How To</button></header><details open><summary>Get images from Easil</summary><ol><li>Drag <a id="bookmark" class="bookmark">Copy image links</a> to your browser’s bookmarks bar (one-time setup).</li><li>Open your image list in Easil, scroll to load the images you want, then click that bookmark.</li><li>Return here, paste the copied links and click Find Images.</li></ol><p class="hint">Only images currently loaded on the page can be collected. View Source and saved HTML may omit them.</p></details><label for="paste">Image links or copied HTML</label><textarea id="paste" rows="6" placeholder="Paste here"></textarea><div class="actions"><button id="load">Find Images</button><button id="drop" class="secondary">Upload HTML</button><input id="file" type="file" accept=".html,.htm,.txt" hidden></div><p id="status" role="status"></p></section><nav><a href="../">All utilities</a></nav>  <span id="utilities-ready" hidden></span>
+  </main><dialog id="modal" aria-labelledby="grid-title"><div class="toolbar"><h2 id="grid-title">Image grid</h2><span id="progress" role="status"></span><label>Columns <select id="columns" aria-label="Number of columns"><option value="auto">Auto</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label><label>Background <input id="background" type="color" value="#ffffff"></label><button id="restore" class="secondary">Restore removed</button><button id="clean">Screenshot view</button><button id="close" class="secondary" aria-label="Close image grid">×</button></div><p class="hint modal-hint">Images are automatically sorted to balance column heights while keeping their natural proportions. Hover to remove. Screenshot view hides the controls; press Escape or click the grid to return.</p><div id="grid"><div id="masonry" class="masonry"></div></div></dialog><dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">Build an image reference grid</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+    <ol>
+      <li>Drag Copy image links to your bookmarks bar. In Easil, scroll until the images you want have loaded, then click the bookmark.</li>
+      <li>Paste the copied links into Image Reference Grid and choose Find Images. You can also paste copied HTML or use Upload HTML.</li>
+      <li>Choose a column count and background. Select Screenshot view to hide the controls, then take your screenshot. Click the grid or press Escape to return.</li>
+    </ol>
+  </div>
+</dialog>
+</body></html>

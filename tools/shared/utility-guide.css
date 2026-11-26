@@ -1,0 +1,44 @@
+body:has(.utility-guide[open]) { overflow: hidden; }
+.guide-open, .guide-heading button {
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: var(--utility-raised, #e5e8eb);
+  color: var(--utility-text, #2c2e2f);
+  font: 500 14px/1.5 Roboto, Arial, sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.guide-open { margin-left: auto; }
+.guide-open:hover, .guide-heading button:hover { background: var(--utility-selected, #d9e6f5); }
+.utility-guide {
+  width: min(620px, calc(100% - 32px));
+  height: auto;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--utility-panel-edge, #d1d4d6);
+  border-radius: 12px;
+  background: var(--utility-surface, white);
+  color: var(--utility-text, #2c2e2f);
+  box-shadow: 0 12px 48px #0004;
+  overflow: auto;
+}
+dialog.utility-guide[open] { display: block; }
+.utility-guide::backdrop { background: rgb(15 30 50 / 65%); }
+.guide-heading {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 24px;
+  background: inherit;
+  border-bottom: 1px solid var(--utility-line, #e5e8eb);
+}
+.guide-heading h2 { margin: 0; font: 500 21px/1.25 Roboto, Arial, sans-serif; }
+.guide-body { padding: 20px 24px; line-height: 1.6; }
+.guide-body ol { padding-left: 1.4em; margin: 0; }
+.guide-body :is(li, p) { margin: 0 0 12px; }
+.guide-body :last-child { margin-bottom: 0; }

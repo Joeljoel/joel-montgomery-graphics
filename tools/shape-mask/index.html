@@ -34,6 +34,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell">
   <main class="container">
@@ -60,7 +62,7 @@
     </aside>
 
     <section class="card">
-      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1>Shape Mask Converter</h1></header>
+      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1>Shape Mask Converter</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">How To</button></header>
       <button id="drop-area" class="drop-area" type="button">Click or drag to upload SVG</button>
       <input id="file-input" type="file" accept=".svg,image/svg+xml" multiple hidden>
       <div class="actions"><button id="mode-switcher" class="secondary" type="button" aria-pressed="false">Advanced Mode</button></div>
@@ -84,6 +86,19 @@
     <nav aria-label="Design utilities"><a href="../">All utilities</a></nav>
     <span id="utilities-ready" hidden></span>
   </main>
+<dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">Convert shapes to image masks</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+    <ol>
+      <li>Drop a single-shape SVG onto the converter to download the converted SVG and its PNG thumbnail.</li>
+      <li>For artwork with several shapes, choose Advanced Mode before uploading. Select each shape that should hold an image. Click a selected shape again to keep its original artwork.</li>
+      <li>Choose Download SVG + PNG when the selection is ready.</li>
+    </ol>
+  </div>
+</dialog>
 </body>
 </html>
 

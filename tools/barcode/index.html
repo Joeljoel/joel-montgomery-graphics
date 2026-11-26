@@ -24,6 +24,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell"><main>
     <aside class="utilities-sidebar" aria-label="Design utilities">
@@ -47,7 +49,7 @@
       </nav>
       <a class="utilities-overview" href="../">← All utilities</a>
     </aside>
-<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Barcode Data Merge</h1></header>
+<section class="card"><header><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1>Barcode Data Merge</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">How To</button></header>
 <button type="button" id="drop">Click or drop a TSV, CSV or TXT file here</button><input id="file" type="file" accept=".tsv,.csv,.txt,text/plain,text/csv,text/tab-separated-values" hidden>
 <label for="paste">Or paste codes or spreadsheet cells</label><textarea id="paste" rows="5" placeholder="Paste your data here" spellcheck="false"></textarea>
 <div class="options"><label>Separator <select id="delimiter"><option value="\t">Tabs / one code per line</option><option value=",">Commas (CSV)</option></select></label><label class="check"><input id="header" type="checkbox" checked> First row contains column headings</label></div>
@@ -55,4 +57,17 @@
 <section id="settings" hidden><div class="options"><label>Barcode source <select id="source"></select></label><label>New column name <input id="name" value="BarcodeFormatted"></label></div><p id="count"></p><p id="last-row" class="hint"></p><div class="table-wrap"><table id="preview"></table></div><button type="button" id="download">Download for InDesign</button></section>
 <p class="info">Creates Code 128B text for Libre Barcode 128. Existing columns and values are kept; a formatted barcode column is added. Apply the barcode font to that field in InDesign. Import the tab-delimited TXT as Unicode.</p>
     </section><nav><a href="../">All utilities</a></nav>  <span id="utilities-ready" hidden></span>
-  </main></body></html>
+  </main><dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">Prepare barcodes for InDesign</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+    <ol>
+      <li>Drop in a CSV, TSV or TXT file, or paste spreadsheet cells. Choose the separator and indicate whether the first row contains headings.</li>
+      <li>Choose the source column that holds your codes and name the new barcode column. The export keeps the original columns.</li>
+      <li>Select Download for InDesign. Import the tab-delimited TXT as Unicode in Data Merge and apply Libre Barcode 128 to the merged barcode field.</li>
+    </ol>
+  </div>
+</dialog>
+</body></html>

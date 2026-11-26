@@ -34,6 +34,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell">
   <main class="container">
@@ -60,7 +62,7 @@
     </aside>
 
     <section class="card" aria-labelledby="title">
-      <header class="heading"><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1 id="title">PDF Inspector</h1></header>
+      <header class="heading"><img src="../assets/easilLogo.png" width="24" height="24" alt=""><h1 id="title">PDF Inspector</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">Info</button></header>
       <p class="intro">Check trim size and bleed at a glance, then explore the page boxes.</p>
       <div id="drop-zone" class="drop-zone">
         <input id="files" type="file" accept=".pdf,application/pdf" multiple hidden>
@@ -93,5 +95,16 @@
     <nav class="back" aria-label="Design utilities"><a href="../">All utilities</a></nav>
     <span id="utilities-ready" hidden></span>
   </main>
+<dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">What PDF Inspector measures</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+      <p>Drop one or more PDFs to see the finished page size and the bleed on each edge. The inspector reads the files locally in your browser.</p>
+      <p>Expand a page to compare its boxes. TrimBox describes the finished size. BleedBox describes the area reserved beyond the trim. If either box is missing, bleed is marked unconfirmed.</p>
+      <p>The measurements describe the file’s boundaries. Checking whether the artwork fills the bleed requires a visual inspection. Use Export CSV to save the measurements.</p>
+  </div>
+</dialog>
 </body>
 </html>

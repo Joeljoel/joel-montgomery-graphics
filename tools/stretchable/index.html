@@ -33,6 +33,8 @@
     } catch {}
 
   </script>
+  <link rel="stylesheet" href="../shared/utility-guide.css">
+  <script src="../shared/utility-guide.js" defer></script>
 </head>
 <body class="utilities-shell">
   <main class="container">
@@ -59,7 +61,7 @@
     </aside>
 
     <section class="card">
-      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1>Stretchable Shape Creator</h1></header>
+      <header><img src="../assets/easilLogo.png" alt="" width="24" height="24"><h1>Stretchable Shape Creator</h1><button class="how-to-button guide-open" type="button" aria-haspopup="dialog" aria-controls="utility-guide">How To</button></header>
       <fieldset class="direction"><legend>Stretch direction</legend>
         <div class="direction-options">
           <label><input type="radio" name="direction" value="horizontal" checked><span><b aria-hidden="true">↔</b>Horizontal<small>3 equal columns</small></span></label>
@@ -88,6 +90,19 @@
     <nav aria-label="Design utilities"><a href="../">All utilities</a></nav>
     <span id="utilities-ready" hidden></span>
   </main>
+<dialog class="utility-guide" id="utility-guide" aria-labelledby="guide-title">
+  <div class="guide-heading">
+    <h2 id="guide-title">Prepare a stretchable shape</h2>
+    <form method="dialog"><button autofocus>Close</button></form>
+  </div>
+  <div class="guide-body">
+    <ol>
+      <li>Fit the artboard to your artwork, use filled vector shapes and outline text and strokes before exporting the SVG.</li>
+      <li>Choose Horizontal for three columns, Vertical for three rows, or Both directions for a 3 × 3 grid. The converter divides the artboard into equal thirds.</li>
+      <li>Drop in the SVG and resize the preview to see how the edges and corners behave. Download the stretchable SVG or copy its code.</li>
+    </ol>
+  </div>
+</dialog>
 </body>
 </html>
 
