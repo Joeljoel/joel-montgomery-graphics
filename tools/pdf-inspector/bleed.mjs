@@ -1,3 +1,4 @@
+import { revealTrimClips } from './trim-clips.mjs';
 import { revealIllustrator } from './illustrator-bleed.mjs';
 import { MM_PER_POINT, analysePage } from './core.mjs';
 
@@ -11,7 +12,12 @@ export async function writeBleed(file, mm, marks, lib, recover = true) {
     const bleed = mm * scale;
     const margin = marks ? 6 * scale : 0;
     const extent = bleed + margin;
-    if (recover && bleed > 0) revealIllustrator(page, { x, y, width, height }, bleed, lib);
+    if (recover && bleed > 0) {
+      const trim = { x, y, width, height };
+      const privateAI = page.node.lookup(lib.PDFName.of('PieceInfo'))?.has?.(lib.PDFName.of('Illustrator'));
+      if (privateAI) revealIllustrator(page, trim, bleed, lib);
+      else revealTrimClips(page, trim, bleed, lib);
+    }
     page.setTrimBox(x, y, width, height);
     page.setBleedBox(x - bleed, y - bleed, width + 2 * bleed, height + 2 * bleed);
     page.setMediaBox(x - extent, y - extent, width + 2 * extent, height + 2 * extent);

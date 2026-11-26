@@ -184,10 +184,20 @@ function renderPageRow(page, index, single) {
 }
 
 function bleedEditor(report) {
-  const hasBleed = report.pages.some(page => page.bleed && EDGES.some(edge => page.bleed[edge] > 0.005));
-  const editor = element('details', 'bleed-editor');
-  editor.append(element('summary', '', hasBleed ? 'Adjust bleed' : 'Add bleed'));
+  const editor = element('section', 'bleed-editor');
+  const actions = element('div', 'actions');
+  const quick = element('button', '', 'Download with 3mm bleed');
+  const custom = element('button', 'button-secondary', 'Custom Bleed');
   const form = element('form', 'bleed-controls');
+  custom.setAttribute('aria-expanded', 'false');
+  form.hidden = true;
+  actions.append(quick, custom);
+  editor.append(actions, form);
+  custom.onclick = () => {
+    form.hidden = !form.hidden;
+    custom.setAttribute('aria-expanded', String(!form.hidden));
+    if (!form.hidden) amount.focus();
+  };
   const amount = element('input');
   amount.type = 'number';
   amount.min = '0';
@@ -200,54 +210,51 @@ function bleedEditor(report) {
   const marks = element('input');
   marks.type = 'checkbox';
   marks.checked = true;
-  const prepare = element('button', '', 'Prepare PDF');
+  const prepare = element('button', '', 'Download with custom bleed');
   const recover = element('input');
   recover.type = 'checkbox';
-  recover.checked = report.illustrator;
-  const links = element('div', 'actions');
+  recover.checked = true;
   const message = element('p', 'status');
   message.setAttribute('role', 'status');
-  let worker, url;
+  let worker;
   function reset() {
     worker?.terminate();
-    if (url) URL.revokeObjectURL(url);
-    worker = url = null;
+    worker = null;
+    quick.disabled = false;
     prepare.disabled = false;
-    links.replaceChildren();
     message.textContent = '';
   }
   report.dispose = reset;
   form.addEventListener('input', reset);
-  form.addEventListener('submit', event => {
-    event.preventDefault();
+  function downloadPdf(mm, cropMarks, reveal) {
     reset();
-    prepare.disabled = true;
+    quick.disabled = prepare.disabled = true;
     message.textContent = 'Preparing PDF…';
     worker = new Worker(new URL('inspect-worker.mjs', import.meta.url), { type: 'module' });
     worker.onerror = () => { reset(); message.textContent = 'Could not prepare PDF.'; };
     worker.onmessage = ({ data }) => {
       reset();
       if (data.error) { message.textContent = data.error; return; }
-      url = URL.createObjectURL(new Blob([data.bytes], { type: 'application/pdf' }));
-      const preview = element('a', '', 'Preview PDF ↗');
-      preview.href = url;
-      preview.target = '_blank';
-      preview.rel = 'noopener';
-      const download = element('a', '', 'Download PDF');
+      const url = URL.createObjectURL(new Blob([data.bytes], { type: 'application/pdf' }));
+      const download = element('a');
       download.href = url;
-      download.download = report.name.replace(/\.pdf$/i, '') + '-' + amount.value + 'mm.pdf';
-      links.append(preview, download);
+      download.download = report.name.replace(/\.pdf$/i, '') + '-' + mm + 'mm.pdf';
       download.click();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
-    worker.postMessage({ action: 'bleed', source: report.file, mm: amount.valueAsNumber, marks: marks.checked, recover: recover.checked });
-  });
+    worker.postMessage({ action: 'bleed', source: report.file, mm, marks: cropMarks, recover: reveal });
+  }
+  quick.onclick = () => downloadPdf(3, true, true);
+  form.onsubmit = event => {
+    event.preventDefault();
+    downloadPdf(amount.valueAsNumber, marks.checked, recover.checked);
+  };
   form.append(append(element('label', '', 'Bleed per edge (mm) '), amount),
     append(element('label'), marks, ' Crop marks'), prepare);
   if (report.illustrator) form.insertBefore(append(element('label'), recover, ' Reveal Illustrator artwork at trim edges'), prepare);
-  editor.append(form, element('p', 'metric-sub', 'Applies to every page. Set 0 to remove bleed. Check the preview for artwork at each edge.'));
   if (report.pages.some(page => !page.explicit.trim))
     editor.append(element('p', 'metric-note', 'Pages without a TrimBox use their current crop as the finished size.'));
-  editor.append(message, links);
+  editor.append(message);
   return editor;
 }
 
