@@ -7,7 +7,7 @@ const rect = new RegExp('^(' + Array(4).fill(number).join('\\s+') + ')\\s+re$');
 const near = (a, b) => Math.abs(a - b) < 0.002;
 const bounds = (x, y, w, h) => [Math.min(x, x+w), Math.min(y, y+h), Math.max(x, x+w), Math.max(y, y+h)];
 
-function originalRectangles(ai, trim, lib) {
+function originalRectangles(ai, trim, lib, masks) {
   const name = lib.PDFName.of;
   const data = ai.lookup(name('Private'));
   const chunks = [];
@@ -35,6 +35,17 @@ function originalRectangles(ai, trim, lib) {
   const rectangles = [];
   const point = new RegExp('^(' + number + ') (' + number + ') ([mL])$');
   for (let i = 5; i < lines.length; i++) {
+    // The editable clip retains the four original cubic segments, including
+    // the arc that the PDF export replaced with a straight trim-edge line.
+    if (i >= 6 && lines[i] === 'W' && lines[i-1] === 'h' && lines[i+1] === 'n') {
+      const path = lines.slice(i-6, i-1).map(line => line.trim().split(/\s+/));
+      if (path.every((parts,j) => parts.length === (j ? 7 : 3) &&
+          parts.at(-1) === (j ? 'c' : 'm') && parts.slice(0,-1).every(v => Number.isFinite(Number(v))))) {
+        const coords = path.map(parts => parts.slice(0,-1).map((v,k) =>
+          Number(v) + (k % 2 ? trim.y - board[1] : trim.x - board[0])));
+        if (coords[0].every((v,k) => near(v,coords[4][k+4]))) masks.push(coords);
+      }
+    }
     if (lines[i] !== 'f') continue;
     const points = lines.slice(i-5, i).map(line => line.match(point));
     if (rectangles.length > 4096) return [];
@@ -63,12 +74,20 @@ export function revealIllustrator(page, trim, bleed, lib) {
   const lines = source.split(/\r\n|[\r\n]/);
   if (lines.some(line => /[()]/.test(line.replace(/\((?:\\.|[^()\\])*\)/g,'')))) return;
   const edges = bounds(trim.x,trim.y,trim.width,trim.height);
+  const masks = [];
   let originals = [];
-  try { originals = originalRectangles(ai, trim, lib); } catch { /* Private data is optional. */ }
+  try { originals = originalRectangles(ai, trim, lib, masks); } catch { /* Private data is optional. */ }
   const stack = [];
   let transformed = false, changed = false;
   for (let i=0; i<lines.length; i++) {
     const line = lines[i].trim();
+    if (!transformed && line === 'q' && masks.length) {
+      const extra = outsideMaskedImage(lines, i + 1, masks, trim, bleed);
+      if (extra) {
+        lines[i] = extra + '\nq';
+        changed = true;
+      }
+    }
     const match = !transformed && rect.exec(line);
     if (match) {
       const [x,y,w,h] = match[1].split(/\s+/).map(Number);
@@ -93,4 +112,41 @@ export function revealIllustrator(page, trim, bleed, lib) {
     }
   }
   if (changed) page.node.set(name('Contents'),page.doc.context.register(page.doc.context.flateStream(lines.join('\n'))));
+}
+
+// Repeat the same image through its original mask only in the newly exposed
+// perimeter. Keep the exported clip and its exact rasterisation inside trim.
+function outsideMaskedImage(lines, start, masks, trim, bleed) {
+  if (!lines[start]?.trim().endsWith(' m')) return;
+  const curves = [];
+  let previous;
+  let touchesTrim = false;
+  let i = start;
+  for (; i < start + 24 && lines[i]?.trim() !== 'W n'; i++) {
+    const parts = lines[i]?.trim().split(/\s+/) || [];
+    const op = parts.pop();
+    if (parts.length !== (op === 'c' ? 6 : 2) ||
+        !['m','l','c'].includes(op) || !parts.every(v => Number.isFinite(Number(v)))) return;
+    const coords = parts.map(Number);
+    if (op === 'c' && previous) curves.push([...previous, ...coords]);
+    previous = coords.slice(-2);
+    if (op === 'l') {
+      const [x,y] = coords;
+      touchesTrim ||= near(x,trim.x) || near(x,trim.x+trim.width) || near(y,trim.y) || near(y,trim.y+trim.height);
+    }
+  }
+  if (!touchesTrim || lines[i]?.trim() !== 'W n' || lines[i+1]?.trim() !== 'q' ||
+      !new RegExp('^' + Array(6).fill(number).join('\\s+') + ' cm$').test(lines[i+2]?.trim()) ||
+      !/^\/[A-Za-z0-9_]+ Do$/.test(lines[i+3]?.trim()) || lines[i+4]?.trim() !== 'Q') return;
+  const matches = masks.filter(path => path.slice(1).filter((segment,j) => {
+    const forward = [...path[j].slice(-2), ...segment];
+    const reverse = [forward[6],forward[7],forward[4],forward[5],forward[2],forward[3],forward[0],forward[1]];
+    return curves.some(curve => [forward,reverse].some(order => curve.every((v,k) => near(v,order[k]))));
+  }).length >= 2);
+  if (matches.length !== 1) return;
+  const {x,y,width,height} = trim;
+  const mask = matches[0].map((coords,j) => coords.map(v => v.toFixed(5)).join(' ') + (j ? ' c' : ' m'));
+  return ['q', [x-bleed,y-bleed,width+2*bleed,height+2*bleed].join(' ') + ' re',
+    [x,y,width,height].join(' ') + ' re', 'W* n', ...mask, 'h W n',
+    lines[i+2], lines[i+3], 'Q'].join('\n');
 }

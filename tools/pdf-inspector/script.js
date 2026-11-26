@@ -199,6 +199,7 @@ function bleedEditor(report) {
   amount.value = common ? String(Math.round(current.top * 100) / 100) : '3';
   const marks = element('input');
   marks.type = 'checkbox';
+  marks.checked = true;
   const prepare = element('button', '', 'Prepare PDF');
   const recover = element('input');
   recover.type = 'checkbox';
@@ -303,6 +304,8 @@ let generation = 0;
 let queue = Promise.resolve();
 let cancelActive;
 function inspectFiles(files) {
+  if (!files.length) return;
+  clearReports();
   const current = generation;
   queue = queue.then(() => processFiles(files, current));
 }
@@ -373,14 +376,15 @@ dropZone.addEventListener('drop', event => {
   dropZone.classList.remove('is-over');
   inspectFiles(Array.from(event.dataTransfer?.files || []));
 });
-clearButton.addEventListener('click', () => {
+function clearReports() {
   generation++;
   cancelActive?.();
   reports.forEach(report => report.dispose?.());
   reports.length = 0;
   render();
   status.textContent = '';
-});
+}
+clearButton.addEventListener('click', clearReports);
 
 function csvQuote(value) {
   const raw = String(value ?? '');

@@ -62,6 +62,7 @@ function pdfWithBoxes(hasBoxes) {
     for (const [index, action, mm] of [[0, 'Adjust bleed', '0'], [1, 'Add bleed', '3']]) {
       const editor = cards.nth(index).locator('.bleed-editor');
       await editor.getByText(action, { exact: true }).click();
+      assert.equal(await editor.getByLabel('Crop marks').isChecked(), true);
       const amount = editor.getByRole('spinbutton');
       assert.equal(await amount.inputValue(), '3');
       await amount.fill(mm);
@@ -73,6 +74,9 @@ function pdfWithBoxes(hasBoxes) {
       assert.match(await download.getAttribute('download'), new RegExp(mm + 'mm\\.pdf$'));
       assert.equal(await editor.getByText('Preview PDF ↗').getAttribute('href'), await download.getAttribute('href'));
     }
+    await page.locator('#files').setInputFiles({ name: 'replacement.pdf', mimeType: 'application/pdf', buffer: pdfWithBoxes(true) });
+    await page.getByRole('heading', { name: 'replacement.pdf' }).waitFor();
+    assert.equal(await cards.count(), 1);
     assert.deepEqual(errors, []);
     console.log('PASS: PDF parser, defined / fallback boxes, page details, mobile layout.');
   } finally {
