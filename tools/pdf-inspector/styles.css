@@ -127,7 +127,7 @@ a { color: inherit; }
 .bleed-amount label { display: grid; padding: 3px 26px 3px 8px; font-size: 12px; line-height: 15px; color: var(--utility-muted, #656b73); }
 .bleed-amount input[type=number] { appearance: textfield; width: 100%; min-width: 0; height: 17px; margin: 0; padding: 0; border: 0; background: transparent; color: var(--utility-text, #343b44); font: inherit; font-size: 15px; line-height: 17px; }
 .bleed-amount input::-webkit-inner-spin-button, .bleed-amount input::-webkit-outer-spin-button { appearance: none; }
-.bleed-steppers { position: absolute; right: 2px; top: 2px; display: grid; }
+.bleed-steppers { position: absolute; right: 2px; top: 6px; display: grid; }
 .bleed-steppers button { display: grid; place-items: center; width: 22px; height: 11px; min-height: 0; margin: 0; padding: 0; border-radius: 2px; background: transparent; color: var(--utility-muted, #656b73); }
 .bleed-steppers button:hover { background: var(--utility-raised, #eef1f5); }
 .bleed-steppers button::after { content: ''; width: 5px; height: 5px; border: solid currentColor; border-width: 1.5px 1.5px 0 0; transform: translateY(1px) rotate(-45deg); }
