@@ -130,6 +130,41 @@ function detect(page, lib) {
 
 // These exports paint the cropped effect immediately before its clipped subject.
 // Continue the last surviving pixel column (or row), including its soft mask.
+// A symmetric effect retains the opposite arc, including its original fade.
+// Locate its reflection axis using complete chords in the surviving opacity mask.
+function reflectionAxis(alpha, width, height, horizontal, cutAtEnd) {
+  const length = horizontal ? width : height;
+  const lines = horizontal ? height : width;
+  const opacity = (line, pos) => alpha[horizontal ? line*width+pos : pos*width+line];
+  let peak = 0;
+  for (const value of alpha) peak = Math.max(peak,value);
+  if (peak < 20) return;
+  const centres = [];
+  for (let line=0; line<lines; line+=Math.max(1,Math.floor(lines/1500))) {
+    let first=0, last=length-1;
+    while (first<length && opacity(line,first)<peak/2) first++;
+    while (last>=first && opacity(line,last)<peak/2) last--;
+    if (last-first>=8 && first>2 && last<length-3) centres.push((first+last)/2);
+  }
+  if (centres.length<12) return;
+  centres.sort((a,b)=>a-b);
+  const centre = centres[Math.floor(centres.length/2)];
+  if (centres[Math.floor(centres.length*.9)]-centres[Math.floor(centres.length*.1)]>1) return;
+  // Check the actual opacity near the cut against its reflection before using it.
+  let signal=0, error=0;
+  for (const depth of [3,8,16]) {
+    const pos=cutAtEnd ? length-1-depth : depth;
+    const reflected=2*centre-pos;
+    if (pos<0 || pos>=length || reflected<0 || reflected>=length) return;
+    for (let line=0; line<lines; line++) {
+      const original=opacity(line,pos), mirror=opacity(line,reflected);
+      signal+=Math.max(original,mirror);
+      error+=Math.abs(original-mirror);
+    }
+  }
+  if (signal && error/signal<0.025) return centre+0.5;
+}
+
 function detectEdgeEffects(page, lib) {
   const contents = page.node.Contents();
   const streams = contents instanceof lib.PDFArray ? contents.asArray().map(ref => page.doc.context.lookup(ref)) : [contents];
@@ -212,7 +247,9 @@ function detectEdgeEffects(page, lib) {
         const sourceEdge=imageEdge-sign*inset*pixel;
         const slope=(centre(inset)-centre(inset+8))/(8*pixel);
         if (!Number.isFinite(slope)) continue;
-        effects.push({index,bytes,end,name,horizontal,sign,side,imageEdge,sourceEdge,scale,pixel,w,h,x,y,slope:Math.max(-2,Math.min(2,slope))});
+        const axisPixel = vector && reflectionAxis(alpha,pw,ph,horizontal,horizontal ? sign>0 : sign<0);
+        const mirror = Number.isFinite(axisPixel) ? (horizontal ? x+axisPixel*w/pw : y+h-axisPixel*h/ph) : undefined;
+        effects.push({mirror,index,bytes,end,name,horizontal,sign,side,imageEdge,sourceEdge,scale,pixel,w,h,x,y,slope:Math.max(-2,Math.min(2,slope))});
       }
     }
   }
@@ -233,11 +270,16 @@ function drawEdgeEffects(page, effects, bleed, lib) {
       const join = sign>0 ? Math.max(side,imageEdge) : Math.min(side,imageEdge);
       const offset = sign*depth;
       // Stretch one edge pixel outward. Shear along the edge to follow the effect's offset.
-      const factor = -depth/pixel;
-      const shear = sign*slope*factor;
+      const mirrored = effect.mirror !== undefined;
+      const factor = mirrored ? -1 : -depth/pixel;
+      const shear = mirrored ? 0 : sign*slope*factor;
       const transform = horizontal
         ? [factor*w,shear*w,0,h,join+factor*(x-sourceEdge),y+shear*(x-sourceEdge)]
         : [w,0,shear*h,factor*h,x+shear*(y-sourceEdge),join+factor*(y-sourceEdge)];
+      if (mirrored) {
+        if (horizontal) transform[4]=2*effect.mirror-x;
+        else transform[5]=2*effect.mirror-y;
+      }
       const margin = Math.abs(depth*slope);
       const clip = horizontal ? [Math.min(join,join+offset),y-margin,depth,h+2*margin]
                               : [x-margin,Math.min(join,join+offset),w+2*margin,depth];
