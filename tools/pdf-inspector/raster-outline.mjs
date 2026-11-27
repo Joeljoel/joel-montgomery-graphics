@@ -128,11 +128,138 @@ function detect(page, lib) {
     insert: m.indices[2][0]};
 }
 
+// These exports paint the cropped effect immediately before its clipped subject.
+// Continue the last surviving pixel column (or row), including its soft mask.
+function detectEdgeEffects(page, lib) {
+  const contents = page.node.Contents();
+  const streams = contents instanceof lib.PDFArray ? contents.asArray().map(ref => page.doc.context.lookup(ref)) : [contents];
+  const objects = page.node.Resources()?.lookup(lib.PDFName.of('XObject'));
+  const trim = page.getTrimBox();
+  const effects = [];
+  for (const [index, stream] of streams.entries()) {
+    if (!(stream instanceof lib.PDFRawStream) || stream.contents.length > 2e6) continue;
+    const bytes = lib.decodePDFRawStream(stream).decode();
+    if (bytes.length > 8e6) continue;
+    // Latin-1 code units preserve byte offsets, including binary PDF strings.
+    const source = new TextDecoder('latin1').decode(bytes);
+    const outer = new RegExp('^\\s*q\\s+' + matrix).exec(source);
+    if (!outer) continue;
+    const [sx,b,c,sy,tx,ty] = values(outer[1]);
+    if (b || c || sx <= 0 || sy <= 0) continue;
+    const draws = new RegExp('(?:' + rectangleClip + ')?' + imageDraw, 'g');
+    for (const match of source.matchAll(draws)) {
+      let end = match.index + match[0].length;
+      if (match[1]) {
+        const close = /^\s*Q\b/.exec(source.slice(end));
+        if (!close) continue;
+        end += close[0].length;
+      }
+      const subject = source.slice(end,end+1800);
+      const vector = new RegExp('^\\s*' + rectangleClip + numbers(4) + '\\s+k\\s+' + numbers(2) + '\\s+m\\s+' + numbers(6) + '\\s+c').exec(subject);
+      const photo = new RegExp('^\\s*' + rectangleClip + '(?:Q\\s+q\\s+[\\d.\\smlh-]+W\\*?\\s+n\\s+)?' + imageDraw).exec(subject);
+      if (!vector && !photo) continue;
+      const [w,iy,ix,h,x,y] = values(match[2]);
+      if (ix || iy || w <= 0 || h <= 0) continue;
+      const name = match[3];
+      const image = objects?.lookup(lib.PDFName.of(name));
+      const mask = image?.dict?.lookup(lib.PDFName.of('SMask'));
+      if (!mask || image.dict.get(lib.PDFName.of('ColorSpace'))?.toString() !== '/DeviceCMYK') continue;
+      const alpha = samples(mask,1,lib);
+      if (!alpha) continue;
+      const pw = uint(mask.dict,'Width',lib), ph = uint(mask.dict,'Height',lib);
+      if (vector) {
+        const pixels = samples(image,4,lib);
+        if (!pixels || pixels.length !== alpha.length*4) continue;
+        let color, consistent = true;
+        for (let i=0;i<alpha.length;i+=43) {
+          if (alpha[i]<20) continue;
+          color ??= pixels.slice(i*4,i*4+4);
+          if (color.some((value,k)=>Math.abs(value-pixels[i*4+k])>5)) { consistent=false; break; }
+        }
+        if (!color || !consistent) continue;
+      } else {
+        const foreground = objects.lookup(lib.PDFName.of(photo[3]));
+        if (!foreground?.dict?.lookup(lib.PDFName.of('SMask'))) continue;
+      }
+      const [cx,cy,cw,ch] = values((vector || photo)[1]);
+      for (const [axis,sign] of [[0,-1],[0,1],[1,-1],[1,1]]) {
+        const horizontal = axis === 0;
+        const scale = horizontal ? sx : sy;
+        const side = (horizontal ? trim.x + (sign>0 ? trim.width : 0) - tx : trim.y + (sign>0 ? trim.height : 0) - ty)/scale;
+        const imageEdge = horizontal ? x+(sign>0?w:0) : y+(sign>0?h:0);
+        const clipEdge = horizontal ? cx+(sign>0?cw:0) : cy+(sign>0?ch:0);
+        const pixel = horizontal ? w/pw : h/ph;
+        if (Math.abs(side-imageEdge)>1.1*pixel || Math.abs(side-clipEdge)*scale>0.5) continue;
+        // Estimate tangential motion from the opacity-weighted centres of two scanlines.
+        function centre(depth) {
+          let sum=0, moment=0;
+          for (let i=0;i<(horizontal?ph:pw);i++) {
+            const col=horizontal ? (sign>0?pw-1-depth:depth) : i;
+            const row=horizontal ? i : (sign>0?depth:ph-1-depth);
+            const a=alpha[row*pw+col];
+            sum+=a; moment+=a*(horizontal ? -i*h/ph : i*w/pw);
+          }
+          return sum>=255 ? moment/sum : NaN;
+        }
+        let inset=0;
+        while (inset<3 && !Number.isFinite(centre(inset))) inset++;
+        const sourceEdge=imageEdge-sign*inset*pixel;
+        const slope=(centre(inset)-centre(inset+8))/(8*pixel);
+        if (!Number.isFinite(slope)) continue;
+        effects.push({index,bytes,end,name,horizontal,sign,side,imageEdge,sourceEdge,scale,pixel,w,h,x,y,slope:Math.max(-2,Math.min(2,slope))});
+      }
+    }
+  }
+  return effects.length ? {effects} : undefined;
+}
+
+function drawEdgeEffects(page, effects, bleed, lib) {
+  const contents = page.node.Contents();
+  const updated = contents instanceof lib.PDFArray ? contents.clone() : undefined;
+  for (const index of new Set(effects.map(effect=>effect.index))) {
+    const group = effects.filter(effect=>effect.index===index);
+    const chunks = [];
+    let start = 0;
+    for (const effect of group) {
+      const {bytes,end,name,horizontal,sign,side,imageEdge,sourceEdge,scale,pixel,w,h,x,y,slope} = effect;
+      const depth = bleed/scale - Math.max(0,sign*(imageEdge-side));
+      if (depth<=0) continue;
+      const join = sign>0 ? Math.max(side,imageEdge) : Math.min(side,imageEdge);
+      const offset = sign*depth;
+      // Stretch one edge pixel outward. Shear along the edge to follow the effect's offset.
+      const factor = -depth/pixel;
+      const shear = sign*slope*factor;
+      const transform = horizontal
+        ? [factor*w,shear*w,0,h,join+factor*(x-sourceEdge),y+shear*(x-sourceEdge)]
+        : [w,0,shear*h,factor*h,x+shear*(y-sourceEdge),join+factor*(y-sourceEdge)];
+      const margin = Math.abs(depth*slope);
+      const clip = horizontal ? [Math.min(join,join+offset),y-margin,depth,h+2*margin]
+                              : [x-margin,Math.min(join,join+offset),w+2*margin,depth];
+      const fmt = array=>array.map(v=>v.toFixed(6)).join(' ');
+      const [originX,originY]=clip;
+      transform[4]-=originX;
+      transform[5]-=originY;
+      // Express the patch clip in local coordinates so trim recovery treats it as artwork.
+      chunks.push(bytes.subarray(start,end),new TextEncoder().encode('\nq 1 0 0 1 '+fmt([originX,originY])+' cm 0 0 '+fmt(clip.slice(2))+' re W n '+fmt(transform)+' cm /'+name+' Do Q\n'));
+      start=end;
+    }
+    chunks.push(group[0].bytes.subarray(start));
+    const joined=new Uint8Array(chunks.reduce((n,chunk)=>n+chunk.length,0));
+    let pos=0;
+    for (const chunk of chunks) { joined.set(chunk,pos); pos+=chunk.length; }
+    const ref=page.doc.context.register(page.doc.context.flateStream(joined));
+    if (updated) updated.set(index,ref);
+    else page.node.set(lib.PDFName.of('Contents'),ref);
+  }
+  if (updated) page.node.set(lib.PDFName.of('Contents'),updated);
+}
+
 export function findRasterOutline(page, lib) {
-  try { return detect(page, lib); } catch { return undefined; }
+  try { return detect(page, lib) || detectEdgeEffects(page, lib); } catch { return undefined; }
 }
 
 export function drawRasterOutline(page, candidate, bleed, lib) {
+  if (candidate.effects) return drawEdgeEffects(page,candidate.effects,bleed,lib);
   const {bytes,edge,step,sx,color,photoSpan,offsets,end,insert} = candidate;
   if (insert<0) return;
   const width = Math.min(bleed/sx,end-edge);
