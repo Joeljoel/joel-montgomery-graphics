@@ -124,7 +124,7 @@ function detect(page, lib) {
     if (offsets) break;
   }
   if (!offsets || !margins(col-8) || !margins(col-16)) return;
-  return {bytes, edge, step, sx, color, photoSpan, offsets, end: photo[4]+photo[0],
+  return {bytes, edge, join: outline[4]+col*step, step, sx, color, photoSpan, offsets, end: photo[4]+photo[0],
     insert: m.indices[2][0]};
 }
 
@@ -146,6 +146,10 @@ export function drawRasterOutline(page, candidate, bleed, lib) {
     bottom.push([x,span[0]-offsets[0]]);
   }
   if (top.length<2) return;
+  // Tuck the start under the last solid outline column to avoid a preview seam.
+  const start = Math.min(edge,candidate.join) - Math.min(step, 0.25/sx);
+  top.unshift([start,top[0][1]]);
+  bottom.unshift([start,bottom[0][1]]);
   const path=top.concat(bottom.reverse()).map(([x,y],i) =>
     x.toFixed(5)+' '+y.toFixed(5)+(i?' l':' m'));
   const patch = ['q', color.map(v=>(v/255).toFixed(6)).join(' ')+' k', ...path, 'h f','Q',''].join('\n');
