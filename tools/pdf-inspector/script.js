@@ -193,7 +193,7 @@ function bleedEditor(report) {
   const marks = element('input');
   marks.type = 'checkbox';
   marks.checked = true;
-  const prepare = element('button', '', 'Download');
+  const prepare = element('button', 'bleed-download', 'Download');
   const recover = element('input');
   recover.type = 'checkbox';
   recover.checked = true;
@@ -233,12 +233,28 @@ function bleedEditor(report) {
     worker.postMessage({ action: 'bleed', source: report.file, mm, marks: marks.checked,
       recover: recover.checked, recreateOutline: report.hasRasterOutline });
   };
-  form.append(append(element('label', 'bleed-amount', 'Bleed (mm)'), amount),
+  const field = element('div', 'bleed-amount');
+  const steppers = element('div', 'bleed-steppers');
+  for (const delta of [1, -1]) {
+    const stepper = element('button');
+    stepper.type = 'button';
+    stepper.setAttribute('aria-label', delta > 0 ? 'Increase bleed' : 'Decrease bleed');
+    stepper.onclick = () => {
+      amount.value = String(Math.max(0, Number(((amount.valueAsNumber || 0) + delta).toFixed(10))));
+      amount.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    steppers.append(stepper);
+  }
+  field.append(append(element('label', '', 'Bleed (mm)'), amount), steppers);
+  form.append(field,
     append(element('label', 'bleed-check'), marks, 'Include crop marks'), prepare);
   if (report.illustrator) form.insertBefore(append(element('label', 'bleed-check'), recover, 'Reveal Illustrator artwork at trim edges'), prepare);
   if (report.hasRasterOutline) {
     const warning = element('p', 'outline-warning',
-      'Clipped outline detected. Experimental recreation is on. Check the outline in the downloaded PDF.');
+      'Clipped outlines detected in PDF. These will be recreated experimentally, please check these after downloading.');
+    const icon = element('span', 'outline-info', 'i');
+    icon.setAttribute('aria-hidden', 'true');
+    warning.prepend(icon);
     editor.append(warning);
     amount.addEventListener('input', () => { warning.hidden = !(amount.valueAsNumber > 0); });
   }
