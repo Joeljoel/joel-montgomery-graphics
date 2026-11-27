@@ -123,12 +123,21 @@ a { color: inherit; }
 .bleed-editor { padding: 22px; border-top: 1px solid var(--utility-line, #e4e7eb); }
 .bleed-title { font-size: 14px; font-weight: 500; margin: 0 0 12px; }
 .bleed-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
-.bleed-amount { display: grid; gap: 2px; padding: 4px 8px; border: 1px solid var(--utility-line, #bbc3cc); border-radius: 5px; font-size: 12px; color: var(--utility-muted, #656b73); }
-.bleed-amount input { width: 6em; margin: 0; padding: 0; border: 0; color: var(--utility-text, #343b44); background: transparent; font-size: 15px; }
+.bleed-amount { position: relative; width: 104px; height: 40px; border: 1px solid var(--utility-line, #bbc3cc); border-radius: 5px; }
+.bleed-amount label { display: grid; padding: 3px 26px 3px 8px; font-size: 12px; line-height: 15px; color: var(--utility-muted, #656b73); }
+.bleed-amount input[type=number] { appearance: textfield; width: 100%; min-width: 0; height: 17px; margin: 0; padding: 0; border: 0; background: transparent; color: var(--utility-text, #343b44); font: inherit; font-size: 15px; line-height: 17px; }
+.bleed-amount input::-webkit-inner-spin-button, .bleed-amount input::-webkit-outer-spin-button { appearance: none; }
+.bleed-steppers { position: absolute; right: 2px; top: 2px; display: grid; }
+.bleed-steppers button { display: grid; place-items: center; width: 22px; height: 11px; min-height: 0; margin: 0; padding: 0; border-radius: 2px; background: transparent; color: var(--utility-muted, #656b73); }
+.bleed-steppers button:hover { background: var(--utility-raised, #eef1f5); }
+.bleed-steppers button::after { content: ''; width: 5px; height: 5px; border: solid currentColor; border-width: 1.5px 1.5px 0 0; transform: translateY(1px) rotate(-45deg); }
+.bleed-steppers button:last-child::after { transform: translateY(-1px) rotate(135deg); }
 .bleed-check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
 .bleed-check input { margin: 0; width: 18px; height: 18px; }
-.bleed-controls button { margin-inline-start: auto; padding-inline: 24px; }
-.outline-warning { margin: 18px 0 0; padding: 12px 16px; border: 1px solid var(--utility-warning, #84601f); border-radius: 8px; background: var(--utility-warn-bg, #fff4df); color: var(--utility-warning, #84601f); font-size: 14px; }
+.bleed-download { margin-inline-start: auto; height: 40px; padding: 0 24px; }
+.outline-warning { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; padding: 16px; border: 1px solid #ffc100; border-radius: 8px; background: #fff5db; color: #2b2e2e; font-size: 14px; }
+.outline-info { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border: 2px solid currentColor; border-radius: 50%; color: #ffc100; font: 700 14px/1 Georgia, serif; }
+[data-utility-theme="dark"] .outline-warning { background: var(--utility-warn-bg); color: var(--utility-text); }
 .page-row summary.single-page { grid-template-columns: max-content 1fr 12px; }
 .single-page .page-number { white-space: nowrap; }
 .single-page .pill { justify-self: start; }
