@@ -156,7 +156,13 @@ function detectEdgeEffects(page, lib) {
       }
       const subject = source.slice(end,end+1800);
       const vector = new RegExp('^\\s*' + rectangleClip + numbers(4) + '\\s+k\\s+' + numbers(2) + '\\s+m\\s+' + numbers(6) + '\\s+c').exec(subject);
-      const photo = new RegExp('^\\s*' + rectangleClip + '(?:Q\\s+q\\s+[\\d.\\smlh-]+W\\*?\\s+n\\s+)?' + imageDraw).exec(subject);
+      // Some source exports emit an empty clip scope before the identical live rectangle.
+      const emptyClip = new RegExp('^\\s*' + rectangleClip + 'Q\\s*').exec(subject);
+      const following = emptyClip && subject.slice(emptyClip[0].length);
+      const liveClip = following && new RegExp('^' + rectangleClip).exec(following);
+      const photoSubject = liveClip && values(liveClip[1]).every((v,i)=>v===values(emptyClip[1])[i])
+        ? following : subject;
+      const photo = new RegExp('^\\s*' + rectangleClip + '(?:Q\\s+q\\s+[\\d.\\smlh-]+W\\*?\\s+n\\s+)?' + imageDraw).exec(photoSubject);
       if (!vector && !photo) continue;
       const [w,iy,ix,h,x,y] = values(match[2]);
       if (ix || iy || w <= 0 || h <= 0) continue;
