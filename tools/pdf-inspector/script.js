@@ -6,9 +6,6 @@ const choose = document.querySelector('#choose');
 const status = document.querySelector('#status');
 const resultSection = document.querySelector('#results');
 const resultList = document.querySelector('#file-results');
-const fileCount = document.querySelector('#file-count');
-const clearButton = document.querySelector('#clear');
-const exportButton = document.querySelector('#export');
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MAX_BYTES = 150 * 1024 * 1024;
 const reports = [];
@@ -163,7 +160,7 @@ function pageTable(page) {
 
 function renderPageRow(page, index, single) {
   const details = element('details', 'page-row');
-  const summary = element('summary');
+  const summary = element('summary', single ? 'single-page' : '');
   append(summary, element('span', 'page-number', 'Page ' + (index + 1)),
     append(element('span', 'page-size'), element('span', 'row-label', 'Trim size'),
       element('span', '', page.explicit.trim ? sizeLabel(page.sizes.trim) : 'Not defined')),
@@ -185,32 +182,18 @@ function renderPageRow(page, index, single) {
 
 function bleedEditor(report) {
   const editor = element('section', 'bleed-editor');
-  const actions = element('div', 'actions');
-  const quick = element('button', '', 'Download with 3mm bleed');
-  const custom = element('button', 'button-secondary', 'Custom Bleed');
   const form = element('form', 'bleed-controls');
-  custom.setAttribute('aria-expanded', 'false');
-  form.hidden = true;
-  actions.append(quick, custom);
-  editor.append(actions, form);
-  custom.onclick = () => {
-    form.hidden = !form.hidden;
-    custom.setAttribute('aria-expanded', String(!form.hidden));
-    if (!form.hidden) amount.focus();
-  };
+  editor.append(element('h3', 'bleed-title', 'Download with custom bleed'), form);
   const amount = element('input');
   amount.type = 'number';
   amount.min = '0';
   amount.step = 'any';
   amount.required = true;
-  const current = report.pages[0].bleed;
-  const common = current && current.top > 0 && report.pages.every(page =>
-    uniformBleed(page.bleed) && Math.abs(page.bleed.top - current.top) < 0.005);
-  amount.value = common ? String(Math.round(current.top * 100) / 100) : '3';
+  amount.value = '3';
   const marks = element('input');
   marks.type = 'checkbox';
   marks.checked = true;
-  const prepare = element('button', '', 'Download with custom bleed');
+  const prepare = element('button', 'bleed-download', 'Download');
   const recover = element('input');
   recover.type = 'checkbox';
   recover.checked = true;
@@ -220,15 +203,16 @@ function bleedEditor(report) {
   function reset() {
     worker?.terminate();
     worker = null;
-    quick.disabled = false;
     prepare.disabled = false;
     message.textContent = '';
   }
   report.dispose = reset;
   form.addEventListener('input', reset);
-  function downloadPdf(mm, cropMarks, reveal) {
+  form.onsubmit = event => {
+    event.preventDefault();
+    const mm = amount.valueAsNumber;
     reset();
-    quick.disabled = prepare.disabled = true;
+    prepare.disabled = true;
     message.textContent = 'Preparing PDF…';
     worker = new Worker(new URL('inspect-worker.mjs', import.meta.url), { type: 'module' });
     worker.onerror = () => { reset(); message.textContent = 'Could not prepare PDF.'; };
@@ -246,18 +230,34 @@ function bleedEditor(report) {
       download.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
-    worker.postMessage({ action: 'bleed', source: report.file, mm, marks: cropMarks, recover: reveal });
-  }
-  quick.onclick = () => downloadPdf(3, true, true);
-  form.onsubmit = event => {
-    event.preventDefault();
-    downloadPdf(amount.valueAsNumber, marks.checked, recover.checked);
+    worker.postMessage({ action: 'bleed', source: report.file, mm, marks: marks.checked,
+      recover: recover.checked, recreateOutline: report.hasRasterOutline });
   };
-  form.append(append(element('label', '', 'Bleed per edge (mm) '), amount),
-    append(element('label'), marks, ' Crop marks'), prepare);
-  if (report.illustrator) form.insertBefore(append(element('label'), recover, ' Reveal Illustrator artwork at trim edges'), prepare);
-  if (report.pages.some(page => !page.explicit.trim))
-    editor.append(element('p', 'metric-note', 'Pages without a TrimBox use their current crop as the finished size.'));
+  const field = element('div', 'bleed-amount');
+  const steppers = element('div', 'bleed-steppers');
+  for (const delta of [1, -1]) {
+    const stepper = element('button');
+    stepper.type = 'button';
+    stepper.setAttribute('aria-label', delta > 0 ? 'Increase bleed' : 'Decrease bleed');
+    stepper.onclick = () => {
+      amount.value = String(Math.max(0, Number(((amount.valueAsNumber || 0) + delta).toFixed(10))));
+      amount.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    steppers.append(stepper);
+  }
+  field.append(append(element('label', '', 'Bleed (mm)'), amount), steppers);
+  form.append(field,
+    append(element('label', 'bleed-check'), marks, 'Include crop marks'), prepare);
+  if (report.illustrator) form.insertBefore(append(element('label', 'bleed-check'), recover, 'Reveal Illustrator artwork at trim edges'), prepare);
+  if (report.hasRasterOutline) {
+    const warning = element('p', 'outline-warning',
+      'Clipped outlines detected in PDF. These will be recreated experimentally, please check these after downloading.');
+    const icon = element('span', 'outline-info', 'i');
+    icon.setAttribute('aria-hidden', 'true');
+    warning.prepend(icon);
+    editor.append(warning);
+    amount.addEventListener('input', () => { warning.hidden = !(amount.valueAsNumber > 0); });
+  }
   editor.append(message);
   return editor;
 }
@@ -305,8 +305,6 @@ function renderReport(report) {
 function render(report) {
   resultSection.hidden = reports.length === 0;
   dropZone.classList.toggle('has-results', reports.length > 0);
-  fileCount.textContent = '(' + reports.length + ')';
-  exportButton.disabled = !reports.some(report => report.pages);
   if (report) resultList.append(renderReport(report));
   else resultList.replaceChildren();
 }
@@ -395,34 +393,3 @@ function clearReports() {
   render();
   status.textContent = '';
 }
-clearButton.addEventListener('click', clearReports);
-
-function csvQuote(value) {
-  const raw = String(value ?? '');
-  // Protect spreadsheet users from formulas in untrusted filenames.
-  const safe = /^[\s]*[-=+@\t\r]/.test(raw) && typeof value === 'string' ? "'" + raw : raw;
-  return '"' + safe.replaceAll('"', '""') + '"';
-}
-exportButton.addEventListener('click', () => {
-  const headers = ['File', 'Page', 'TrimBox (mm)', 'CropBox (mm)', 'BleedBox (mm)',
-    'MediaBox (mm)', 'ArtBox (mm)', 'Top bleed (mm)', 'Right bleed (mm)',
-    'Bottom bleed (mm)', 'Left bleed (mm)', 'Trim defined', 'Bleed defined',
-    'Rotation (degrees)', 'Notes'];
-  const rows = [headers];
-  reports.filter(report => report.pages).forEach(report => report.pages.forEach((page, i) => {
-    rows.push([report.name, i + 1, ...BOX_NAMES.map(name => sizeLabel(page.sizes[name])),
-      ...['top', 'right', 'bottom', 'left'].map(edge => page.bleed ? formatMm(page.bleed[edge]) : ''),
-      page.explicit.trim ? 'Yes' : 'No', page.explicit.bleed ? 'Yes' : 'No',
-      page.rotation, page.warnings.join('; ')]);
-  }));
-  const blob = new Blob(['\uFEFF' + rows.map(row => row.map(csvQuote).join(',')).join('\r\n')],
-    { type: 'text/csv;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'pdf-inspector-report.csv';
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});

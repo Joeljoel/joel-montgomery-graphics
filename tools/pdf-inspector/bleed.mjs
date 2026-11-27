@@ -1,8 +1,9 @@
+import { findRasterOutline, drawRasterOutline } from './raster-outline.mjs';
 import { revealTrimClips } from './trim-clips.mjs';
 import { revealIllustrator } from './illustrator-bleed.mjs';
 import { MM_PER_POINT, analysePage } from './core.mjs';
 
-export async function writeBleed(file, mm, marks, lib, recover = true) {
+export async function writeBleed(file, mm, marks, lib, recover = true, recreateOutline = false) {
   if (!Number.isFinite(mm) || mm < 0) throw new Error('Enter a bleed of 0 mm or more.');
   const pdf = await lib.PDFDocument.load(await file.arrayBuffer(), { updateMetadata: false });
   for (const page of pdf.getPages()) {
@@ -13,6 +14,10 @@ export async function writeBleed(file, mm, marks, lib, recover = true) {
     const markStart = 6 / userUnit;
     const markEnd = markStart + 27 / userUnit;
     const extent = marks ? Math.max(markEnd, bleed) : bleed;
+    if (recreateOutline && bleed > 0) {
+      const candidate = findRasterOutline(page, lib);
+      if (candidate) drawRasterOutline(page, candidate, bleed, lib);
+    }
     if (recover && bleed > 0) {
       const trim = { x, y, width, height };
       const privateAI = page.node.lookup(lib.PDFName.of('PieceInfo'))?.has?.(lib.PDFName.of('Illustrator'));

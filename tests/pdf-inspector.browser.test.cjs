@@ -61,16 +61,18 @@ function pdfWithBoxes(hasBoxes) {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
     const editor = cards.first().locator('.bleed-editor');
     const amount = editor.getByRole('spinbutton');
-    assert.equal(await amount.isVisible(), false);
-    await editor.getByRole('button', { name: 'Custom Bleed', exact: true }).click();
-    assert.equal(await editor.getByLabel('Crop marks').isChecked(), true);
-    await amount.fill('0');
-    await editor.getByLabel('Crop marks').uncheck();
+    assert.equal(await amount.isVisible(), true);
+    assert.equal(await amount.inputValue(), '3');
+    assert.equal(await editor.getByLabel('Include crop marks').isChecked(), true);
     const popups = [];
     page.context().on('page', popup => popups.push(popup));
-    for (const [label, mm] of [['Download with custom bleed', 0], ['Download with 3mm bleed', 3]]) {
+    for (const mm of [3, 0]) {
+      if (!mm) {
+        await amount.fill('0');
+        await editor.getByLabel('Include crop marks').uncheck();
+      }
       const started = page.waitForEvent('download');
-      await editor.getByRole('button', { name: label }).click();
+      await editor.getByRole('button', { name: 'Download', exact: true }).click();
       const download = await started;
       assert.equal(download.suggestedFilename(), 'with-bleed-' + mm + 'mm.pdf');
       const lib = require('../tools/pdf-inspector/pdf-lib.min.js');
