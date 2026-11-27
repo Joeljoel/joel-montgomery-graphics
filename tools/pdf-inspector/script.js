@@ -194,9 +194,6 @@ function bleedEditor(report) {
   marks.type = 'checkbox';
   marks.checked = true;
   const prepare = element('button', 'bleed-download', 'Download');
-  const recover = element('input');
-  recover.type = 'checkbox';
-  recover.checked = true;
   const message = element('p', 'status');
   message.setAttribute('role', 'status');
   let worker;
@@ -231,7 +228,7 @@ function bleedEditor(report) {
       setTimeout(() => URL.revokeObjectURL(url), 60000);
     };
     worker.postMessage({ action: 'bleed', source: report.file, mm, marks: marks.checked,
-      recover: recover.checked, recreateOutline: report.hasRasterOutline });
+      recreateOutline: report.hasRasterOutline });
   };
   const field = element('div', 'bleed-amount');
   const steppers = element('div', 'bleed-steppers');
@@ -248,7 +245,6 @@ function bleedEditor(report) {
   field.append(append(element('label', '', 'Bleed (mm)'), amount), steppers);
   form.append(field,
     append(element('label', 'bleed-check'), marks, 'Include crop marks'), prepare);
-  if (report.illustrator) form.insertBefore(append(element('label', 'bleed-check'), recover, 'Reveal Illustrator artwork at trim edges'), prepare);
   if (report.hasRasterOutline) {
     const warning = element('p', 'outline-warning',
       'Clipped outlines detected in PDF. These will be recreated experimentally, please check these after downloading.');
