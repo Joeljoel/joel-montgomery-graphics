@@ -142,3 +142,14 @@ a { color: inherit; }
 .single-page .page-number { white-space: nowrap; }
 .single-page .pill { justify-self: start; }
 .page-row summary.single-page::after { grid-column: 3; }
+
+
+.layup-editor summary { cursor: pointer; font-weight: 500; }
+.layup-form { display: grid; gap: 14px; margin-top: 16px; }
+.layup-form label:not(.bleed-check) { display: grid; gap: 4px; font-size: 13px; }
+.layup-form select, .layup-fields input { box-sizing: border-box; width: 100%; padding: 8px; border: 1px solid var(--utility-line, #bbc3cc); border-radius: 5px; background: var(--utility-surface, Canvas); color: inherit; font: inherit; }
+.layup-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.layup-fields[hidden] { display: none; }
+.layup-form .bleed-check { margin: 12px 0; }
+.layup-form p { margin: 0; }
+.layup-form .status:empty { display: none; }
