@@ -7,6 +7,12 @@ import { writeBleed } from './bleed.mjs';
 self.onmessage = async ({data: file}) => {
   try {
     const library = self.PDFLib;
+    if (file.action === 'layup') {
+      const { writeLayup } = await import('./layup.mjs');
+      const bytes = await writeLayup(file.source, file.options, library);
+      self.postMessage({ bytes }, [bytes.buffer]);
+      return;
+    }
     if (file.action === 'bleed') {
       const bytes = await writeBleed(file.source, file.mm, file.marks, library, file.recover, file.recreateOutline);
       self.postMessage({ bytes }, [bytes.buffer]);
@@ -22,3 +28,4 @@ self.onmessage = async ({data: file}) => {
     self.postMessage({error: String(error.message || error)});
   }
 };
+

@@ -1,3 +1,4 @@
+import { presets, orientation } from './layup-presets.mjs';
 import { analysePage, summarisePages, formatMm, sizeLabel, BOX_NAMES } from './core.mjs';
 
 const input = document.querySelector('#files');
@@ -180,6 +181,19 @@ function renderPageRow(page, index, single) {
   return details;
 }
 
+function downloadPdf(bytes, name) {
+  const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+  const download = element('a');
+  download.href = url;
+  download.download = name;
+  download.target = '_self';
+  download.hidden = true;
+  document.body.append(download);
+  download.click();
+  download.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
 function bleedEditor(report) {
   const editor = element('section', 'bleed-editor');
   const form = element('form', 'bleed-controls');
@@ -216,16 +230,7 @@ function bleedEditor(report) {
     worker.onmessage = ({ data }) => {
       reset();
       if (data.error) { message.textContent = data.error; return; }
-      const url = URL.createObjectURL(new Blob([data.bytes], { type: 'application/octet-stream' }));
-      const download = element('a');
-      download.href = url;
-      download.download = report.name.replace(/\.pdf$/i, '') + '-' + mm + 'mm.pdf';
-      download.target = '_self';
-      download.hidden = true;
-      document.body.append(download);
-      download.click();
-      download.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      downloadPdf(data.bytes, report.name.replace(/\.pdf$/i, '') + '-' + mm + 'mm.pdf');
     };
     worker.postMessage({ action: 'bleed', source: report.file, mm, marks: marks.checked,
       recreateOutline: report.hasRasterOutline });
@@ -256,6 +261,90 @@ function bleedEditor(report) {
   }
   editor.append(message);
   return editor;
+}
+
+function layupEditor(report) {
+  const panel = element('details', 'bleed-editor layup-editor');
+  const form = element('form', 'layup-form');
+  panel.append(element('summary', '', 'Lay up PDF'), form);
+  const select = element('select');
+  const first = report.pages[0].sizes.trim;
+  presets.forEach((preset, i) => select.add(new Option(preset.name, i)));
+  select.add(new Option('Custom grid', -1));
+  select.value = String(presets.findIndex(preset => orientation(first, preset) !== null));
+  form.append(append(element('label', '', 'Layout'), select));
+  function number(label, initial, container, min, max, step = 'any') {
+    const input = element('input');
+    input.type = 'number';
+    Object.assign(input, { value: initial, required: true, step });
+    if (min !== undefined) input.min = min;
+    if (max !== undefined) input.max = max;
+    container.append(append(element('label', '', label), input));
+    return input;
+  }
+  const grid = element('div', 'layup-fields');
+  const columns = number('Columns', 2, grid, 1, 32, 1);
+  const rows = number('Rows', 1, grid, 1, 32, 1);
+  const advanced = element('details');
+  const manual = element('input');
+  manual.type = 'checkbox';
+  const fields = element('div', 'layup-fields');
+  const width = number('Trim width (mm)', formatInput(first.width), fields, 0.001);
+  const height = number('Trim height (mm)', formatInput(first.height), fields, 0.001);
+  const dx = number('Offset right (mm)', 0, fields);
+  const dy = number('Offset up (mm)', 0, fields);
+  function formatInput(n) { return Number(n.toFixed(3)); }
+  advanced.append(element('summary', '', 'Advanced options'),
+    append(element('label', 'bleed-check'), manual, 'Override detected trim on all pages'), fields,
+    element('p', 'diagram-caption', 'Manual trim is centred on each media box. Offsets use the original PDF axes before rotation.'));
+  const summary = element('p', 'diagram-caption');
+  const button = element('button', 'bleed-download', 'Download layup');
+  const status = element('p', 'status');
+  status.setAttribute('role', 'status');
+  form.append(grid, advanced, summary, button, status);
+  let worker;
+  const disposeBleed = report.dispose;
+  function reset() {
+    worker?.terminate();
+    worker = null;
+    button.disabled = false;
+    status.textContent = '';
+  }
+  report.dispose = () => { reset(); disposeBleed?.(); };
+  function refresh() {
+    reset();
+    const preset = presets[Number(select.value)];
+    grid.hidden = Boolean(preset);
+    columns.disabled = rows.disabled = Boolean(preset);
+    fields.hidden = !manual.checked;
+    for (const input of [width, height, dx, dy]) input.disabled = !manual.checked;
+    const size = manual.checked ? {width:width.valueAsNumber, height:height.valueAsNumber} : first;
+    const sheet = preset?.sheet || [size.width * columns.valueAsNumber, size.height * rows.valueAsNumber];
+    summary.textContent = sheet.every(Number.isFinite) ? sizeLabel({width:sheet[0], height:sheet[1]}) +
+      ' trim · 3 mm outer bleed · crop marks' : '';
+  }
+  form.addEventListener('input', refresh);
+  refresh();
+  form.onsubmit = event => {
+    event.preventDefault();
+    reset();
+    const presetIndex = Number(select.value);
+    const preset = presets[presetIndex];
+    const options = {presetIndex, manual:manual.checked, width:width.valueAsNumber, height:height.valueAsNumber,
+      dx:dx.valueAsNumber, dy:dy.valueAsNumber, rows:preset?.rows ?? rows.valueAsNumber,
+      columns:preset?.columns ?? columns.valueAsNumber};
+    button.disabled = true;
+    status.textContent = 'Preparing layup…';
+    worker = new Worker(new URL('inspect-worker.mjs', import.meta.url), {type:'module'});
+    worker.onerror = () => { reset(); status.textContent = 'Could not prepare layup.'; };
+    worker.onmessage = ({data}) => {
+      reset();
+      if (data.error) { status.textContent = data.error; return; }
+      downloadPdf(data.bytes, report.name.replace(/\.pdf$/i, '') + '-' + options.rows * options.columns + 'up.pdf');
+    };
+    worker.postMessage({action:'layup', source:report.file, options});
+  };
+  return panel;
 }
 
 function renderReport(report) {
@@ -289,7 +378,7 @@ function renderReport(report) {
   const overview = element('div', 'overview');
   append(overview, trimMetric(first), bleedMetric(first));
   card.append(overview);
-  card.append(bleedEditor(report));
+  card.append(bleedEditor(report), layupEditor(report));
   const pagesLabel = element('div', 'pages-heading', 'Page details');
   const pages = element('div', 'page-rows');
   report.pages.forEach((page, index) => pages.append(renderPageRow(page, index, report.pages.length === 1)));
@@ -389,3 +478,4 @@ function clearReports() {
   render();
   status.textContent = '';
 }
+
